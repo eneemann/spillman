@@ -6,6 +6,7 @@ Created on Fri Mar 22 11:06:12 2019
 
 EMN: On 22 Mar 2019, created script from Millard_prep_v3_0.
 """
+# Test comment for GitHub
 
 import arcpy
 from arcpy import env
