@@ -54,14 +54,16 @@ def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete
     env.workspace = original_wgs84
     print("Deleting old files from WGS84 gdb ...")
     for fc in WGS84_delete_files:
-        print("Deleting {} ...".format(fc))
-        arcpy.Delete_management(fc)
+        if arcpy.Exists(fc):
+            print("Deleting {} ...".format(fc))
+            arcpy.Delete_management(fc)
     # reassign workspace to utm GDB
     env.workspace = original_utm
     print("Deleting old files from UTM gdb ...")
     for fc in UTM_delete_files:
-        print("Deleting {} ...".format(fc))
-        arcpy.Delete_management(fc)
+        if arcpy.Exists(fc):
+            print("Deleting {} ...".format(fc))
+            arcpy.Delete_management(fc)
 
 
 def blanks_to_nulls(streets):
@@ -372,14 +374,13 @@ def create_streets_CAD(streets):
     arcpy.CopyFeatures_management(sel, outname)
 
 
-# NEED FUNCTION TO CREATE ADDRESS POINTS CAD?
+# NEED FUNCTION TO CREATE ADDRESS POINTS CAD
 def create_address_pts_CAD(addpts):
     where_clause = "FULLADDR NOT LIKE '% UNIT%' AND FULLADDR NOT LIKE '% TRLR%' AND FULLADDR NOT LIKE '% APT%' AND" \
                    " FULLADDR NOT LIKE '% STE%' AND FULLADDR NOT LIKE '% SPC%' AND FULLADDR NOT LIKE '% BSMT%' AND" \
                    " FULLADDR NOT LIKE '% LOT%' AND FULLADDR NOT LIKE '% #%' AND FULLADDR NOT LIKE '% BLDG%' AND" \
                    " FULLADDR NOT LIKE '% HNGR%' AND FULLADDR NOT LIKE '% OFC%'"
     # Need to make layer from feature class here
-    # NOTE: it appears redundant to use the same where_clause twice
     arcpy.MakeFeatureLayer_management(addpts, "addpts_lyr", where_clause)
     # Select where streets are not NULL and have valid address ranges
     sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
@@ -427,7 +428,7 @@ def copy_tbzones(tbzones_table):
     arcpy.TableToTable_conversion(in_rows, wgs84_db, "tbzones")
 
 
-# NEED FUNCTION TO CREATE STREETS_ALL?
+# NEED FUNCTION TO CREATE STREETS_ALL
 def create_streets_all(streets):
     lincoln = os.path.join(utm_db, "LincolnCo_Streets")
     mohave = os.path.join(utm_db, "MohaveCo_Streets")
@@ -463,7 +464,6 @@ def project_to_wgs84(input_features):
 def spillman_polygon_prep(streets):
     # Null out the appropriate data on streets layer
     update_count = 0
-    # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "SALIAS2" field
     # where_clause = ""
     fields = ['LCITYCD', 'RCITYCD', 'LZ_LEFT', 'LZ_RIGHT', 'LA_LEFT', 'LA_RIGHT', 'FZ_LEFT', 'FZ_RIGHT',
               'FA_LEFT', 'FA_RIGHT', 'EZ_LEFT', 'EZ_RIGHT', 'EA_LEFT', 'EA_RIGHT']
@@ -531,7 +531,6 @@ WGS84_files_to_delete = ["StGeorge_Dispatch_AddressPoints", "StGeorge_Dispatch_A
                          "StGeorge_Dispatch_CITYCD", "StGeorge_Dispatch_Common_Place_Points",
                          "StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones", "StGeorge_Dispatch_Law_Zones",
                          "StGeorge_Dispatch_Streets_All", "StGeorge_Dispatch_Streets_CAD", "tbzones"]
-# UTM_files_to_delete = ["AddressPoints_CAD_All", "StGeorge_Dispatch_Streets_CAD"]
 UTM_files_to_delete = ["StGeorge_Dispatch_AddressPoints_CAD", "StGeorge_Dispatch_Streets_CAD"]  # needs Streets_all?
 
 # Create variables for address points

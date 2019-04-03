@@ -4,9 +4,9 @@ Created on Fri Mar 22 11:06:12 2019
 
 @author: eneemann
 
-EMN: On 22 Mar 2019, created script from Millard_prep_v3_0.
+EMN: On 22 Mar 2019, created script from Millard_prep_v3_0/StGeorge_prep_v3_0.
+EMN: On 2 Apr 2019, updated variables and prepped for testing.
 """
-# Test comment for GitHub
 
 import arcpy
 from arcpy import env
@@ -18,11 +18,10 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-# utm_db = r"C:\E911\BeaverCo\Beaver_Spillman_UTM.gdb"
-# wgs84_db = r"C:\E911\BeaverCo\Beaver_Spillman_WGS84.gdb"
-utm_db = r"C:\Users\eneemann\Desktop\Neemann\Spillman\TestData\BeaverCo\TEST_BeaverCo_UTM.gdb"
-wgs84_db = r"C:\Users\eneemann\Desktop\Neemann\Spillman\TestData\BeaverCo\TEST_Beaver_Co_WGS84.gdb"
-# env.workspace = r"C:\Users\eneemann\Desktop\Neemann\Spillman\BeaverCo"
+# utm_db = r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb"
+# wgs84_db = r"C:\E911\Beaver Co\Beaver_Spillman_WGS84.gdb"
+utm_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_UTM.gdb"
+wgs84_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_WGS84.gdb"
 env.workspace = utm_db
 fc_layer = "Streets"
 streets_fc_utm = os.path.join(utm_db, fc_layer)
@@ -54,14 +53,16 @@ def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete
     env.workspace = original_wgs84
     print("Deleting old files from WGS84 gdb ...")
     for fc in WGS84_delete_files:
-        print("Deleting {} ...".format(fc))
-        arcpy.Delete_management(fc)
+        if arcpy.Exists(fc):
+            print("Deleting {} ...".format(fc))
+            arcpy.Delete_management(fc)
     # reassign workspace to utm GDB
     env.workspace = original_utm
     print("Deleting old files from UTM gdb ...")
     for fc in UTM_delete_files:
-        print("Deleting {} ...".format(fc))
-        arcpy.Delete_management(fc)
+        if arcpy.Exists(fc):
+            print("Deleting {} ...".format(fc))
+            arcpy.Delete_management(fc)
 
 
 def blanks_to_nulls(streets):
@@ -75,7 +76,7 @@ def blanks_to_nulls(streets):
     for field in fields:
         # print field.name
         if field.name in flist:
-            # print("{} appended to field_list".format(field.name)
+            # print("{} appended to field_list".format(field.name))
             field_list.append(field)
 
     with arcpy.da.UpdateCursor(streets, flist) as cursor:
@@ -363,7 +364,6 @@ def calc_location(streets):
 def create_streets_CAD(streets):
     where_clause = "STREET IS NOT NULL AND (L_F_ADD > 0 OR R_F_ADD > 0)"
     # Need to make layer from feature class here
-    # NOTE: it appears redundant to use the same where_clause twice
     arcpy.MakeFeatureLayer_management(streets, "streets_lyr", where_clause)
     # Select where streets are not NULL and have valid address ranges
     sel = arcpy.SelectLayerByAttribute_management("streets_lyr", "NEW_SELECTION", where_clause)
@@ -373,41 +373,57 @@ def create_streets_CAD(streets):
     arcpy.CopyFeatures_management(sel, outname)
 
 
-def combine_address_pts(add_CAD, add_mm, add_all):
-    # Get address points into a single FC
-    print("Combining address point data into {} ...".format(add_all))
-    arcpy.CopyFeatures_management(add_CAD, add_all)
-    arcpy.MakeFeatureLayer_management(add_mm, "add_mm_lyr")
-    arcpy.Append_management("add_mm_lyr", add_all, "NO_TEST")
+# NEED FUNCTION TO COMBINE COMMONPLACES IN COMMONPLACES_ALL
+def create_commonplaces_all(commplc):
+    exits = os.path.join(utm_db, "CommonPlaces_Exits")
+    mp = os.path.join(utm_db, "CommonPlaces_MP")
+    rrmp = os.path.join(utm_db, "CommonPlaces_RRMP")
+    rrx = os.path.join(utm_db, "CommonPlaces_RRX")
+    commplc_all = os.path.join(utm_db, "CommonPlaces_All")
 
-    # Project "AddressPoints_CAD_All" into WGS84
+    # Get address points into a single FC
+    print("Combining CommonPlaces data into {} ...".format(commplc_all))
+    arcpy.CopyFeatures_management(commplc, commplc_all)
+    arcpy.MakeFeatureLayer_management(exits, "exits_lyr")
+    arcpy.MakeFeatureLayer_management(mp, "mp_lyr")
+    arcpy.MakeFeatureLayer_management(rrmp, "rrmp_lyr")
+    arcpy.MakeFeatureLayer_management(rrx, "rrx_lyr")
+    arcpy.Append_management("exits_lyr", commplc_all, "NO_TEST")
+    arcpy.Append_management("mp_lyr", commplc_all, "NO_TEST")
+    arcpy.Append_management("rrmp_lyr", commplc_all, "NO_TEST")
+    arcpy.Append_management("rrx_lyr", commplc_all, "NO_TEST")
+
+
+# NEED FUNCTION TO CREATE ADDRESS POINTS CAD
+def create_address_pts_CAD(addpts):
+    where_clause = "FullAdd NOT LIKE '% UNIT%' AND FullAdd NOT LIKE '% TRLR%' AND FullAdd NOT LIKE '% APT%' AND" \
+                   " FullAdd NOT LIKE '% STE%' AND FullAdd NOT LIKE '% SPC%' AND FullAdd NOT LIKE '% BSMT%' AND" \
+                   " FullAdd NOT LIKE '% LOT%' AND FullAdd NOT LIKE '% #%' AND FullAdd NOT LIKE '% BLDG%' AND" \
+                   " FullAdd NOT LIKE '% HNGR%' AND FullAdd NOT LIKE '% OFC%' AND ((AGRC_NOTES NOT LIKE 'Remove%' AND" \
+                   " AGRC_NOTES NOT LIKE 'Needs Fixed -%') OR AGRC_NOTES IS NULL)"
+    # Need to make layer from feature class here
+    arcpy.MakeFeatureLayer_management(addpts, "addpts_lyr", where_clause)
+    # Select where streets are not NULL and have valid address ranges
+    sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
+    # Export selected streets to 'AddressPoints_CAD' feature class
+    addpts_CAD = os.path.join(utm_db, "AddressPoints_CAD")
+    print("Exporting {} ...".format(addpts_CAD))
+    arcpy.CopyFeatures_management(sel, addpts_CAD)
+
+    # Project "AddressPoints_CAD" into WGS84
     print("Project UTM data into WGS84 ...")
-    add_all_wgs84 = os.path.join(wgs84_db, "AddressPoints_CAD_All")
+    addpts_CAD_wgs84 = os.path.join(wgs84_db, "AddressPoints_CAD")
     sr = arcpy.SpatialReference("WGS 1984")
-    arcpy.Project_management(add_all, add_all_wgs84, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
+    arcpy.Project_management(addpts_CAD, addpts_CAD_wgs84, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
 
     # Calculate XY values for points without them (WGS84 coords)
     print("Calculating XY values in WGS84 ...")
-    # geometry_property = [["X", "POINT_X"], ["Y", "POINT_Y"]]
-    # arcpy.CalculateGeometryAttributes_management(add_all_wgs84, geometry_property)
-    arcpy.AddXY_management(add_all_wgs84)
+    arcpy.AddXY_management(addpts_CAD_wgs84)
 
-    # Copy XY values from "POINT_X" and "POINT_Y" into "X" and "Y"
-    print("Copying POINT_X/POINT_Y into X/Y fields ...")
-    update_count = 0
-    fields = ['X', 'POINT_X', 'Y', 'POINT_Y']
-    with arcpy.da.UpdateCursor(add_all_wgs84, fields) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[1]
-            # print("New value for {0} is: {1}".format(fields[0], row[0])
-            row[2] = row[3]
-            update_count += 1
-            cursor.updateRow(row)
-    print("Total count of row updates in {0} is: {1}".format(add_all_wgs84.split("\\")[-1], update_count))
-    # Delete "POINT_X" and "POINT_Y" fields
-    print("Deleting POINT_X and POINT_Y fields ...")
-    arcpy.DeleteField_management(add_all_wgs84, ["POINT_X", "POINT_Y"])
+    # Rename fields to just "X" and "Y"
+    print("Renaming X and Y fields ...")
+    arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_X', 'X')
+    arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_Y', 'Y')
 
 
 def copy_tbzones(tbzones_table):
@@ -428,10 +444,8 @@ def project_to_wgs84(input_features):
 def spillman_polygon_prep(streets):
     # Null out the appropriate data on streets layer
     update_count = 0
-    # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "SALIAS2" field
     # where_clause = ""
-    fields = ['LCITYCD', 'RCITYCD', 'LZ_LEFT', 'LZ_RIGHT', 'LA_LEFT', 'LA_RIGHT', 'FZ_LEFT', 'FZ_RIGHT',
-              'FA_LEFT', 'FA_RIGHT', 'EZ_LEFT', 'EZ_RIGHT', 'EA_LEFT', 'EA_RIGHT']
+    fields = ['L_CITYCD', 'R_CITYCD', 'LZ_LEFT', 'LZ_RIGHT', 'LA_LEFT', 'LA_RIGHT', 'FZ_LEFT', 'FZ_RIGHT', 'EZ_LEFT', 'EZ_RIGHT']
     with arcpy.da.UpdateCursor(streets, fields) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
@@ -468,26 +482,47 @@ def export_shapefiles_select_fields(fc, folder, field_list):
     arcpy.FeatureClassToFeatureClass_conversion(fc, folder, fc, field_mapping=fms)
 
 
+def export_shapefiles_select_fields_rename(fc, folder, field_list, outname):
+    print("Output folder is: {}".format(folder))
+    print("Exporting {} to shapefile with the following fields:".format(fc))
+    for field in field_list:
+        print(field)
+    env.workspace = wgs84_db
+    infile = os.path.join(wgs84_db, fc)
+    d = {}                              # create dictionary to hold FieldMap objects
+    fms = arcpy.FieldMappings()         # create FieldMappings objects
+    for index, field in enumerate(field_list):
+        d["fm{}".format(index)] = arcpy.FieldMap()                              # create FieldMap object in dictionary
+        d["fm{}".format(index)].addInputField(infile, field)                    # add input field
+        # add output field
+        d["fname{}".format(index)] = d["fm{}".format(index)].outputField
+        d["fname{}".format(index)].name = field
+        d["fm{}".format(index)].outputField = d["fname{}".format(index)]
+        fms.addFieldMap(d["fm{}".format(index)])                                # add FieldMap to FieldMappings object
+    arcpy.FeatureClassToFeatureClass_conversion(fc, folder, outname, field_mapping=fms)
+
 #######################################
 #  Prep variables for function calls  #
 #######################################
 
-WGS84_files_to_delete = ["AddressPoints", "AddressPoints_CAD_All", "Boundary_County", "CityCodes", "CommonPlaces",
-                         "CommonPlaces_MP", "EMSAreas", "EMSZones", "FireAreas", "FireZones", "LawAreas", "LawZones",
-                         "Streets", "Streets_CAD", "tbzones"]
-UTM_files_to_delete = ["AddressPoints_CAD_All", "Streets_CAD"]
+WGS84_files_to_delete = ["AddressPoints", "AddressPoints_CAD", "Beaver_County", "CityCodes", "CommonPlaces", "CommonPlaces_Exits",
+                         "CommonPlaces_All", "CommonPlaces_MP", "CommonPlaces_RRMP", "CommonPlaces_RRX", "Ems_zone",
+                         "Fire_zone", "Law_area", "Law_zone", "Streets", "Streets_CAD", "tbzones"]
+UTM_files_to_delete = ["AddressPoints_CAD", "Streets_CAD", "CommonPlaces_All"]
 
 # Create variables for address points
-address_pts_CAD = os.path.join(utm_db, "AddressPoints_CAD")
-address_pts_MM = os.path.join(utm_db, "AddressPoints_CAD_Milemarkers")
-address_pts_all = os.path.join(utm_db, "AddressPoints_CAD_All")
+address_pts = os.path.join(utm_db, "AddressPoints")
+
+# Create variables for common places
+commonplaces = os.path.join(utm_db, "CommonPlaces")
 
 # Create variable for tbzones
 tbzones = os.path.join(utm_db, "tbzones")
 
 # Create variables for projecting
-FCs_to_project = ["AddressPoints", "Boundary_County", "CityCodes", "CommonPlaces", "CommonPlaces_MP",
-                  "EMSAreas", "EMSZones", "FireAreas", "FireZones", "LawAreas", "LawZones", "Streets", "Streets_CAD"]
+FCs_to_project = ["AddressPoints", "Beaver_County", "CityCodes", "CommonPlaces", "CommonPlaces_All", "CommonPlaces_Exits", "CommonPlaces_MP",
+                  "CommonPlaces_RRMP", "CommonPlaces_RRX", "Ems_zone", "Fire_zone", "Law_area", "Law_zone", "Streets", "Streets_CAD",
+                  "Communities", "railroads"]
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -498,65 +533,112 @@ FCs_to_project = ["AddressPoints", "Boundary_County", "CityCodes", "CommonPlaces
 # Create variables for shapefiles
 FCs_to_export = FCs_to_project
 today = time.strftime("%Y%m%d")
-# out_folder = r"C:\Users\eneemann\Desktop\Neemann\Spillman\TestData\BeaverCo\Shapefiles\TEST_Shapefiles_Beaver"
-main_dir = r"C:\E911\BeaverCo\Shapefiles"
-folder = "Spillman_Shapefiles_Beaver_" + today
-out_folder = os.path.join(main_dir, folder)
-os.mkdir(out_folder)
+spill_dir = r"C:\E911\Beaver Co_TEST\0 Shapefiles"
+spillman_folder = "Spillman_Shapefiles_Beaver_" + today
+out_folder_spillman = os.path.join(spill_dir, spillman_folder)
+vela_dir = r"C:\E911\Beaver Co_TEST\0 Vela Files"
+vela_folder = "Vela_Shapefiles_Beaver_" + today
+out_folder_vela = os.path.join(vela_dir, vela_folder)
+
+# Comment out this line if the folder already exists (like if code was already run once today)
+os.mkdir(out_folder_spillman)
+os.mkdir(out_folder_vela)
+
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
 # Option 2: Individually exports each FC to shapefile, trims output down to specified fields
 # -----> See last set of function calls
 
-addpt_fields = ["FULLADDR", "LABEL"]
+addpt_fields = ["FullAdd", "LABEL"]
 commplc_fields = ["ALIAS", "ADDRESS"]
-milepost_fields = ["ALIAS", "XCOORD", "YCOORD"]
-street_fields = ["L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "ZIPLEFT", "ZIPRIGHT", "STREET", "LCITYCD", "RCITYCD"]
-earea_fields = ["DESCRIPTION", "ABBR", "Shape_Length", "Shape_Area"]
-ezone_fields = ["DESCRIPTION", "ABBR", "Shape_Length", "Shape_Area"]
-farea_fields = ["DESCRIPTION", "ABBR", "Shape_Length", "Shape_Area"]
-fzone_fields = ["DESCRIPTION", "ABBR", "Shape_Length", "Shape_Area"]
-larea_fields = ["desc", "abbr", "Shape_Length", "Shape_Area"]
-lzone_fields = ["DESCRIPTION", "ABBR", "Shape_Length", "Shape_Area"]
-citycd_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
+exit_fields = ["ALIAS", "ADDRESS"]
+milepost_fields = ["ALIAS", "ADDRESS"]
+rrmp_fields = ["ALIAS", "ADDRESS"]
+rrx_fields = ["ALIAS", "ADDRESS"]
+street_fields = ["L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "ZIPLEFT", "ZIPRIGHT", "STREET", "L_CITYCD", "R_CITYCD"]
+ezone_fields = ["ZONEDESC", "ZONEID"]
+fzone_fields = ["ZONEDESC", "ZONEID"]
+larea_fields = ["ZONEDESC", "ZONEID"]
+lzone_fields = ["ZONEDESC", "ZONEID"]
+citycd_fields = ["ZONEDESC", "CITYCD"]
+muni_fields = ["NAME", "SHORTDESC", "POPLASTCENSUS"]
+railroad_fields = ["LABEL"]
+river_fields = ["GNIS_Name", "LengthKM"]
+trail_fields = ["PrimaryName","DesignatedUses"]
+gnis_fields = ["FEATURE_NAME", "FEATURE_CLASS", "ELEV_IN_FT"]
+parcel_fields = ["Label", "NAME", "ACRES"]
 # other_fields = ["NAME", "CITYCD", "Length", "Area"]
+
+# Vela Shapefile field lists
+vela_addpt_fields = ["FullAdd", "AddNum", "PrefixDir", "StreetName", "StreetType", "SuffixDir", "UnitID", "STREET", "X",
+                     "Y"] #, "ZipCode", "State", "COMM"]
+vela_commplc_fields = ["ALIAS", "CITYCD", "STREET", "BEGNUMB", "ENDNUMB", "FULL_ADDRE", "COMM"]
+vela_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "PREDIR", "STREETNAME", "STREETTYPE",
+                      "SUFDIR", "ALIAS1", "ALIAS1TYPE", "ALIAS2", "ALIAS2TYPE", "ACSALIAS", "ACSNAME", "ACSSUF",
+                      "ZIPLEFT", "ZIPRIGHT", "STREET", "COMM_LEFT", "COMM_RIGHT", "Shape_Length"]
+vela_muni_fields = ["NAME", "POPLASTCENSUS", "CITYCD"]
+# Vela Shapefile outnames
+vela_addpt_out = "AddressPoints"
+vela_commplc_out = "CommonPlaces"
+vela_street_out = "Streets"
+vela_muni_out = "Municipalities"
+# Additional Vela Shapefiles to export
+vela_to_export = ["Ems_zone", "Fire_zone", "Law_zone", "Communities"]
 
 ##########################
 #  Call Functions Below  #
 ##########################
 
-create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-blanks_to_nulls(streets_fc_utm)
-calc_street(streets_fc_utm)
-calc_salias1(streets_fc_utm)
-calc_salias2(streets_fc_utm)
-calc_salias4(streets_fc_utm)
-highway_to_sr_us(streets_fc_utm)
-calc_salias3(streets_fc_utm)
-street_blank_to_null(streets_fc_utm)
-calc_location(streets_fc_utm)
-create_streets_CAD(streets_fc_utm)
-combine_address_pts(address_pts_CAD, address_pts_MM, address_pts_all)
-copy_tbzones(tbzones)
-project_to_wgs84(FCs_to_project)
-spillman_polygon_prep(streets_cad_wgs84)
+#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+#blanks_to_nulls(streets_fc_utm)
+#calc_street(streets_fc_utm)
+#calc_salias1(streets_fc_utm)
+#calc_salias2(streets_fc_utm)
+#calc_salias4(streets_fc_utm)
+#highway_to_sr_us(streets_fc_utm)
+#calc_salias3(streets_fc_utm)
+#street_blank_to_null(streets_fc_utm)
+#calc_location(streets_fc_utm)
+#create_streets_CAD(streets_fc_utm)
+#create_commonplaces_all(commonplaces)
+#create_address_pts_CAD(address_pts)
+#copy_tbzones(tbzones)
+#project_to_wgs84(FCs_to_project)
+#spillman_polygon_prep(streets_cad_wgs84)
 
-################################################################
-# Run code to here, then pause to use Spillman tools in ArcMap #
-################################################################
+#################################################################
+# Run code to here, then pause to use Spillman tools in ArcMap. #
+# When complete, run code below to export shapefiles            #
+#################################################################
 
-export_shapefiles_select_fields("AddressPoints", out_folder, addpt_fields)
-export_shapefiles_select_fields("CommonPlaces", out_folder, commplc_fields)
-export_shapefiles_select_fields("Mileposts", out_folder, milepost_fields)
-export_shapefiles_select_fields("Streets", out_folder, street_fields)
-export_shapefiles_select_fields("EMSAreas", out_folder, earea_fields)
-export_shapefiles_select_fields("EMSZones", out_folder, ezone_fields)
-export_shapefiles_select_fields("FireAreas", out_folder, farea_fields)
-export_shapefiles_select_fields("FireZones", out_folder, fzone_fields)
-export_shapefiles_select_fields("LawAreas", out_folder, larea_fields)
-export_shapefiles_select_fields("LawZones", out_folder, lzone_fields)
-export_shapefiles_select_fields("CityCodes", out_folder, citycd_fields)
-# export_shapefiles_select_fields("_other_", out_folder, other_fields)
+# Spillman Shapefiles Export
+export_shapefiles_select_fields("AddressPoints", out_folder_spillman, addpt_fields)
+export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
+export_shapefiles_select_fields("CommonPlaces_Exits", out_folder_spillman, exit_fields)
+export_shapefiles_select_fields("CommonPlaces_MP", out_folder_spillman, milepost_fields)
+export_shapefiles_select_fields("CommonPlaces_RRMP", out_folder_spillman, rrmp_fields)
+export_shapefiles_select_fields("CommonPlaces_RRX", out_folder_spillman, rrx_fields)
+export_shapefiles_select_fields("Streets", out_folder_spillman, street_fields)
+export_shapefiles_select_fields("Ems_zone", out_folder_spillman, ezone_fields)
+export_shapefiles_select_fields("Fire_zone", out_folder_spillman, fzone_fields)
+export_shapefiles_select_fields("Law_zone", out_folder_spillman, lzone_fields)
+export_shapefiles_select_fields("Law_area", out_folder_spillman, larea_fields)
+export_shapefiles_select_fields("CityCodes", out_folder_spillman, citycd_fields)
+export_shapefiles_select_fields("Municipalities", out_folder_spillman, muni_fields)
+export_shapefiles_select_fields("railroads", out_folder_spillman, railroad_fields)
+export_shapefiles_select_fields("Rivers", out_folder_spillman, river_fields)
+export_shapefiles_select_fields("RecreationTrails", out_folder_spillman, trail_fields)
+export_shapefiles_select_fields("GNIS_PlaceNames", out_folder_spillman, gnis_fields)
+export_shapefiles_select_fields("Parcels", out_folder_spillman, parcel_fields)
+
+# Vela Shapefiles Export
+#export_shapefiles_select_fields_rename("AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+#export_shapefiles_select_fields_rename("CommonPlaces", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+#export_shapefiles_select_fields_rename("Streets", out_folder_vela, vela_street_fields, vela_street_out)
+#export_shapefiles_select_fields_rename("Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+#export_shapefiles_all_fields(vela_to_export, out_folder_vela)
+#env.workspace = out_folder_vela
+#arcpy.Rename_management("Communities.shp", "Communities.shp")
 
 
 print("Script shutting down ...")
