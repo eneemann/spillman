@@ -78,31 +78,6 @@ def calc_street(working):
     print("Total count of updates to {0} field: {1}".format(fields[4], update_count))
 
 
-def count_new_addpts(current, possible):
-    # arcpy.MakeFeatureLayer_management(streets, "streets_lyr")
-    current_list = []
-    fields = ['FullAdd']
-    with arcpy.da.SearchCursor(current, fields) as cursor:
-        print("Looping through rows in {} ...".format(current))
-        for row in cursor:
-            current_list.append(row[0])
-
-    print("Total current address points: {}".format(str(len(current_list))))
-
-    possible_list = []
-    fields = ['FullAdd', 'AddSystem']
-    with arcpy.da.SearchCursor(possible, fields) as cursor:
-        print("Looping through rows in {} ...".format(possible))
-        for row in cursor:
-            if row[0] in current_list:
-                continue
-            else:
-                # print row[1] + " " + row[0]
-                possible_list.append(str(row[1] + " " + row[0]))
-
-    print("Possible non-duplicate new address points: {}".format(str(len(possible_list))))
-
-
 def remove_duplicates(current, possible, working):
     count = 0
     # Need to make a layer from possible address points feature class here
@@ -324,7 +299,6 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-# count_new_addpts(current_addpts, possible_addpts)
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, possible_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))

@@ -567,6 +567,7 @@ river_fields = ["GNIS_Name", "LengthKM"]
 trail_fields = ["PrimaryName","DesignatedUses"]
 gnis_fields = ["FEATURE_NAME", "FEATURE_CLASS", "ELEV_IN_FT"]
 parcel_fields = ["Label", "NAME", "ACRES"]
+county_fields = ["NAME"]
 # other_fields = ["NAME", "CITYCD", "Length", "Area"]
 
 # Vela Shapefile field lists
@@ -630,6 +631,7 @@ export_shapefiles_select_fields("Rivers", out_folder_spillman, river_fields)
 export_shapefiles_select_fields("RecreationTrails", out_folder_spillman, trail_fields)
 export_shapefiles_select_fields("GNIS_PlaceNames", out_folder_spillman, gnis_fields)
 export_shapefiles_select_fields("Parcels", out_folder_spillman, parcel_fields)
+export_shapefiles_select_fields("Beaver_County", out_folder_spillman, county_fields)
 
 # Vela Shapefiles Export
 #export_shapefiles_select_fields_rename("AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
