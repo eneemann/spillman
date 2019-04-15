@@ -24,6 +24,7 @@ wgs84_db = r"C:\E911\MillardCo\MIllard_Co_WGS84.gdb"
 # wgs84_db = r"C:\Users\eneemann\Desktop\Neemann\Spillman\TestData\MillardCo\TEST_MIllard_Co_WGS84.gdb"
 # env.workspace = r"C:\Users\eneemann\Desktop\Neemann\Spillman\MillardCo"
 env.workspace = utm_db
+env.overwriteOutput = True
 fc_layer = "Streets"
 streets_fc_utm = os.path.join(utm_db, fc_layer)
 streets_cad_wgs84 = os.path.join(wgs84_db, "Streets_CAD")
