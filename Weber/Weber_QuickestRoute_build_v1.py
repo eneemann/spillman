@@ -59,6 +59,24 @@ with arcpy.da.UpdateCursor(network_streets, fields) as cursor:
         cursor.updateRow(row)
 print("Total count of TrvlTime updates is {}".format(update_count))
 
+# Calculate "One_Way" field
+update_count_oneway = 0
+#                    0         1  
+fields_oneway = ['ONEWAY', 'One_Way']
+with arcpy.da.UpdateCursor(network_streets, fields) as cursor:
+    print("Looping through rows to calculate One_Way field ...")
+    for row in cursor:
+        if row[0] == '0':
+            row[1] = 'B'
+            update_count_oneway += 1
+        elif row[0] == '1':
+            row[1] = 'FT'
+            update_count_oneway += 1
+        elif row[0] == '2':
+            row[1] = 'TF'
+            update_count_oneway += 1
+        cursor.updateRow(row)
+print("Total count of One_Way updates is {}".format(update_count_oneway))
 
 # Recalculate travel times based on multiplication factors
 # Interstates to not get an additional multiplication factor applied
