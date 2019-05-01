@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 26 11:23:54 2019
+Created on Wed May  1 08:34:21 2019
 @author: eneemann
 Script to detect possible address points by comparing new data to current data
+
+Need to call get_SGID_addpts function first, then comment out the call and run the script
 """
 
 import arcpy
@@ -19,33 +21,26 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-beaver_db = r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb"
-staging_db = r"C:\E911\Beaver Co\Beaver_Staging.gdb"
-env.workspace = beaver_db
+stgeorge_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_UTM.gdb"
+staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
+env.workspace = stgeorge_db
 env.overwriteOutput = True
 
-beaver_streets = os.path.join(beaver_db, "Streets")
-#beaver_addpts = "AddressPoints_TEST_current"
-#current_addpts = os.path.join(staging_db, beaver_addpts)
-#beaver_addpts = "zzz_AddPts_NW_TEST_current"    # Test on small set of points (5K)
-beaver_addpts = "AddressPoints_20190326"
-current_addpts = os.path.join(staging_db, beaver_addpts)
+stgeorge_streets = os.path.join(stgeorge_db, "StGeorge_Dispatch_Streets")
+#stgeorge_addpts = "AddressPoints_TEST_current"
+#current_addpts = os.path.join(staging_db, stgeorge_addpts)
+stgeorge_addpts = "AddressPoints_20190430"    # Point to current addpts in staging_db
+current_addpts = os.path.join(staging_db, stgeorge_addpts)
 
 today = time.strftime("%Y%m%d")
-# new_addpts = "aaa_possible_newSGID_addpts_" + today
-# possible_addpts = os.path.join(staging_db, new_addpts)
-#new_addpts = "AddressPoints_TEST_possible_WGS84"
-#possible_addpts = os.path.join(staging_db, new_addpts)
-#new_addpts = "zzz_AddPts_NW_TEST_possible"    # Test on small set of points (5K)
-new_addpts = "AddressPoints_SGID_export_20190326"    # Test of export from SGID (3K)
+new_addpts = "AddressPoints_SGID_export_" + today
+#new_addpts = "AddressPoints_SGID_export_20190408"    # Use if SGID data was already exported
 possible_addpts = os.path.join(staging_db, new_addpts)
 
-# SGID_addpts = r"Database Connections\sde@SGID10@sgid.agrc.utah.gov.sde\SGID10.LOCATION.AddressPoints"
+# SGID_addpts = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
 # SGID_addpts_wgs84 = os.path.join(staging_db, "SGID_addpts_wgs84")
 
 # Copy current address points into a working FC
-#working_addpts = os.path.join(staging_db, "AddressPoints_TEST_working_" + today)
-#arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
 arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 
@@ -56,6 +51,18 @@ arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 ###############
 #  Functions  #
 ###############
+
+def get_SGID_addpts(out_db):
+    today = time.strftime("%Y%m%d")
+    SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
+    sgid_pts = os.path.join(SGID, "SGID10.LOCATION.AddressPoints")
+    new_pts = "AddressPoints_SGID_export_" + today
+    if arcpy.Exists(new_pts):
+        arcpy.Delete_management(new_pts)
+    where_SGID = "CountyID = '49053'"
+    print("Exporting SGID address points to: {}".format(new_pts))
+    arcpy.FeatureClassToFeatureClass_conversion (sgid_pts, out_db, new_pts, where_SGID)
+  
 
 def calc_street(working):
     update_count = 0
@@ -78,21 +85,22 @@ def calc_street(working):
     print("Total count of updates to {0} field: {1}".format(fields[4], update_count))
 
 
-def remove_duplicates(current, possible, working):
+def remove_duplicates(current, working):
     count = 0
-    # Need to make a layer from possible address points feature class here
+    # Need to make a layer from working address points feature class here
     arcpy.MakeFeatureLayer_management(working, "working_lyr")
 
-    # Create list of features in the current beaver address points feature class
+    # Create list of features in the current St George address points feature class
     current_dict = {}
-    fields = ['FullAdd']
+    fields = ['FULLADDR']
     with arcpy.da.SearchCursor(current, fields) as cursor:
         print("Looping through rows in {} ...".format(current))
         for row in cursor:
             current_dict.setdefault(row[0])
     print("Total current address points: {}".format(str(len(current_dict))))
 
-    # Loop through possible layer and select features that aren't in current Beaver add pts list (avoid duplicates)
+    # Loop through working layer and select features that aren't in current St George add pts list (avoid duplicates)
+    # Export these features out to a non-duplicates FC
     fields = ['FullAdd', 'Notes']
     with arcpy.da.UpdateCursor("working_lyr", fields) as cursor:
         print("Looping through rows in {} ...".format("working_lyr"))
@@ -103,7 +111,7 @@ def remove_duplicates(current, possible, working):
             else:
                 row[1] = 'name duplicate'
             cursor.updateRow(row)
-            if count % 10000 == 0:
+            if count % 1000 == 0:
                 print("'remove_duplicates' function has completed row {}".format(count))
     where_final = "Notes = 'not name duplicate'"
     final_selection = arcpy.SelectLayerByAttribute_management("working_lyr", "NEW_SELECTION", where_final)
@@ -117,17 +125,17 @@ def remove_duplicates(current, possible, working):
     return non_duplicates
 
 
-def mark_near_addpts(current, possible, working):
+def mark_near_addpts(current, working):
     where_clause = "Notes <> 'name duplicate'"
-    # Need to make a layer from possible address points feature class here
+    # Need to make a layer from working address points feature class here
     arcpy.MakeFeatureLayer_management(working, "working_lyr_2", where_clause)
     print("Working layer feature count: {}".format(arcpy.GetCount_management("working_lyr_2")))
     
-    # Select all features within 5m of current Beaver FC
+    # Select all features within 5m of current St George FC
     fields = ['Notes']
     arcpy.SelectLayerByLocation_management("working_lyr_2", "WITHIN_A_DISTANCE_GEODESIC", current,
                                                          "5 meters", "NEW_SELECTION")
-    
+    # Add note that these points are likely duplicates
     with arcpy.da.UpdateCursor("working_lyr_2", fields) as cursor:
         print("Looping through rows in {} ...".format("working_lyr_2"))
         for row in cursor:
@@ -150,9 +158,9 @@ def check_nearby_roads(working, streets, gdb):
     address points layer using the 'IN_FID' field to update the 'Notes' field in a FC.
     """
     func_start_time = time.time()
-    # look at features that aren't name duplicates
+    # look at features that aren't name duplicates or likely spatial duplicates
     where_clause = "Notes = 'not name duplicate'"
-    # Need to make a layer from possible address points feature class here
+    # Need to make a layer from working address points feature class here
     arcpy.MakeFeatureLayer_management(working, "working_nodups", where_clause)
     result = arcpy.GetCount_management("working_nodups")
     total = int(result.getOutput(0))
@@ -167,13 +175,13 @@ def check_nearby_roads(working, streets, gdb):
     
     # Convert neartable to pandas dataframe
     neartable_arr = arcpy.da.TableToNumPyArray(neartable, '*')
-    near_df =pd.DataFrame(data = neartable_arr)
+    near_df = pd.DataFrame(data = neartable_arr)
     print(near_df.head(5).to_string())
     
     # Convert address points to pandas dataframe
-    addpt_fields = ['OBJECTID', 'AddNum', 'Street', 'ZipCode', 'Notes']
+    addpt_fields = ['OBJECTID', 'AddNum', 'Street', 'Notes']
     addpts_arr = arcpy.da.FeatureClassToNumPyArray(working, addpt_fields)
-    addpts_df =pd.DataFrame(data = addpts_arr)
+    addpts_df = pd.DataFrame(data = addpts_arr)
     print(addpts_df.head(5).to_string())
     
     # Convert roads to pandas dataframe
@@ -185,18 +193,18 @@ def check_nearby_roads(working, streets, gdb):
     # Join address points to near table
     join1_df = near_df.join(addpts_df.set_index('OBJECTID'), on='IN_FID')
     print(join1_df.head(5).to_string())
-    path = r'C:\Users\eneemann\Desktop\beaver_neartable_join1.csv'
+    path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_join1.csv'
     join1_df.to_csv(path)
     
     # Join streets to near table
     join2_df = join1_df.join(streets_df.set_index('OBJECTID'), on='NEAR_FID')
     print(join2_df.head(5).to_string())
-    path = r'C:\Users\eneemann\Desktop\beaver_neartable_join2.csv'
+    path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_join2.csv'
     join2_df.to_csv(path)
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
     near_df_updated = join2_df.apply(logic_checks, axis=1)
-    path = r'C:\Users\eneemann\Desktop\neartable_updated.csv'
+    path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\neartable_updated.csv'
     near_df_updated.to_csv(path)
     
     # Separate rows with a good nearby street into a separate dataframe
@@ -216,18 +224,19 @@ def check_nearby_roads(working, streets, gdb):
     filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
     # Re-sort data frame on address point ID for final data set
     final_df = filtered_df.sort_values('IN_FID')
-    path = r'C:\Users\eneemann\Desktop\beaver_neartable_final.csv'
+    path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_final.csv'
     final_df.to_csv(path)
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
     join_df.columns = ['IN_FID', 'Notes_near', 'edit_dist']
-    join_path = r'C:\Users\eneemann\Desktop\beaver_neartable_join.csv'
+    join_path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_join.csv'
     join_df.to_csv(join_path)
         
     # Convert CSV output into table and join to working address points FC
     env.workspace = gdb
+    env.qualifiedFieldNames = False
     if arcpy.Exists("neartable_join"):
         arcpy.Delete_management("neartable_join")
     arcpy.TableToTable_conversion(join_path, gdb, "neartable_join")
@@ -237,16 +246,17 @@ def check_nearby_roads(working, streets, gdb):
     # Copy joined table to "_final" feature class
     # This is a copy of the address points feature class with new joined fields
     arcpy.CopyFeatures_management(joined_table, working + "_final")
-                                                          
+
+        
     # Update 'Notes' field in working address points with joined table notes
-    # ArcPy makes a mess of the field names after the join, so we need to make
+    # ---> ArcPy makes a mess of the field names after the join, so we need to make
     # sure the proper fields are pulled and updated
-    field1 = os.path.basename(working) + "_Notes"
-    field2 = "neartable_join" + "_Notes_near"
-    fields = [field1, field2]
-    for field in fields:
-        print(field)
-#    fields = ['Notes', 'Notes_near']
+#    field1 = os.path.basename(working) + "_Notes"
+#    field2 = "neartable_join" + "_Notes_near"
+#    fields = [field1, field2]
+#    for field in fields:
+#        print(field)
+    fields = ['Notes', 'Notes_near']
     with arcpy.da.UpdateCursor(working + "_final", fields) as cursor:
         print("Looping through rows in {} to update 'Notes' field ...".format(os.path.basename(working) + "_final"))
         for row in cursor:
@@ -299,14 +309,15 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
+#get_SGID_addpts(staging_db)
 calc_street(working_addpts)
-working_nodups = remove_duplicates(current_addpts, possible_addpts, working_addpts)
+working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
-mark_near_addpts(current_addpts, possible_addpts, working_addpts)
+mark_near_addpts(current_addpts, working_addpts)
 
 arcpy.Delete_management("working_nodups")
 arcpy.Delete_management('in_memory\\near_table')
-check_nearby_roads(working_addpts, beaver_streets, staging_db)
+check_nearby_roads(working_addpts, stgeorge_streets, staging_db)
 
 
 print("Script shutting down ...")
@@ -315,9 +326,9 @@ readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 
-
+# Plot histogram of Edit Distances
 print("Creating edit distance histogram ...")
-df = pd.read_csv(r'C:\Users\eneemann\Desktop\beaver_neartable_final.csv')
+df = pd.read_csv(r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_final.csv')
 plt.figure(figsize=(6,4))
 plt.hist(df['edit_dist'], bins = np.arange(0, df['edit_dist'].max(), 1)-0.5, color='red', edgecolor='black')
 plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
@@ -326,13 +337,4 @@ plt.xlabel('Edit Distance')
 plt.ylabel('Count')
 plt.show()
 
-
-
-
-
-
-
-
-
-
-
+df['edit_dist'].max()

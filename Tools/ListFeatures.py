@@ -21,10 +21,11 @@ today = time.strftime("%Y%m%d")
 ## Prep data for network
 
 # Set up variables
-database = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_UTM.gdb"
+database = r"C:\Users\eneemann\Documents\ArcGIS\Projects\MyFirstProject\UHP_FATPOT_update.gdb"
 env.workspace = database
 
 fclist = arcpy.ListFeatureClasses()
+fclist.sort()
 
 for fc in fclist:
     print("The spatial reference of {0} is: {1}".format(fc, arcpy.Describe(fc).spatialReference.name))

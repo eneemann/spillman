@@ -319,17 +319,12 @@ print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 print("Creating edit distance histogram ...")
 df = pd.read_csv(r'C:\Users\eneemann\Desktop\neartable_final.csv')
 plt.figure(figsize=(6,4))
-plt.hist(df['edit_dist'], bins = np.arange(0,21,1), color='red', edgecolor='black')
+plt.hist(df['edit_dist'], bins = np.arange(0, df['edit_dist'].max(), 1)-0.5, color='red', edgecolor='black')
+plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
 plt.title('Address/Street Edit Distance Histogram')
 plt.xlabel('Edit Distance')
 plt.ylabel('Count')
 plt.show()
-
-
-
-
-
-
 
 
 
