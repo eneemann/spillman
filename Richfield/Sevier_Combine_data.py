@@ -3,6 +3,10 @@
 Created on Mon Apr 15 16:18:26 2019
 
 @author: eneemann
+
+This script is used to combine shapefiles into point and line datasets from
+individual zip files received via email.  Points are address points, lines are
+road segments to be added, deleted, or modified.
 """
 
 # Import Libraries
