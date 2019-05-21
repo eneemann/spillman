@@ -562,8 +562,8 @@ vela_folder = "Vela_Shapefiles_StGeorge_" + today
 out_folder_vela = os.path.join(vela_dir, vela_folder)
 
 # Comment out this line if the folder already exists (like if code was already run once today)
-os.mkdir(out_folder_spillman)
-os.mkdir(out_folder_vela)
+#os.mkdir(out_folder_spillman)
+#os.mkdir(out_folder_vela)
 
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
@@ -626,23 +626,24 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 #################################################################
 
 # Spillman Shapefiles Export
-export_shapefiles_select_fields("StGeorge_Dispatch_AddressPoints", out_folder_spillman, addpt_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Common_Place_Points", out_folder_spillman, commplc_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Streets_All", out_folder_spillman, street_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_EMS_Zones", out_folder_spillman, ezone_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Fire_Zones", out_folder_spillman, fzone_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Law_Zones", out_folder_spillman, lzone_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_CITYCD", out_folder_spillman, citycd_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Municipalities", out_folder_spillman, muni_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_AddressPoints", out_folder_spillman, addpt_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_Common_Place_Points", out_folder_spillman, commplc_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_Streets_All", out_folder_spillman, street_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_EMS_Zones", out_folder_spillman, ezone_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_Fire_Zones", out_folder_spillman, fzone_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_Law_Zones", out_folder_spillman, lzone_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_CITYCD", out_folder_spillman, citycd_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_Municipalities", out_folder_spillman, muni_fields)
 
 # Vela Shapefiles Export
 export_shapefiles_select_fields_rename("StGeorge_Dispatch_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-export_shapefiles_select_fields_rename("StGeorge_Dispatch_Common_Place_Points", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
-export_shapefiles_select_fields_rename("StGeorge_Dispatch_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
-export_shapefiles_all_fields(vela_to_export, out_folder_vela)
-env.workspace = out_folder_vela
-arcpy.Rename_management("StGeorge_Dispatch_COMMUNITY.shp", "StGeorge_Dispatch_Communities.shp")
+#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Common_Place_Points", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
+#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+
+#export_shapefiles_all_fields(vela_to_export, out_folder_vela)
+#env.workspace = out_folder_vela
+#arcpy.Rename_management("StGeorge_Dispatch_COMMUNITY.shp", "StGeorge_Dispatch_Communities.shp")
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
