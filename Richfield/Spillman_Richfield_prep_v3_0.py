@@ -364,6 +364,8 @@ def create_streets_CAD(streets):
     outname = os.path.join(utm_db, "streets_CAD")
     print("Exporting {} ...".format(outname))
     arcpy.CopyFeatures_management(sel, outname)
+    arcpy.Delete_management("streets_lyr")
+    
 
 
 # NEED FUNCTION TO CREATE ADDRESS POINTS CAD
@@ -474,6 +476,9 @@ def export_shapefiles_select_fields_rename(fc, folder, field_list, outname):
     arcpy.FeatureClassToFeatureClass_conversion(fc, folder, outname, field_mapping=fms)
 
 def populate_LS_ZONE(streets, zones_fc):
+    if arcpy.Exists("streets_lyr"):
+        print("Deleting {} ...".format("streets_lyr"))
+        arcpy.Delete_management("streets_lyr")
     env.workspace = wgs84_db
     # Need to create streets layer for select by location operation
     where_clause1 = "HWYNAME IS NOT NULL"
@@ -488,11 +493,14 @@ def populate_LS_ZONE(streets, zones_fc):
             print(row[0])
     print(zone_list)
     
+    if arcpy.Exists("zone_lyr"):
+        print("Deleting {} ...".format("zone_lyr"))
+        arcpy.Delete_management("zone_lyr")
     # Loop through zone_list for each zone value
     for zone in zone_list:
         update_count = 0
         # Create layer for zone value
-        where_temp = "UHPLS = " + zone
+        where_temp = "UHPLS = '{}'".format(zone)
         print(where_temp)
         arcpy.MakeFeatureLayer_management(zones_fc, "zone_lyr", where_temp)
         # Select street segments that intersect zone
@@ -504,6 +512,7 @@ def populate_LS_ZONE(streets, zones_fc):
             for row in uCursor:
                 row[0] = zone
                 update_count += 1
+                uCursor.updateRow(row)
             print("Number of updates to {0} is: {1}".format(zone, update_count))
         # Delete temporary zone layer
         arcpy.Delete_management("zone_lyr")
@@ -529,10 +538,11 @@ tbzones = os.path.join(utm_db, "tbzones")
 FCs_to_project = ["address_points", "citycodes",
                   "common_places", "ems_zones",
                   "fire_zones", "law_zones", "streets",
-                  "streets_CAD", "municipalities"]
+                  "streets_CAD", "municipalities",
+                  "common_places_Exits", "common_places_Mileposts"]
 
 # Create variables for populating LS zones
-ls_zones = "UHP_LS_Zones"
+ls_zones = os.path.join(wgs84_db, "UHP_LS_Zones")
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -593,7 +603,7 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #  Call Functions Below  #
 ##########################
 
-create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
 blanks_to_nulls(streets_fc_utm)
 calc_street(streets_fc_utm)
 calc_salias1(streets_fc_utm)
@@ -615,10 +625,10 @@ spillman_polygon_prep(streets_cad_wgs84)
 # When complete, run code below to export shapefiles            #
 #################################################################
 
-## Assign LS_Zones to streets_CAD (wgs84) segments
+# Assign LS_Zones to streets_CAD (wgs84) segments
 #populate_LS_ZONE(streets_cad_wgs84, ls_zones)
-#
-## Spillman Shapefiles Export
+
+# Spillman Shapefiles Export
 #export_shapefiles_select_fields("address_points", out_folder_spillman, addpt_fields)
 #export_shapefiles_select_fields("common_places", out_folder_spillman, commplc_fields)
 #export_shapefiles_select_fields("streets", out_folder_spillman, street_fields)
@@ -627,7 +637,7 @@ spillman_polygon_prep(streets_cad_wgs84)
 #export_shapefiles_select_fields("law_zones", out_folder_spillman, lzone_fields)
 #export_shapefiles_select_fields("citycodes", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fields)
-#
+
 ## Vela Shapefiles Export
 #export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
 #export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
