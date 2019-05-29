@@ -475,6 +475,7 @@ def export_shapefiles_select_fields_rename(fc, folder, field_list, outname):
         fms.addFieldMap(d["fm{}".format(index)])                                # add FieldMap to FieldMappings object
     arcpy.FeatureClassToFeatureClass_conversion(fc, folder, outname, field_mapping=fms)
 
+
 def populate_LS_ZONE(streets, zones_fc):
     if arcpy.Exists("streets_lyr"):
         print("Deleting {} ...".format("streets_lyr"))
@@ -524,7 +525,7 @@ def populate_LS_ZONE(streets, zones_fc):
 
 WGS84_files_to_delete = ["address_points", "address_points_CAD",
                          "citycodes", "common_places",
-                         "ems_zones", "fire_zones", "law_zones",
+                         "ems_zones", "fire_zones", "law_zones", "MZ_Zones",
                          "streets", "streets_CAD", "tbzones"]
 UTM_files_to_delete = ["address_points_CAD", "streets_CAD"]
 
@@ -537,7 +538,7 @@ tbzones = os.path.join(utm_db, "tbzones")
 # Create variables for projecting
 FCs_to_project = ["address_points", "citycodes",
                   "common_places", "ems_zones",
-                  "fire_zones", "law_zones", "streets",
+                  "fire_zones", "law_zones", "streets", "MZ_Zones",
                   "streets_CAD", "municipalities",
                   "common_places_Exits", "common_places_Mileposts"]
 
@@ -577,9 +578,11 @@ commplc_fields = ["ALIAS", "ADDRESS"]
 street_fields = ["L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "ZIPLEFT", "ZIPRIGHT", "STREET", "LCITYCD", "RCITYCD"]
 ezone_fields = ["NAME", "EMSZONE", "EMS_AREA", "Shape_Length", "Shape_Area"]
 fzone_fields = ["GRIDNAME", "FIREZONE", "FIREAREA", "Shape_Length", "Shape_Area"]
-lzone_fields = ["AGENCY_NAME", "L_ZONE", "L_AREA" "Shape_Length", "Shape_Area"]
+lzone_fields = ["AGENCY_NAME", "L_ZONE", "L_AREA", "Shape_Length", "Shape_Area"]
+mzone_fields = ["NAME", "MZ_ID", "Shape_Length", "Shape_Area"]
 citycd_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
 muni_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
+
 
 # Vela Shapefile field lists
 vela_addpt_fields = ["FullAdd", "ADDRESS", "PrefixDir", "StreetName", "StreetType", "SuffixDir", "UnitID", "STREET", "X",
@@ -604,20 +607,20 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 ##########################
 
 #create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-blanks_to_nulls(streets_fc_utm)
-calc_street(streets_fc_utm)
-calc_salias1(streets_fc_utm)
-calc_salias2(streets_fc_utm)
-calc_salias4(streets_fc_utm)
-highway_to_sr_us(streets_fc_utm)
-calc_salias3(streets_fc_utm)
-street_blank_to_null(streets_fc_utm)
-calc_location(streets_fc_utm)
-create_streets_CAD(streets_fc_utm)
-create_address_pts_CAD(address_pts)
-copy_tbzones(tbzones)
-project_to_wgs84(FCs_to_project)
-spillman_polygon_prep(streets_cad_wgs84)
+#blanks_to_nulls(streets_fc_utm)
+#calc_street(streets_fc_utm)
+#calc_salias1(streets_fc_utm)
+#calc_salias2(streets_fc_utm)
+#calc_salias4(streets_fc_utm)
+#highway_to_sr_us(streets_fc_utm)
+#calc_salias3(streets_fc_utm)
+#street_blank_to_null(streets_fc_utm)
+#calc_location(streets_fc_utm)
+#create_streets_CAD(streets_fc_utm)
+#create_address_pts_CAD(address_pts)
+#copy_tbzones(tbzones)
+#project_to_wgs84(FCs_to_project)
+#spillman_polygon_prep(streets_cad_wgs84)
 
 
 #################################################################
@@ -635,14 +638,15 @@ spillman_polygon_prep(streets_cad_wgs84)
 #export_shapefiles_select_fields("ems_zones", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("fire_zones", out_folder_spillman, fzone_fields)
 #export_shapefiles_select_fields("law_zones", out_folder_spillman, lzone_fields)
+#export_shapefiles_select_fields("MZ_Zones", out_folder_spillman, mzone_fields)
 #export_shapefiles_select_fields("citycodes", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fields)
 
 ## Vela Shapefiles Export
-#export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-#export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-#export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
-#export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
+export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
 
 #export_shapefiles_all_fields(vela_to_export, out_folder_vela)
 #env.workspace = out_folder_vela
