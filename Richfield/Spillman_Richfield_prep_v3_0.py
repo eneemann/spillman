@@ -582,7 +582,12 @@ lzone_fields = ["AGENCY_NAME", "L_ZONE", "L_AREA", "Shape_Length", "Shape_Area"]
 mzone_fields = ["NAME", "MZ_ID", "Shape_Length", "Shape_Area"]
 citycd_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
 muni_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
+exit_fields = ["ALIAS"]
+milepost_fields = ["ALIAS"]
 
+# Spillman shapefile outnames
+exits_out = "exits"
+mileposts_out = "mileposts"
 
 # Vela Shapefile field lists
 vela_addpt_fields = ["FullAdd", "ADDRESS", "PrefixDir", "StreetName", "StreetType", "SuffixDir", "UnitID", "STREET", "X",
@@ -641,6 +646,10 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #export_shapefiles_select_fields("MZ_Zones", out_folder_spillman, mzone_fields)
 #export_shapefiles_select_fields("citycodes", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fields)
+#export_shapefiles_select_fields("citycodes", out_folder_spillman, citycd_fields)
+#export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fields)
+#export_shapefiles_select_fields_rename("common_places_Exits", out_folder_spillman, exit_fields, exits_out)
+#export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_spillman, milepost_fields, mileposts_out)
 
 ## Vela Shapefiles Export
 export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
