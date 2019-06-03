@@ -8,7 +8,7 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-database = r"C:\E911\Kane Co\KaneCo_VESTA_Data_20190314.gdb"
+database = r"C:\E911\JuabCo\UtahValley_Spillman_Data_State_Plane_New.gdb"
 env.workspace = database
 
 fclist = arcpy.ListFeatureClasses()
