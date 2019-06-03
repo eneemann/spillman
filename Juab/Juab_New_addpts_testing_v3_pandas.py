@@ -90,16 +90,16 @@ def remove_duplicates(current, working):
     # Need to make a layer from working address points feature class here
     arcpy.MakeFeatureLayer_management(working, "working_lyr")
 
-    # Create list of features in the current St George address points feature class
+    # Create list of features in the current address points feature class
     current_dict = {}
-    fields = ['ADDRESS']
+    fields = ['FullAdd']
     with arcpy.da.SearchCursor(current, fields) as cursor:
         print("Looping through rows in {} ...".format(current))
         for row in cursor:
             current_dict.setdefault(row[0])
     print("Total current address points: {}".format(str(len(current_dict))))
 
-    # Loop through working layer and select features that aren't in current St George add pts list (avoid duplicates)
+    # Loop through working layer and select features that aren't in current add pts list (avoid duplicates)
     # Export these features out to a non-duplicates FC
     fields = ['FullAdd', 'Notes']
     with arcpy.da.UpdateCursor("working_lyr", fields) as cursor:
@@ -131,7 +131,7 @@ def mark_near_addpts(current, working):
     arcpy.MakeFeatureLayer_management(working, "working_lyr_2", where_clause)
     print("Working layer feature count: {}".format(arcpy.GetCount_management("working_lyr_2")))
     
-    # Select all features within 5m of current St George FC
+    # Select all features within 5m of current addpts FC
     fields = ['Notes']
     arcpy.SelectLayerByLocation_management("working_lyr_2", "WITHIN_A_DISTANCE_GEODESIC", current,
                                                          "5 meters", "NEW_SELECTION")
@@ -185,9 +185,10 @@ def check_nearby_roads(working, streets, gdb):
     print(addpts_df.head(5).to_string())
     
     # Convert roads to pandas dataframe
-    street_fields = ['OBJECTID', 'L_F_ADD', 'L_T_ADD', 'R_F_ADD', 'R_T_ADD', 'STREET']
+    # Make sure this points to the correct ObjectID field in the attribute table
+    street_fields = ['OBJECTID_12', 'FROMLEFT', 'TOLEFT', 'FROMRIGHT', 'TORIGHT', 'FULLNAME']
     streets_arr = arcpy.da.FeatureClassToNumPyArray(streets, street_fields)
-    streets_df =pd.DataFrame(data = streets_arr)
+    streets_df = pd.DataFrame(data = streets_arr)
     print(streets_df.head(5).to_string())
     
     # Join address points to near table
@@ -197,10 +198,13 @@ def check_nearby_roads(working, streets, gdb):
     join1_df.to_csv(path)
     
     # Join streets to near table
-    join2_df = join1_df.join(streets_df.set_index('OBJECTID'), on='NEAR_FID')
+    join2_df = join1_df.join(streets_df.set_index('OBJECTID_12'), on='NEAR_FID')
     print(join2_df.head(5).to_string())
     path = r'C:\E911\JuabCo\Addpts_working_folder\juab_neartable_join2.csv'
     join2_df.to_csv(path)
+    
+    # Convert NaNs to blank strings
+    join2_df.fillna('', inplace=True)
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
     near_df_updated = join2_df.apply(logic_checks, axis=1)
@@ -276,10 +280,10 @@ def logic_checks(row):
     """
     goodstreet = False
     goodnum = False
-    if row['Street'] == row['STREET']:
+    if row['Street'] == row['FULLNAME']:
         goodstreet = True
-        if (int(row['AddNum'].split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].split()[0]) <= row['L_T_ADD']) or (
-                int(row['AddNum'].split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].split()[0]) <= row['R_T_ADD']):
+        if (int(row['AddNum'].split()[0]) >= row['FROMLEFT'] and int(row['AddNum'].split()[0]) <= row['TOLEFT']) or (
+                int(row['AddNum'].split()[0]) >= row['FROMRIGHT'] and int(row['AddNum'].split()[0]) <= row['TORIGHT']):
             goodnum = True
     # Update Notes field based on if street and number are good from near analysis
     if goodstreet and goodnum:
@@ -290,15 +294,15 @@ def logic_checks(row):
         row['Notes'] = 'near street not found'
     row['goodstreet'] = goodstreet
     row['goodnum'] = goodnum
-    row['edit_dist'] = Lv.distance(row['Street'], row['STREET'])
+    row['edit_dist'] = Lv.distance(row['Street'], row['FULLNAME'])
     # Check edit distance for roads that might have typos, predir, or sufdir errors
     if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
         row['Notes'] = 'no near st: possible typo predir or sufdir error'
     # Check for likely predir/sufdir errors: road nearly matches, range is good
     # Replace needed in logic to catch potential range in address number (e.g., '188-194')
     if row['Notes'] == 'no near st: possible typo predir or sufdir error':
-        if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-                int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['FROMLEFT'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['TOLEFT']) or (
+                int(row['AddNum'].replace('-', ' ').split()[0]) >= row['FROMRIGHT'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['TORIGHT']):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
             row['goodnum'] = goodnum      
