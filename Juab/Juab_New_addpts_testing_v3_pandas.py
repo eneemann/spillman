@@ -179,26 +179,26 @@ def check_nearby_roads(working, streets, gdb):
     print(near_df.head(5).to_string())
     
     # Convert address points to pandas dataframe
-    addpt_fields = ['OBJECTID', 'AddNum', 'Street', 'Notes']
+    addpt_fields = ['OID@', 'AddNum', 'Street', 'Notes']
     addpts_arr = arcpy.da.FeatureClassToNumPyArray(working, addpt_fields)
     addpts_df = pd.DataFrame(data = addpts_arr)
     print(addpts_df.head(5).to_string())
     
     # Convert roads to pandas dataframe
     # Make sure this points to the correct ObjectID field in the attribute table
-    street_fields = ['OBJECTID_12', 'FROMLEFT', 'TOLEFT', 'FROMRIGHT', 'TORIGHT', 'FULLNAME']
+    street_fields = ['OID@', 'FROMLEFT', 'TOLEFT', 'FROMRIGHT', 'TORIGHT', 'FULLNAME']
     streets_arr = arcpy.da.FeatureClassToNumPyArray(streets, street_fields)
     streets_df = pd.DataFrame(data = streets_arr)
     print(streets_df.head(5).to_string())
     
     # Join address points to near table
-    join1_df = near_df.join(addpts_df.set_index('OBJECTID'), on='IN_FID')
+    join1_df = near_df.join(addpts_df.set_index('OID@'), on='IN_FID')
     print(join1_df.head(5).to_string())
     path = r'C:\E911\JuabCo\Addpts_working_folder\juab_neartable_join1.csv'
     join1_df.to_csv(path)
     
     # Join streets to near table
-    join2_df = join1_df.join(streets_df.set_index('OBJECTID_12'), on='NEAR_FID')
+    join2_df = join1_df.join(streets_df.set_index('OID@'), on='NEAR_FID')
     print(join2_df.head(5).to_string())
     path = r'C:\E911\JuabCo\Addpts_working_folder\juab_neartable_join2.csv'
     join2_df.to_csv(path)
