@@ -500,7 +500,7 @@ FCs_to_project = ["AddressPoints", "Boundary_County", "CityCodes", "CommonPlaces
 FCs_to_export = FCs_to_project
 today = time.strftime("%Y%m%d")
 # out_folder = r"C:\Users\eneemann\Desktop\Neemann\Spillman\TestData\MillardCo\Shapefiles\TEST_Shapefiles_Millard"
-main_dir = r"C:\E911\MillardCo\Shapefiles"
+main_dir = r"C:\E911\MillardCo\0 Shapefiles"
 folder = "Spillman_Shapefiles_Millard_" + today
 out_folder = os.path.join(main_dir, folder)
 os.mkdir(out_folder)
@@ -545,18 +545,18 @@ citycd_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
 ################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap #
 ################################################################
-#env.workspace = wgs84_db
-#export_shapefiles_select_fields("AddressPoints", out_folder, addpt_fields)
-#export_shapefiles_select_fields("CommonPlaces", out_folder, commplc_fields)
-#export_shapefiles_select_fields("Mileposts", out_folder, milepost_fields)
-#export_shapefiles_select_fields("Streets", out_folder, street_fields)
-#export_shapefiles_select_fields("EMSAreas", out_folder, earea_fields)
-#export_shapefiles_select_fields("EMSZones", out_folder, ezone_fields)
-#export_shapefiles_select_fields("FireAreas", out_folder, farea_fields)
-#export_shapefiles_select_fields("FireZones", out_folder, fzone_fields)
-#export_shapefiles_select_fields("LawAreas", out_folder, larea_fields)
-#export_shapefiles_select_fields("LawZones", out_folder, lzone_fields)
-#export_shapefiles_select_fields("CityCodes", out_folder, citycd_fields)
+env.workspace = wgs84_db
+export_shapefiles_select_fields("AddressPoints", out_folder, addpt_fields)
+export_shapefiles_select_fields("CommonPlaces", out_folder, commplc_fields)
+export_shapefiles_select_fields("Mileposts", out_folder, milepost_fields)
+export_shapefiles_select_fields("Streets", out_folder, street_fields)
+export_shapefiles_select_fields("EMSAreas", out_folder, earea_fields)
+export_shapefiles_select_fields("EMSZones", out_folder, ezone_fields)
+export_shapefiles_select_fields("FireAreas", out_folder, farea_fields)
+export_shapefiles_select_fields("FireZones", out_folder, fzone_fields)
+export_shapefiles_select_fields("LawAreas", out_folder, larea_fields)
+export_shapefiles_select_fields("LawZones", out_folder, lzone_fields)
+export_shapefiles_select_fields("CityCodes", out_folder, citycd_fields)
 # export_shapefiles_select_fields("_other_", out_folder, other_fields)
 
 
