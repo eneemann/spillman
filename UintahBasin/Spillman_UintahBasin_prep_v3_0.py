@@ -397,6 +397,18 @@ def copy_tbzones(tbzones_table):
     print("Copying tbzones table from UTM to WGS84 geodatabase ...")
     in_rows = tbzones_table
     arcpy.TableToTable_conversion(in_rows, wgs84_db, "tbzones")
+    
+
+# NEED FUNCTION TO CREATE STREETS_ALL
+def create_streets_all(streets):
+    external = os.path.join(utm_db, "UintahBasinStreets_External")
+    streets_all = os.path.join(utm_db, "UintahBasinStreets_All")
+
+    # Get address points into a single FC
+    print("Combining external streets data into {} ...".format(streets_all))
+    arcpy.CopyFeatures_management(streets, streets_all)
+    arcpy.MakeFeatureLayer_management(external, "external_lyr")
+    arcpy.Append_management("external_lyr", streets_all, "NO_TEST")
 
 
 def project_to_wgs84(input_features):
@@ -475,8 +487,8 @@ def export_shapefiles_select_fields_rename(fc, folder, field_list, outname):
 
 WGS84_files_to_delete = ["CountyBoundaries", "UintahBasinCityCodes", "UintahBasin_CommonPlaces", "UintahBasin_CP_MP",
                          "UintahBasinEMS", "UintahBasinFire", "UintahBasinLaw", "UintahBasinMZ", "UintahBasinStreets",
-                         "UintahBasinStreets_CAD", "UintahBasinMunicipalities", "tbzones", "UintahBasinCommunities"]
-UTM_files_to_delete = ["UintahBasinStreets_CAD", "UintahBasinCommonPlaces_All"]
+                         "UintahBasinStreets_CAD", "UintahBasinMunicipalities", "tbzones", "UintahBasinCommunities", "UintahBasinStreets_All"]
+UTM_files_to_delete = ["UintahBasinStreets_CAD", "UintahBasinCommonPlaces_All", "UintahBasinStreets_All"]
 
 # Create variables for address points
 #address_pts = os.path.join(utm_db, "AddressPoints")
@@ -490,7 +502,7 @@ tbzones = os.path.join(utm_db, "tbzones")
 # Create variables for projecting
 FCs_to_project = ["CountyBoundaries", "UintahBasinCityCodes", "UintahBasin_CommonPlaces", "UintahBasin_CP_MP",
                   "UintahBasinEMS", "UintahBasinFire", "UintahBasinLaw", "UintahBasinMZ", "UintahBasinStreets",
-                  "UintahBasinStreets_CAD", "UintahBasinMunicipalities", "UintahBasinCommunities"]
+                  "UintahBasinStreets_CAD", "UintahBasinMunicipalities", "UintahBasinCommunities", "UintahBasinStreets_All"]
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -568,6 +580,7 @@ create_streets_CAD(streets_fc_utm)
 create_commonplaces_all(commonplaces)
 #create_address_pts_CAD(address_pts)
 copy_tbzones(tbzones)
+create_streets_all(streets_fc_utm)
 project_to_wgs84(FCs_to_project)
 spillman_polygon_prep(streets_cad_wgs84)
 
