@@ -531,7 +531,7 @@ WGS84_files_to_delete = ["StGeorge_Dispatch_AddressPoints", "StGeorge_Dispatch_A
                          "StGeorge_Dispatch_CITYCD", "StGeorge_Dispatch_Common_Place_Points",
                          "StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones", "StGeorge_Dispatch_Law_Zones",
                          "StGeorge_Dispatch_Streets_All", "StGeorge_Dispatch_Streets_CAD", "tbzones"]
-UTM_files_to_delete = ["StGeorge_Dispatch_AddressPoints_CAD", "StGeorge_Dispatch_Streets_CAD"]  # needs Streets_all?
+UTM_files_to_delete = ["StGeorge_Dispatch_AddressPoints_CAD", "StGeorge_Dispatch_Streets_CAD", "StGeorge_Dispatch_Streets_All"]
 
 # Create variables for address points
 address_pts = os.path.join(utm_db, "StGeorge_Dispatch_AddressPoints")
