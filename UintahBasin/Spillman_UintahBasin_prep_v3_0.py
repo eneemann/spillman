@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Apr 18 10:12:00 2019
-
 @author: eneemann
 
-EMN: On 18 Apr 2019, created script from Beaver_prep_v3_0
+Script to prep Spillman data for Uintah Basin PSAP
+
+18 Apr 2019: created script from Beaver_prep_v3_0 (EMN)
+4 Jun 2019: work to update variables for Uintah Basin (EMN)
 """
 
 import arcpy
@@ -17,10 +19,10 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-# utm_db = r"C:\E911\UintahBasin\UintahBasin_UTM.gdb"
-# wgs84_db = r"C:\E911\UintahBasin\UintahBasin_WGS84.gdb"
-utm_db = r"C:\E911\UintahBasin_TEST\UintahBasin_UTM.gdb"
-wgs84_db = r"C:\E911\UintahBasin_TEST\UintahBasin_WGS84.gdb"
+utm_db = r"C:\E911\UintahBasin\UintahBasin_UTM.gdb"
+wgs84_db = r"C:\E911\UintahBasin\UintahBasin_WGS84.gdb"
+#utm_db = r"C:\E911\UintahBasin_TEST\UintahBasin_UTM.gdb"
+#wgs84_db = r"C:\E911\UintahBasin_TEST\UintahBasin_WGS84.gdb"
 env.workspace = utm_db
 fc_layer = "UintahBasinStreets"
 streets_fc_utm = os.path.join(utm_db, fc_layer)
@@ -377,7 +379,7 @@ def create_commonplaces_all(commplc):
     mp = os.path.join(utm_db, "UintahBasin_CP_MP")
     commplc_all = os.path.join(utm_db, "UintahBasinCommonPlaces_All")
 
-    # Get address points into a single FC
+    # Get common places into a single FC
     print("Combining CommonPlaces data into {} ...".format(commplc_all))
     arcpy.CopyFeatures_management(commplc, commplc_all)
     arcpy.MakeFeatureLayer_management(mp, "mp_lyr")
@@ -385,35 +387,10 @@ def create_commonplaces_all(commplc):
 
 
 # NEED FUNCTION TO CREATE ADDRESS POINTS CAD
-def create_address_pts_CAD(addpts):
-    where_clause = "FullAdd NOT LIKE '% UNIT%' AND FullAdd NOT LIKE '% TRLR%' AND FullAdd NOT LIKE '% APT%' AND" \
-                   " FullAdd NOT LIKE '% STE%' AND FullAdd NOT LIKE '% SPC%' AND FullAdd NOT LIKE '% BSMT%' AND" \
-                   " FullAdd NOT LIKE '% LOT%' AND FullAdd NOT LIKE '% #%' AND FullAdd NOT LIKE '% BLDG%' AND" \
-                   " FullAdd NOT LIKE '% HNGR%' AND FullAdd NOT LIKE '% OFC%' AND ((AGRC_NOTES NOT LIKE 'Remove%' AND" \
-                   " AGRC_NOTES NOT LIKE 'Needs Fixed -%') OR AGRC_NOTES IS NULL)"
-    # Need to make layer from feature class here
-    arcpy.MakeFeatureLayer_management(addpts, "addpts_lyr", where_clause)
-    # Select where streets are not NULL and have valid address ranges
-    sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
-    # Export selected streets to 'AddressPoints_CAD' feature class
-    addpts_CAD = os.path.join(utm_db, "AddressPoints_CAD")
-    print("Exporting {} ...".format(addpts_CAD))
-    arcpy.CopyFeatures_management(sel, addpts_CAD)
-
-    # Project "AddressPoints_CAD" into WGS84
-    print("Project UTM data into WGS84 ...")
-    addpts_CAD_wgs84 = os.path.join(wgs84_db, "AddressPoints_CAD")
-    sr = arcpy.SpatialReference("WGS 1984")
-    arcpy.Project_management(addpts_CAD, addpts_CAD_wgs84, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
-
-    # Calculate XY values for points without them (WGS84 coords)
-    print("Calculating XY values in WGS84 ...")
-    arcpy.AddXY_management(addpts_CAD_wgs84)
-
-    # Rename fields to just "X" and "Y"
-    print("Renaming X and Y fields ...")
-    arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_X', 'X')
-    arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_Y', 'Y')
+"""
+Address Points not used in Uintah Basin.  If added in the future, this is where
+function needs to be added to create AddressPoints_CAD
+"""
 
 
 def copy_tbzones(tbzones_table):
@@ -497,9 +474,9 @@ def export_shapefiles_select_fields_rename(fc, folder, field_list, outname):
 #######################################
 
 WGS84_files_to_delete = ["CountyBoundaries", "UintahBasinCityCodes", "UintahBasin_CommonPlaces", "UintahBasin_CP_MP",
-                         "UintahBasinEMS", "UintahBasinFire", "UintahBasinLaw", "UintahBasinMZ", "UintahBasinMileposts",
-                         "UintahBasinStreets", "UintahBasinStreets_CAD", "UintahBasinMunicipalities", "tbzones"]
-UTM_files_to_delete = ["UintahBasinStreets_CAD"]
+                         "UintahBasinEMS", "UintahBasinFire", "UintahBasinLaw", "UintahBasinMZ", "UintahBasinStreets",
+                         "UintahBasinStreets_CAD", "UintahBasinMunicipalities", "tbzones", "UintahBasinCommunities"]
+UTM_files_to_delete = ["UintahBasinStreets_CAD", "UintahBasinCommonPlaces_All"]
 
 # Create variables for address points
 #address_pts = os.path.join(utm_db, "AddressPoints")
@@ -512,8 +489,8 @@ tbzones = os.path.join(utm_db, "tbzones")
 
 # Create variables for projecting
 FCs_to_project = ["CountyBoundaries", "UintahBasinCityCodes", "UintahBasin_CommonPlaces", "UintahBasin_CP_MP",
-                  "UintahBasinEMS", "UintahBasinFire", "UintahBasinLaw", "UintahBasinMZ", "UintahBasinMileposts", 
-                  "UintahBasinStreets", "UintahBasinStreets_CAD", "UintahBasinMZ", "UintahBasinMunicipalities"]  #"Communities",
+                  "UintahBasinEMS", "UintahBasinFire", "UintahBasinLaw", "UintahBasinMZ", "UintahBasinStreets",
+                  "UintahBasinStreets_CAD", "UintahBasinMunicipalities", "UintahBasinCommunities"]
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -524,16 +501,18 @@ FCs_to_project = ["CountyBoundaries", "UintahBasinCityCodes", "UintahBasin_Commo
 # Create variables for shapefiles
 FCs_to_export = FCs_to_project
 today = time.strftime("%Y%m%d")
-spill_dir = r"C:\E911\UintahBasin_TEST\0 Shapefiles"
+spill_dir = r"C:\E911\UintahBasin\0 Shapefiles"
 spillman_folder = "Spillman_Shapefiles_UB_" + today
 out_folder_spillman = os.path.join(spill_dir, spillman_folder)
-vesta_dir = r"C:\E911\UintahBasin_TEST\0 Vesta Files"
-vesta_folder = "Vesta_Shapefiles_Beaver_" + today
+vesta_dir = r"C:\E911\UintahBasin\0 Vesta Files"
+vesta_folder = "Vesta_Shapefiles_UB_" + today
 out_folder_vesta = os.path.join(vesta_dir, vesta_folder)
 
 # Comment out this line if the folder already exists (like if code was already run once today)
-os.mkdir(out_folder_spillman)
-os.mkdir(out_folder_vesta)
+if os.path.isdir(out_folder_spillman) == False:
+    os.mkdir(out_folder_spillman)
+if os.path.isdir(out_folder_vesta) == False:
+    os.mkdir(out_folder_vesta)
 
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
@@ -544,9 +523,9 @@ os.mkdir(out_folder_vesta)
 commplc_fields = ["ALIAS", "FULLADDR"]
 milepost_fields = ["ALIAS", "ADDRESS"]
 street_fields = ["L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "ZIPLEFT", "ZIPRIGHT", "STREET", "LCITYCD", "RCITYCD"]
-ezone_fields = ["NAME", "DIS_ZONE"]
+ezone_fields = ["NAME", "DIS_ZONE", "REPRT_AREA"]
 fzone_fields = ["NAME", "ABBR"]
-lzone_fields = ["DIS_NAME", "DIS_ZONE"]
+lzone_fields = ["DIS_NAME", "DIS_ZONE", "REPRT_AREA"]
 citycd_fields = ["NAME", "CITYCD"]
 muni_fields = ["NAME", "MUNIC"]
 county_fields = ["NAME"]
@@ -560,11 +539,14 @@ vesta_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", 
                       "SUFDIR", "ALIAS1", "ALIAS1TYPE", "ALIAS2", "ALIAS2TYPE", "ACSALIAS", "ACSNAME", "ACSSUF",
                       "ZIPLEFT", "ZIPRIGHT", "STREET", "COMMUNITY", "Shape_Length"]
 vesta_muni_fields = ["NAME", "MUNIC"]
+vesta_comm_fields = ["NAME"]
+
 # Vesta Shapefile outnames
 #vesta_addpt_out = "UintahBasinAddressPoints"
 vesta_commplc_out = "UintahBasin_CommonPlaces"
 vesta_street_out = "UintahBasinStreets"
 vesta_muni_out = "UintahBasinMunicipalities"
+vesta_comm_out = "UintahBasinCommunities"
 # Additional Vesta Shapefiles to export
 vesta_to_export = ["Ems_zone", "Fire_zone", "Law_zone", "Communities"]
 
@@ -583,7 +565,7 @@ calc_salias3(streets_fc_utm)
 street_blank_to_null(streets_fc_utm)
 calc_location(streets_fc_utm)
 create_streets_CAD(streets_fc_utm)
-#create_commonplaces_all(commonplaces)
+create_commonplaces_all(commonplaces)
 #create_address_pts_CAD(address_pts)
 copy_tbzones(tbzones)
 project_to_wgs84(FCs_to_project)
@@ -607,10 +589,11 @@ spillman_polygon_prep(streets_cad_wgs84)
 #export_shapefiles_select_fields("CountyBoundaries", out_folder_spillman, county_fields)
 
 # Vesta Shapefiles Export
-#export_shapefiles_select_fields_rename("AddressPoints_CAD", out_folder_vesta, vesta_addpt_fields, vesta_addpt_out)
+##export_shapefiles_select_fields_rename("AddressPoints_CAD", out_folder_vesta, vesta_addpt_fields, vesta_addpt_out)
 #export_shapefiles_select_fields_rename("UintahBasin_CommonPlaces", out_folder_vesta, vesta_commplc_fields, vesta_commplc_out)
 #export_shapefiles_select_fields_rename("UintahBasinStreets", out_folder_vesta, vesta_street_fields, vesta_street_out)
 #export_shapefiles_select_fields_rename("UintahBasinMunicipalities", out_folder_vesta, vesta_muni_fields, vesta_muni_out)
+#export_shapefiles_select_fields_rename("UintahBasinCommunities", out_folder_vesta, vesta_comm_fields, vesta_comm_out)
 #export_shapefiles_all_fields(vesta_to_export, out_folder_vesta)
 #env.workspace = out_folder_vesta
 #arcpy.Rename_management("Communities.shp", "Communities.shp")
@@ -621,13 +604,3 @@ print("Script shutting down ...")
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
-
-
-
-
-
-
-
-
-
-
