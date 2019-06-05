@@ -537,9 +537,9 @@ milepost_fields = ["ALIAS", "ADDRESS"]
 street_fields = ["L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "ZIPLEFT", "ZIPRIGHT", "STREET", "LCITYCD", "RCITYCD"]
 ezone_fields = ["NAME", "DIS_ZONE", "REPRT_AREA"]
 fzone_fields = ["NAME", "ABBR"]
-lzone_fields = ["DIS_NAME", "DIS_ZONE", "REPRT_AREA"]
+lzone_fields = ["DIS_NAME", "DIS_ZONE", "REPT_NAME", "REPT_AREA"]
 citycd_fields = ["NAME", "CITYCD"]
-muni_fields = ["NAME", "MUNIC"]
+muni_fields = ["NAME"]
 county_fields = ["NAME"]
 # other_fields = ["NAME", "CITYCD", "Length", "Area"]
 
@@ -550,7 +550,7 @@ vesta_commplc_fields = ["ALIAS", "CITYCD", "STREET", "BEGNUMB", "ENDNUMB", "FULL
 vesta_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "PREDIR", "STREETNAME", "STREETTYPE",
                       "SUFDIR", "ALIAS1", "ALIAS1TYPE", "ALIAS2", "ALIAS2TYPE", "ACSALIAS", "ACSNAME", "ACSSUF",
                       "ZIPLEFT", "ZIPRIGHT", "STREET", "COMMUNITY", "Shape_Length"]
-vesta_muni_fields = ["NAME", "MUNIC"]
+vesta_muni_fields = ["NAME"]
 vesta_comm_fields = ["NAME"]
 
 # Vesta Shapefile outnames
@@ -566,23 +566,23 @@ vesta_to_export = ["Ems_zone", "Fire_zone", "Law_zone", "Communities"]
 #  Call Functions Below  #
 ##########################
 
-create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-blanks_to_nulls(streets_fc_utm)
-calc_street(streets_fc_utm)
-calc_salias1(streets_fc_utm)
-calc_salias2(streets_fc_utm)
-calc_salias4(streets_fc_utm)
-highway_to_sr_us(streets_fc_utm)
-calc_salias3(streets_fc_utm)
-street_blank_to_null(streets_fc_utm)
-calc_location(streets_fc_utm)
-create_streets_CAD(streets_fc_utm)
-create_commonplaces_all(commonplaces)
-#create_address_pts_CAD(address_pts)
-copy_tbzones(tbzones)
-create_streets_all(streets_fc_utm)
-project_to_wgs84(FCs_to_project)
-spillman_polygon_prep(streets_cad_wgs84)
+#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+#blanks_to_nulls(streets_fc_utm)
+#calc_street(streets_fc_utm)
+#calc_salias1(streets_fc_utm)
+#calc_salias2(streets_fc_utm)
+#calc_salias4(streets_fc_utm)
+#highway_to_sr_us(streets_fc_utm)
+#calc_salias3(streets_fc_utm)
+#street_blank_to_null(streets_fc_utm)
+#calc_location(streets_fc_utm)
+#create_streets_CAD(streets_fc_utm)
+#create_commonplaces_all(commonplaces)
+##create_address_pts_CAD(address_pts)
+#copy_tbzones(tbzones)
+#create_streets_all(streets_fc_utm)
+#project_to_wgs84(FCs_to_project)
+#spillman_polygon_prep(streets_cad_wgs84)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
@@ -591,20 +591,20 @@ spillman_polygon_prep(streets_cad_wgs84)
 
 # Spillman Shapefiles Export
 #export_shapefiles_select_fields("AddressPoints", out_folder_spillman, addpt_fields)
-#export_shapefiles_select_fields("UintahBasin_CommonPlaces", out_folder_spillman, commplc_fields)
-#export_shapefiles_select_fields("UintahBasin_CP_MP", out_folder_spillman, milepost_fields)
-#export_shapefiles_select_fields("UintahBasinStreets", out_folder_spillman, street_fields)
-#export_shapefiles_select_fields("UintahBasinEMS", out_folder_spillman, ezone_fields)
-#export_shapefiles_select_fields("UintahBasinFire", out_folder_spillman, fzone_fields)
-#export_shapefiles_select_fields("UintahBasinLaw", out_folder_spillman, lzone_fields)
-#export_shapefiles_select_fields("UintahBasinCityCodes", out_folder_spillman, citycd_fields)
-#export_shapefiles_select_fields("UintahBasinMunicipalities", out_folder_spillman, muni_fields)
-#export_shapefiles_select_fields("CountyBoundaries", out_folder_spillman, county_fields)
+export_shapefiles_select_fields("UintahBasin_CommonPlaces", out_folder_spillman, commplc_fields)
+export_shapefiles_select_fields_rename("UintahBasin_CP_MP", out_folder_spillman, milepost_fields, "UintahBasinMileMarkers")
+export_shapefiles_select_fields_rename("UintahBasinStreets_All", out_folder_spillman, street_fields, "UintahBasinStreets")
+export_shapefiles_select_fields("UintahBasinEMS", out_folder_spillman, ezone_fields)
+export_shapefiles_select_fields("UintahBasinFire", out_folder_spillman, fzone_fields)
+export_shapefiles_select_fields("UintahBasinLaw", out_folder_spillman, lzone_fields)
+export_shapefiles_select_fields("UintahBasinCityCodes", out_folder_spillman, citycd_fields)
+export_shapefiles_select_fields("UintahBasinMunicipalities", out_folder_spillman, muni_fields)
+export_shapefiles_select_fields("CountyBoundaries", out_folder_spillman, county_fields)
 
 # Vesta Shapefiles Export
 ##export_shapefiles_select_fields_rename("AddressPoints_CAD", out_folder_vesta, vesta_addpt_fields, vesta_addpt_out)
 #export_shapefiles_select_fields_rename("UintahBasin_CommonPlaces", out_folder_vesta, vesta_commplc_fields, vesta_commplc_out)
-#export_shapefiles_select_fields_rename("UintahBasinStreets", out_folder_vesta, vesta_street_fields, vesta_street_out)
+#export_shapefiles_select_fields_rename("UintahBasinStreets_All", out_folder_vesta, vesta_street_fields, vesta_street_out)
 #export_shapefiles_select_fields_rename("UintahBasinMunicipalities", out_folder_vesta, vesta_muni_fields, vesta_muni_out)
 #export_shapefiles_select_fields_rename("UintahBasinCommunities", out_folder_vesta, vesta_comm_fields, vesta_comm_out)
 #export_shapefiles_all_fields(vesta_to_export, out_folder_vesta)
