@@ -8,7 +8,8 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-database = r"C:\E911\UintahBasin_TEST\UintahBasin_UTM.gdb"
+database = r"C:\E911\StGeorgeDispatch_TEST\Bad_Geometries_TEST.gdb"
+#database = r"C:\E911\StGeorgeDispatch_TEST\StGeorgeDispatch_UTM.gdb"
 env.workspace = database
 fclist = arcpy.ListFeatureClasses()
 
