@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Mar 20 08:06:23 2019
-
 @author: eneemann
 
-EMN: On 20 Mar 2019, converted to Python 3.
+20 Mar 2019, converted to Python 3 (EMN).
 """
 
 import arcpy
@@ -435,6 +434,12 @@ def create_streets_all(streets):
     buff_utah = os.path.join(utm_db, "Streets_In_Buffer_Utah")
     streets_temp = os.path.join(utm_db, "StGeorge_Dispatch_Streets_temp")
     streets_all = os.path.join(utm_db, "StGeorge_Dispatch_Streets_All")
+    if arcpy.Exists(streets_temp):
+        print("Deleting {} ...".format(streets_temp))
+        arcpy.Delete_management(streets_temp)
+    if arcpy.Exists(streets_all):
+        print("Deleting {} ...".format(streets_all))
+        arcpy.Delete_management(streets_all)
 
     # Get address points into a single FC
     print("Combining buffer streets data into {} ...".format(streets_temp))
@@ -617,8 +622,8 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 #create_address_pts_CAD(address_pts)
 #copy_tbzones(tbzones)
 #create_streets_all(streets_fc_utm)
-#project_to_wgs84(FCs_to_project)
-#spillman_polygon_prep(streets_cad_wgs84)
+project_to_wgs84(FCs_to_project)
+spillman_polygon_prep(streets_cad_wgs84)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
@@ -636,7 +641,7 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 #export_shapefiles_select_fields("StGeorge_Dispatch_Municipalities", out_folder_spillman, muni_fields)
 
 # Vela Shapefiles Export
-export_shapefiles_select_fields_rename("StGeorge_Dispatch_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+#export_shapefiles_select_fields_rename("StGeorge_Dispatch_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Common_Place_Points", out_folder_vela, vela_commplc_fields, vela_commplc_out)
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
