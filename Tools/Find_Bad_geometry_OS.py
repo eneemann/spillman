@@ -26,20 +26,35 @@ for fc in fclist:
     if layer.schema['geometry'] == ('Point' or 'MultiPoint'):
         # Unsure how to ID null geometries in point data right now
         print("{} geometry type is: {}, skipping this geometry type ...".format(layer.name, layer.schema['geometry']))
+        xmin, ymin, xmax, ymax = layer.bounds[0], layer.bounds[1], layer.bounds[2], layer.bounds[3]
+        for feature in layer:
+            geom = feature['geometry']
+            if geom is None:
+                print("Geometry is invalid (null) for ID: {}".format(feature['id']))
+            elif geom['coordinates'][0] < xmin or geom['coordinates'][0] > xmax:
+                print("Geometry is invalid (outside of bounds) for ID: {}".format(feature['id']))
+            elif geom['coordinates'][1] < ymin or geom['coordinates'][1] > ymax:
+                print("Geometry is invalid (outside of bounds) for ID: {}".format(feature['id']))
+        
     elif layer.schema['geometry'] in ['LineString','MultiLineString']:
         print("{} geometry type is: {}, looping through features ...".format(layer.name, layer.schema['geometry']))
         # Loop through line features, find those with empty coordinate tuples
         for feature in layer:
             geom = feature['geometry']
-            if geom is None or len(geom['coordinates'][0]) == 0:
-                print("Geometry is invalid for ID: {}".format(feature['id']))
+            if geom is None:
+                print("Geometry is invalid (null) for ID: {}".format(feature['id']))
+            elif len(geom['coordinates'][0]) == 0:
+                print("Geometry is invalid (empty) for ID: {}".format(feature['id']))
+                
     elif layer.schema['geometry'] in ['Polygon', 'MultiPolygon']:
         print("{} geometry type is: {}, looping through features ...".format(layer.name, layer.schema['geometry']))
         # Loop through polygon features, find those with empty coordinate tuples
         for feature in layer:
             geom = feature['geometry']
-            if geom is None or len(geom['coordinates'][0]) == 0:
-                print("Geometry is invalid for ID: {}".format(feature['id']))
+            if geom is None:
+                print("Geometry is invalid (null) for ID: {}".format(feature['id']))
+            elif len(geom['coordinates'][0]) == 0:
+                print("Geometry is invalid (empty) for ID: {}".format(feature['id']))
 
 
 ###############
