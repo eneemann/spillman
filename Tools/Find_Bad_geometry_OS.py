@@ -24,13 +24,14 @@ fclist = fiona.listlayers(database)
 for fc in fclist:
     layer = fiona.open(database, layer=fc)
     if layer.schema['geometry'] == ('Point' or 'MultiPoint'):
-        # Unsure how to ID null geometries in point data right now
-        print("{} geometry type is: {}, skipping this geometry type ...".format(layer.name, layer.schema['geometry']))
+        print("{} geometry type is: Point, looping through features ...".format(layer.name, layer.schema['geometry']))
+        # Assign x and y min/max values from layer bounds and use to verify each point
         xmin, ymin, xmax, ymax = layer.bounds[0], layer.bounds[1], layer.bounds[2], layer.bounds[3]
         for feature in layer:
             geom = feature['geometry']
             if geom is None:
                 print("Geometry is invalid (null) for ID: {}".format(feature['id']))
+            # Check for points with coordinates outside of layer bounds, these are invalid
             elif geom['coordinates'][0] < xmin or geom['coordinates'][0] > xmax:
                 print("Geometry is invalid (outside of bounds) for ID: {}".format(feature['id']))
             elif geom['coordinates'][1] < ymin or geom['coordinates'][1] > ymax:
