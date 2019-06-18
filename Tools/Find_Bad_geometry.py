@@ -48,20 +48,16 @@ def list_bad_geom(fc):
 #  Call Functions Below  #
 ##########################
 
+for fc in fclist:
+    list_bad_geom(fc)
+
+#for fc in fclist:
+#    id_bad_geom(fc)
+
 #for fc in fclist:
 #    desc = arcpy.Describe(fc)
 #    print("{} is of shape type: {}".format(fc, desc.shapeType))
-
-for fc in fclist:
-    id_bad_geom(fc)
-
-#for fc in fclist:
-#    list_bad_geom(fc)
     
-                
-#list_bad_geom('TOC_Streets_updates_20190612')
-#list_bad_geom('zzz_Streets_10m_buffer_v2')
-#list_bad_geom('TOC_Streets_10m_buffer')
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
