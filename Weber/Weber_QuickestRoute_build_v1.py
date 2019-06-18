@@ -66,7 +66,7 @@ fields_oneway = ['ONEWAY', 'One_Way']
 with arcpy.da.UpdateCursor(network_streets, fields) as cursor:
     print("Looping through rows to calculate One_Way field ...")
     for row in cursor:
-        if row[0] == '0':
+        if row[0] == '0' or row[0] == None:
             row[1] = 'B'
             update_count_oneway += 1
         elif row[0] == '1':
