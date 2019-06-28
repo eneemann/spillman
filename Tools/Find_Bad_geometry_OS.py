@@ -17,7 +17,8 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 # Get list of feature classes in a geodatabase
-database = r"C:\E911\StGeorgeDispatch_TEST\Bad_Geometries_TEST.gdb"
+database = r"C:\E911\TOC\TOC_Data_UTM.gdb"
+#database = r"C:\E911\StGeorgeDispatch_TEST\Bad_Geometries_TEST.gdb"
 fclist = fiona.listlayers(database)
 
 # Loop through feature classes, process differntly if point, line, or polygon
