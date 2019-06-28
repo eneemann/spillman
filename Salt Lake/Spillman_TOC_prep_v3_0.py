@@ -18,8 +18,8 @@ print("The script start time is {}".format(readable_start))
 
 utm_db = r"C:\E911\TOC\TOC_Data_UTM.gdb"
 wgs84_db = r"C:\E911\TOC\TOC_Spillman_WGS_84.gdb"
-# utm_db = r"C:\E911\TOC_TEST\TOC_Data_UTM.gdb"
-# wgs84_db = r"C:\E911\TOC_TEST\TOC_Spillman_WGS_84.gdb"
+# utm_db = r"C:\E911\TOC_original\TOC_Data_UTM.gdb"
+# wgs84_db = r"C:\E911\TOC_original\TOC_Spillman_WGS_84.gdb"
 env.workspace = utm_db
 fc_layer = "TOC_Streets"
 streets_fc_utm = os.path.join(utm_db, fc_layer)
@@ -109,7 +109,8 @@ def calc_street(streets):
             row[4] = " ".join(parts)
             row[4] = row[4].lstrip().rstrip()
             row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
-            print("New value for {0} is: {1}".format(fields[4], row[4]))
+            row[4] = row[4][:30]
+#            print("New value for {0} is: {1}".format(fields[4], row[4]))
             update_count += 1
             cursor.updateRow(row)
     print("Total count of updates to {0}: {1}".format(fields[4], update_count))
@@ -368,9 +369,10 @@ def create_streets_CAD(streets):
     # Select where streets are not NULL and have valid address ranges
     sel = arcpy.SelectLayerByAttribute_management("streets_lyr", "NEW_SELECTION", where_clause)
     # Export selected streets to 'Streets_CAD' feature class
-    outname = os.path.join(utm_db, "StGeorge_Dispatch_Streets_CAD")
+    outname = os.path.join(utm_db, "TOC_Streets_CAD")
     print("Exporting {} ...".format(outname))
     arcpy.CopyFeatures_management(sel, outname)
+    arcpy.Delete_management("streets_lyr")
 
 
 # NEED FUNCTION TO CREATE ADDRESS POINTS CAD
@@ -384,13 +386,13 @@ def create_address_pts_CAD(addpts):
     # Select where streets are not NULL and have valid address ranges
     sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
     # Export selected streets to 'AddressPoints_CAD' feature class
-    addpts_CAD = os.path.join(utm_db, "StGeorge_Dispatch_AddressPoints_CAD")
+    addpts_CAD = os.path.join(utm_db, "TOC_AddressPoints_CAD")
     print("Exporting {} ...".format(addpts_CAD))
     arcpy.CopyFeatures_management(sel, addpts_CAD)
 
     # Project "AddressPoints_CAD" into WGS84
     print("Project UTM data into WGS84 ...")
-    addpts_CAD_wgs84 = os.path.join(wgs84_db, "StGeorge_Dispatch_AddressPoints_CAD")
+    addpts_CAD_wgs84 = os.path.join(wgs84_db, "TOC_AddressPoints_CAD")
     sr = arcpy.SpatialReference("WGS 1984")
     arcpy.Project_management(addpts_CAD, addpts_CAD_wgs84, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
 
@@ -427,34 +429,34 @@ def copy_tbzones(tbzones_table):
     arcpy.TableToTable_conversion(in_rows, wgs84_db, "tbzones")
 
 
-# NEED FUNCTION TO CREATE STREETS_ALL
-def create_streets_all(streets):
-    lincoln = os.path.join(utm_db, "LincolnCo_Streets")
-    mohave = os.path.join(utm_db, "MohaveCo_Streets")
-    buff_utah = os.path.join(utm_db, "Streets_In_Buffer_Utah")
-    streets_temp = os.path.join(utm_db, "StGeorge_Dispatch_Streets_temp")
-    streets_all = os.path.join(utm_db, "StGeorge_Dispatch_Streets_All")
-    if arcpy.Exists(streets_temp):
-        print("Deleting {} ...".format(streets_temp))
-        arcpy.Delete_management(streets_temp)
-    if arcpy.Exists(streets_all):
-        print("Deleting {} ...".format(streets_all))
-        arcpy.Delete_management(streets_all)
-
-    # Get address points into a single FC
-    print("Combining buffer streets data into {} ...".format(streets_temp))
-    arcpy.CopyFeatures_management(streets, streets_temp)
-    arcpy.MakeFeatureLayer_management(lincoln, "lincoln_lyr")
-    arcpy.MakeFeatureLayer_management(mohave, "mohave_lyr")
-    arcpy.MakeFeatureLayer_management(buff_utah, "buff_utah_lyr")
-    arcpy.Append_management("lincoln_lyr", streets_temp, "NO_TEST")
-    arcpy.Append_management("mohave_lyr", streets_temp, "NO_TEST")
-    arcpy.Append_management("buff_utah_lyr", streets_temp, "NO_TEST")
-
-    # Clip down to St George buffer area
-    print("Clipping streets down to Washington County buffer ...")
-    clip_feature = os.path.join(wgs84_db, "WashingtonCo_Buffer")
-    arcpy.Clip_analysis(streets_temp, clip_feature, streets_all)
+## NEED FUNCTION TO CREATE STREETS_ALL
+#def create_streets_all(streets):
+#    lincoln = os.path.join(utm_db, "LincolnCo_Streets")
+#    mohave = os.path.join(utm_db, "MohaveCo_Streets")
+#    buff_utah = os.path.join(utm_db, "Streets_In_Buffer_Utah")
+#    streets_temp = os.path.join(utm_db, "TOC_Streets_temp")
+#    streets_all = os.path.join(utm_db, "TOC_Streets_All")
+#    if arcpy.Exists(streets_temp):
+#        print("Deleting {} ...".format(streets_temp))
+#        arcpy.Delete_management(streets_temp)
+#    if arcpy.Exists(streets_all):
+#        print("Deleting {} ...".format(streets_all))
+#        arcpy.Delete_management(streets_all)
+#
+#    # Get streets into a single FC
+#    print("Combining buffer streets data into {} ...".format(streets_temp))
+#    arcpy.CopyFeatures_management(streets, streets_temp)
+#    arcpy.MakeFeatureLayer_management(lincoln, "lincoln_lyr")
+#    arcpy.MakeFeatureLayer_management(mohave, "mohave_lyr")
+#    arcpy.MakeFeatureLayer_management(buff_utah, "buff_utah_lyr")
+#    arcpy.Append_management("lincoln_lyr", streets_temp, "NO_TEST")
+#    arcpy.Append_management("mohave_lyr", streets_temp, "NO_TEST")
+#    arcpy.Append_management("buff_utah_lyr", streets_temp, "NO_TEST")
+#
+#    # Clip down to buffer area
+#    print("Clipping streets down to Washington County buffer ...")
+#    clip_feature = os.path.join(wgs84_db, "WashingtonCo_Buffer")
+#    arcpy.Clip_analysis(streets_temp, clip_feature, streets_all)
 
 
 def project_to_wgs84(input_features):
@@ -532,10 +534,11 @@ def export_shapefiles_select_fields_rename(fc, folder, field_list, outname):
 #  Prep variables for function calls  #
 #######################################
 
-WGS84_files_to_delete = ["TOC_CITYCD", "TOC_CommonPlaces", "TOC_MZ", "TOC_EZ_Zones", "TOC_EZ_Areas",
-                         "TOC_Fire_Zones", "TOC_Fire_Areas", "TOC_Law_Zones", "TOC_Law_Areas",
-                         "TOC_Streets_All", "TOC_Streets_CAD", "tbzones"]
-UTM_files_to_delete = ["TOC_Streets_CAD", "TOC_Streets_All"]
+WGS84_files_to_delete = ["TOC_Streets", "TOC_CITYCD", "TOC_CommonPlaces_FC", "TOC_CP_EXITS_FC", "TOC_CP_MP_FC",
+                         "TOC_MZ", "TOC_EZ_Zones", "TOC_EZ_Areas", "TOC_Fire_Zones", "TOC_Fire_Areas",
+                         "TOC_Law_Zones", "TOC_Law_Areas", "TOC_Streets_CAD", "TOC_Municipalities",
+                         "RampSigns", "tbzones"]
+UTM_files_to_delete = ["TOC_Streets_CAD"]
 
 # Create variables for address points
 address_pts = os.path.join(utm_db, "TOC_AddressPoints")
@@ -544,9 +547,9 @@ address_pts = os.path.join(utm_db, "TOC_AddressPoints")
 tbzones = os.path.join(utm_db, "tbzones")
 
 # Create variables for projecting
-FCs_to_project = ["TOC_CITYCD", "TOC_CommonPlaces", "TOC_MZ", "TOC_EZ_Zones", "TOC_EZ_Areas",
-                         "TOC_Fire_Zones", "TOC_Fire_Areas", "TOC_Law_Zones", "TOC_Law_Areas",
-                         "TOC_Streets_All", "TOC_Streets_CAD"]
+FCs_to_project = ["TOC_Streets", "TOC_CITYCD", "TOC_CommonPlaces_FC", "TOC_CP_EXITS_FC", "TOC_CP_MP_FC",
+                         "TOC_MZ", "TOC_EZ_Zones", "TOC_EZ_Areas", "TOC_Fire_Zones", "TOC_Fire_Areas",
+                         "TOC_Law_Zones", "TOC_Law_Areas", "TOC_Streets_CAD", "TOC_Municipalities", "RampSigns"]
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -562,7 +565,8 @@ spillman_folder = "Spillman_Shapefiles_TOC_" + today
 out_folder_spillman = os.path.join(spill_dir, spillman_folder)
 
 # Comment out this line if the folder already exists (like if code was already run once today)
-os.mkdir(out_folder_spillman)
+if os.path.isdir(out_folder_spillman) == False:
+    os.mkdir(out_folder_spillman)
 
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
@@ -570,15 +574,20 @@ os.mkdir(out_folder_spillman)
 # -----> See last set of function calls
 
 # Spillman Shapefile field lists
-addpt_fields = ["FULLADDR", "LABEL"]
-commplc_fields = ["ALIAS", "FULL_ADDRE"]
+#addpt_fields = ["FULLADDR", "LABEL"]
+commplc_fields = ["ALIAS", "ADDRESS"]
 street_fields = ["L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "ZIPLEFT", "ZIPRIGHT", "STREET", "LCITYCD", "RCITYCD"]
-ezone_fields = ["ZONE_DESC", "ZONEID", "Shape_Length", "Shape_Area"]
+ezone_fields = ["NAME", "ZONEID", "Shape_Length", "Shape_Area"]
+earea_fields = ["NAME", "AREAID", "Shape_Length", "Shape_Area"]
 fzone_fields = ["NAME", "ZONEID", "Shape_Length", "Shape_Area"]
+farea_fields = ["NAME", "AREAID", "Shape_Length", "Shape_Area"]
 lzone_fields = ["NAME", "ZONEID", "Shape_Length", "Shape_Area"]
+larea_fields = ["NAME", "AREAID", "Shape_Length", "Shape_Area"]
+mz_fields = ["NAME", "ZONEID", "Shape_Length", "Shape_Area"]
 citycd_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
-muni_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
-
+muni_fields = ["SHORTDESC", "POPLASTCENSUS", "Shape_Length", "Shape_Area"]
+ramp_fields = ["Alias", "CITYCD", "ADDRESS"]
+milepost_fields = ["Alias", "CITYCD", "ADDRESS"]
 
 ##########################
 #  Call Functions Below  #
@@ -595,11 +604,14 @@ muni_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
 #street_blank_to_null(streets_fc_utm)
 #calc_location(streets_fc_utm)
 #create_streets_CAD(streets_fc_utm)
-#create_address_pts_CAD(address_pts)
 #copy_tbzones(tbzones)
-#create_streets_all(streets_fc_utm)
 #project_to_wgs84(FCs_to_project)
 #spillman_polygon_prep(streets_cad_wgs84)
+
+
+# NOT USED IN TOC PSAP
+#create_address_pts_CAD(address_pts)
+#create_streets_all(streets_fc_utm)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
@@ -607,16 +619,23 @@ muni_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
 #################################################################
 
 # Spillman Shapefiles Export
-export_shapefiles_select_fields("TOC_CommonPlaces", out_folder_spillman, commplc_fields)
-export_shapefiles_select_fields("TOC_Streets_All", out_folder_spillman, street_fields)
-export_shapefiles_select_fields("TOC_EZ_Zones", out_folder_spillman, ezone_fields)
-export_shapefiles_select_fields("TOC_EZ_Areas", out_folder_spillman, ezone_fields)
-export_shapefiles_select_fields("TOC_Fire_Zones", out_folder_spillman, fzone_fields)
-export_shapefiles_select_fields("TOC_Fire_Areas", out_folder_spillman, fzone_fields)
-export_shapefiles_select_fields("TOC_Law_Zones", out_folder_spillman, lzone_fields)
-export_shapefiles_select_fields("TOC_Law_Areas", out_folder_spillman, lzone_fields)
+export_shapefiles_select_fields("TOC_Streets", out_folder_spillman, street_fields)
 export_shapefiles_select_fields("TOC_CITYCD", out_folder_spillman, citycd_fields)
+export_shapefiles_select_fields("TOC_Law_Zones", out_folder_spillman, lzone_fields)
+export_shapefiles_select_fields("TOC_Fire_Zones", out_folder_spillman, fzone_fields)
+export_shapefiles_select_fields("TOC_MZ", out_folder_spillman, mz_fields)
+export_shapefiles_select_fields_rename("TOC_CP_MP_FC", out_folder_spillman, milepost_fields, "TOC_Milemarkers")
+export_shapefiles_select_fields("RampSigns", out_folder_spillman, ramp_fields)
+
+
+# Shapefiles that aren't needed for TOC PSAP, but are available:
+#export_shapefiles_select_fields("TOC_CommonPlaces_FC", out_folder_spillman, commplc_fields)
+#export_shapefiles_select_fields("TOC_EZ_Zones", out_folder_spillman, ezone_fields)
+#export_shapefiles_select_fields("TOC_EZ_Areas", out_folder_spillman, earea_fields)
+#export_shapefiles_select_fields("TOC_Fire_Areas", out_folder_spillman, fzone_fields)
+#export_shapefiles_select_fields("TOC_Law_Areas", out_folder_spillman, lzone_fields)
 #export_shapefiles_select_fields("TOC_Municipalities", out_folder_spillman, muni_fields)
+
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
