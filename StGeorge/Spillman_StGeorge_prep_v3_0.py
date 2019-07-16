@@ -567,8 +567,10 @@ vela_folder = "Vela_Shapefiles_StGeorge_" + today
 out_folder_vela = os.path.join(vela_dir, vela_folder)
 
 # Comment out this line if the folder already exists (like if code was already run once today)
-os.mkdir(out_folder_spillman)
-os.mkdir(out_folder_vela)
+if os.path.isdir(out_folder_spillman) == False:
+    os.mkdir(out_folder_spillman)
+if os.path.isdir(out_folder_vela) == False:
+    os.mkdir(out_folder_vela)
 
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
