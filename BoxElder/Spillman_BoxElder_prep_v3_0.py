@@ -16,14 +16,14 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-utm_db = r"C:\E911\TOC\TOC_Data_UTM.gdb"
-wgs84_db = r"C:\E911\TOC\TOC_Spillman_WGS_84.gdb"
-# utm_db = r"C:\E911\TOC_original\TOC_Data_UTM.gdb"
-# wgs84_db = r"C:\E911\TOC_original\TOC_Spillman_WGS_84.gdb"
+utm_db = r"C:\E911\Box Elder CO\BoxElder_Spillman_UTM.gdb"
+wgs84_db = r"C:\E911\Box Elder CO\BoxElder_Spillman_WGS84.gdb"
+# utm_db = r"C:\E911\Box Elder CO_original\BoxElder_Spillman_UTM.gdb"
+# wgs84_db = r"C:\E911\Box Elder CO_original\BoxElder_Spillman_WGS84.gdb"
 env.workspace = utm_db
-fc_layer = "TOC_Streets"
+fc_layer = "BoxElder_Streets"
 streets_fc_utm = os.path.join(utm_db, fc_layer)
-streets_cad_wgs84 = os.path.join(wgs84_db, "TOC_Streets_CAD")
+streets_cad_wgs84 = os.path.join(wgs84_db, "BoxElder_Streets_CAD")
 
 ###############
 #  Functions  #
@@ -369,7 +369,7 @@ def create_streets_CAD(streets):
     # Select where streets are not NULL and have valid address ranges
     sel = arcpy.SelectLayerByAttribute_management("streets_lyr", "NEW_SELECTION", where_clause)
     # Export selected streets to 'Streets_CAD' feature class
-    outname = os.path.join(utm_db, "TOC_Streets_CAD")
+    outname = os.path.join(utm_db, "BoxElder_Streets_CAD")
     print("Exporting {} ...".format(outname))
     arcpy.CopyFeatures_management(sel, outname)
     arcpy.Delete_management("streets_lyr")
@@ -386,13 +386,13 @@ def create_address_pts_CAD(addpts):
     # Select where streets are not NULL and have valid address ranges
     sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
     # Export selected streets to 'AddressPoints_CAD' feature class
-    addpts_CAD = os.path.join(utm_db, "TOC_AddressPoints_CAD")
+    addpts_CAD = os.path.join(utm_db, "BoxElder_AddressPoints_CAD")
     print("Exporting {} ...".format(addpts_CAD))
     arcpy.CopyFeatures_management(sel, addpts_CAD)
 
     # Project "AddressPoints_CAD" into WGS84
     print("Project UTM data into WGS84 ...")
-    addpts_CAD_wgs84 = os.path.join(wgs84_db, "TOC_AddressPoints_CAD")
+    addpts_CAD_wgs84 = os.path.join(wgs84_db, "BoxElder_AddressPoints_CAD")
     sr = arcpy.SpatialReference("WGS 1984")
     arcpy.Project_management(addpts_CAD, addpts_CAD_wgs84, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
 
@@ -404,23 +404,6 @@ def create_address_pts_CAD(addpts):
     print("Renaming X and Y fields ...")
     arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_X', 'X')
     arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_Y', 'Y')
-
-    # # Copy XY values from "POINT_X" and "POINT_Y" into "X" and "Y"
-    # print("Copying POINT_X/POINT_Y into X/Y fields ..."
-    # update_count = 0
-    # fields = ['X', 'POINT_X', 'Y', 'POINT_Y']
-    # with arcpy.da.UpdateCursor(addpts_CAD_wgs84, fields) as cursor:
-    #     print("Looping through rows in FC ..."
-    #     for row in cursor:
-    #         row[0] = row[1]
-    #         # print("New value for {0} is: {1}".format(fields[0], row[0])
-    #         row[2] = row[3]
-    #         update_count += 1
-    #         cursor.updateRow(row)
-    # print("Total count of row updates in {0} is: {1}".format(addpts_CAD_wgs84.split("\\")[-1], update_count)
-    # # Delete "POINT_X" and "POINT_Y" fields
-    # print("Deleting POINT_X and POINT_Y fields ..."
-    # arcpy.DeleteField_management(addpts_CAD_wgs84, ["POINT_X", "POINT_Y"])
 
 
 def copy_tbzones(tbzones_table):
@@ -434,8 +417,8 @@ def copy_tbzones(tbzones_table):
 #    lincoln = os.path.join(utm_db, "LincolnCo_Streets")
 #    mohave = os.path.join(utm_db, "MohaveCo_Streets")
 #    buff_utah = os.path.join(utm_db, "Streets_In_Buffer_Utah")
-#    streets_temp = os.path.join(utm_db, "TOC_Streets_temp")
-#    streets_all = os.path.join(utm_db, "TOC_Streets_All")
+#    streets_temp = os.path.join(utm_db, "BoxElder_Streets_temp")
+#    streets_all = os.path.join(utm_db, "BoxElder_Streets_All")
 #    if arcpy.Exists(streets_temp):
 #        print("Deleting {} ...".format(streets_temp))
 #        arcpy.Delete_management(streets_temp)
@@ -534,22 +517,21 @@ def export_shapefiles_select_fields_rename(fc, folder, field_list, outname):
 #  Prep variables for function calls  #
 #######################################
 
-WGS84_files_to_delete = ["TOC_Streets", "TOC_CITYCD", "TOC_CommonPlaces_FC", "TOC_CP_EXITS_FC", "TOC_CP_MP_FC",
-                         "TOC_MZ", "TOC_EZ_Zones", "TOC_EZ_Areas", "TOC_Fire_Zones", "TOC_Fire_Areas",
-                         "TOC_Law_Zones", "TOC_Law_Areas", "TOC_Streets_CAD", "TOC_Municipalities",
-                         "RampSigns", "tbzones"]
-UTM_files_to_delete = ["TOC_Streets_CAD"]
+WGS84_files_to_delete = ["BoxElder_Streets", "BoxElder_CityCodes", "BoxElder_CommonPlaces", "BoxElder_CP_EXITS_FC", "BoxElder_CP_MP_FC",
+                         "BoxElder_MISC_Zones", "BoxElder_EMS_Zones", "BoxElder_EMS_Areas", "BoxElder_Fire_Zones", "BoxElder_Fire_Areas",
+                         "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_Municipalities", "tbzones"]
+UTM_files_to_delete = ["BoxElder_Streets_CAD"]
 
 # Create variables for address points
-address_pts = os.path.join(utm_db, "TOC_AddressPoints")
+address_pts = os.path.join(utm_db, "BoxElder_AddressPoints")
 
 # Create variable for tbzones
 tbzones = os.path.join(utm_db, "tbzones")
 
 # Create variables for projecting
-FCs_to_project = ["TOC_Streets", "TOC_CITYCD", "TOC_CommonPlaces_FC", "TOC_CP_EXITS_FC", "TOC_CP_MP_FC",
-                         "TOC_MZ", "TOC_EZ_Zones", "TOC_EZ_Areas", "TOC_Fire_Zones", "TOC_Fire_Areas",
-                         "TOC_Law_Zones", "TOC_Law_Areas", "TOC_Streets_CAD", "TOC_Municipalities", "RampSigns"]
+FCs_to_project = ["BoxElder_Streets", "BoxElder_CityCodes", "BoxElder_CommonPlaces", "BoxElder_CP_EXITS_FC", "BoxElder_CP_MP_FC",
+                         "BoxElder_MISC_Zones", "BoxElder_EMS_Zones", "BoxElder_EMS_Areas", "BoxElder_Fire_Zones", "BoxElder_Fire_Areas",
+                         "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_Municipalities"]
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -560,13 +542,18 @@ FCs_to_project = ["TOC_Streets", "TOC_CITYCD", "TOC_CommonPlaces_FC", "TOC_CP_EX
 # Create variables for shapefiles
 FCs_to_export = FCs_to_project
 today = time.strftime("%Y%m%d")
-spill_dir = r"C:\E911\TOC\0 Shapefiles"
-spillman_folder = "Spillman_Shapefiles_TOC_" + today
+spill_dir = r"C:\E911\Box Elder CO\0 Shapefiles"
+spillman_folder = "Spillman_Shapefiles_BoxElder_" + today
 out_folder_spillman = os.path.join(spill_dir, spillman_folder)
+vela_dir = r"C:\E911\Box Elder CO\0 Vela Files"
+vela_folder = "Vela_Shapefiles_BoxElder_" + today
+out_folder_vela = os.path.join(vela_dir, vela_folder)
 
 # Comment out this line if the folder already exists (like if code was already run once today)
 if os.path.isdir(out_folder_spillman) == False:
     os.mkdir(out_folder_spillman)
+if os.path.isdir(out_folder_vela) == False:
+    os.mkdir(out_folder_vela)
 
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
@@ -574,43 +561,59 @@ if os.path.isdir(out_folder_spillman) == False:
 # -----> See last set of function calls
 
 # Spillman Shapefile field lists
-#addpt_fields = ["FULLADDR", "LABEL"]
+addpt_fields = ["FULLADDR", "LABEL"]
 commplc_fields = ["ALIAS", "ADDRESS"]
 street_fields = ["L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "ZIPLEFT", "ZIPRIGHT", "STREET", "LCITYCD", "RCITYCD"]
-ezone_fields = ["NAME", "ZONEID", "Shape_Length", "Shape_Area"]
-earea_fields = ["NAME", "AREAID", "Shape_Length", "Shape_Area"]
-fzone_fields = ["NAME", "ZONEID", "Shape_Length", "Shape_Area"]
-farea_fields = ["NAME", "AREAID", "Shape_Length", "Shape_Area"]
-lzone_fields = ["NAME", "ZONEID", "Shape_Length", "Shape_Area"]
-larea_fields = ["NAME", "AREAID", "Shape_Length", "Shape_Area"]
-mz_fields = ["NAME", "ZONEID", "Shape_Length", "Shape_Area"]
+ezone_fields = ["ZONE_NAME", "ZONE_ID", "Shape_Length", "Shape_Area"]
+earea_fields = ["ZONE_NAME", "ZONE_ID", "Shape_Length", "Shape_Area"]
+fzone_fields = ["ZONE_NAME", "ZONE_ID", "Shape_Length", "Shape_Area"]
+farea_fields = ["ZONE_NAME", "ZONE_ID", "Shape_Length", "Shape_Area"]
+lzone_fields = ["ZONE_NAME", "ZONE_ID", "Shape_Length", "Shape_Area"]
+larea_fields = ["ZONE_NAME", "ZONE_ID", "Shape_Length", "Shape_Area"]
+mz_fields = ["NAME", "MZ", "Shape_Length", "Shape_Area"]
 citycd_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
 muni_fields = ["SHORTDESC", "POPLASTCENSUS", "Shape_Length", "Shape_Area"]
-ramp_fields = ["Alias", "CITYCD", "ADDRESS"]
-milepost_fields = ["Alias", "CITYCD", "ADDRESS"]
+milepost_fields = ["ALIAS", "CITYCD", "ADDRESS"]
+
+# Vela Shapefile field lists
+vela_addpt_fields = ["FULLADDR", "ADDRNUM", "PREDIR", "STREETNAME", "STREETTYPE", "SUFDIR", "UNIT_TYPE", "UNIT_ID", "STREET", "X", "Y"]
+vela_commplc_fields = ["ALIAS", "CITYCD", "STREET", "BEGNUMB", "ENDNUMB", "ADDRESS"]
+vela_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "PREDIR", "STREETNAME", "STREETTYPE",
+                      "SUFDIR", "ALIAS1", "ALIAS1TYPE", "ALIAS2", "ALIAS2TYPE", "ACSALIAS", "ACSNAME", "ACSSUF",
+                      "ZIPLEFT", "ZIPRIGHT", "STREET", "COMM_LEFT", "COMM_RIGHT", "Shape_Length"]
+vela_muni_fields = ["NAME", "POPLASTCENSUS"]
+
+# Vela Shapefile outnames
+vela_addpt_out = "BoxElder_AddressPoints"
+vela_commplc_out = "BoxElder_CommonPlaces"
+vela_street_out = "BoxElder_Streets"
+vela_muni_out = "BoxElder_Municipalities"
+
+# Additional Vela Shapefiles to export
+vela_to_export = ["BoxElder_EMS_Zones", "BoxElder_Fire_Zones", "BoxElder_Law_Zones",
+                  "BoxElder_COMMUNITY"]
 
 ##########################
 #  Call Functions Below  #
 ##########################
 
-#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-#blanks_to_nulls(streets_fc_utm)
-#calc_street(streets_fc_utm)
-#calc_salias1(streets_fc_utm)
-#calc_salias2(streets_fc_utm)
-#calc_salias4(streets_fc_utm)
-#highway_to_sr_us(streets_fc_utm)
-#calc_salias3(streets_fc_utm)
-#street_blank_to_null(streets_fc_utm)
-#calc_location(streets_fc_utm)
-#create_streets_CAD(streets_fc_utm)
-#copy_tbzones(tbzones)
-#project_to_wgs84(FCs_to_project)
-#spillman_polygon_prep(streets_cad_wgs84)
+create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+blanks_to_nulls(streets_fc_utm)
+calc_street(streets_fc_utm)
+calc_salias1(streets_fc_utm)
+calc_salias2(streets_fc_utm)
+calc_salias4(streets_fc_utm)
+highway_to_sr_us(streets_fc_utm)
+calc_salias3(streets_fc_utm)
+street_blank_to_null(streets_fc_utm)
+calc_location(streets_fc_utm)
+create_streets_CAD(streets_fc_utm)
+create_address_pts_CAD(address_pts)
+copy_tbzones(tbzones)
+project_to_wgs84(FCs_to_project)
+spillman_polygon_prep(streets_cad_wgs84)
 
-
-# NOT USED IN TOC PSAP
-#create_address_pts_CAD(address_pts)
+## NOT USED IN BOX ELDER PSAP
 #create_streets_all(streets_fc_utm)
 
 #################################################################
@@ -619,23 +622,32 @@ milepost_fields = ["Alias", "CITYCD", "ADDRESS"]
 #################################################################
 
 # Spillman Shapefiles Export
-export_shapefiles_select_fields("TOC_Streets", out_folder_spillman, street_fields)
-export_shapefiles_select_fields("TOC_CITYCD", out_folder_spillman, citycd_fields)
-export_shapefiles_select_fields("TOC_Law_Zones", out_folder_spillman, lzone_fields)
-export_shapefiles_select_fields("TOC_Fire_Zones", out_folder_spillman, fzone_fields)
-export_shapefiles_select_fields("TOC_MZ", out_folder_spillman, mz_fields)
-export_shapefiles_select_fields_rename("TOC_CP_MP_FC", out_folder_spillman, milepost_fields, "TOC_Milemarkers")
-export_shapefiles_select_fields("RampSigns", out_folder_spillman, ramp_fields)
+export_shapefiles_select_fields("BoxElder_Streets", out_folder_spillman, street_fields)
+export_shapefiles_select_fields("BoxElder_CityCodes", out_folder_spillman, citycd_fields)
+export_shapefiles_select_fields("BoxElder_Law_Zones", out_folder_spillman, lzone_fields)
+export_shapefiles_select_fields("BoxElder_Fire_Zones", out_folder_spillman, fzone_fields)
+export_shapefiles_select_fields("BoxElder_MISC_Zones", out_folder_spillman, mz_fields)
+export_shapefiles_select_fields_rename("BoxElder_CP_MP_FC", out_folder_spillman, milepost_fields, "BoxElder_Mileposts")
 
 
-# Shapefiles that aren't needed for TOC PSAP, but are available:
-#export_shapefiles_select_fields("TOC_CommonPlaces_FC", out_folder_spillman, commplc_fields)
-#export_shapefiles_select_fields("TOC_EZ_Zones", out_folder_spillman, ezone_fields)
-#export_shapefiles_select_fields("TOC_EZ_Areas", out_folder_spillman, earea_fields)
-#export_shapefiles_select_fields("TOC_Fire_Areas", out_folder_spillman, fzone_fields)
-#export_shapefiles_select_fields("TOC_Law_Areas", out_folder_spillman, lzone_fields)
-#export_shapefiles_select_fields("TOC_Municipalities", out_folder_spillman, muni_fields)
+# Shapefiles that aren't needed for PSAP, but are available:
+#export_shapefiles_select_fields("BoxElder_CommonPlaces", out_folder_spillman, commplc_fields)
+#export_shapefiles_select_fields("BoxElder_EMS_Zones", out_folder_spillman, ezone_fields)
+#export_shapefiles_select_fields("BoxElder_EMS_Areas", out_folder_spillman, earea_fields)
+#export_shapefiles_select_fields("BoxElder_Fire_Areas", out_folder_spillman, fzone_fields)
+#export_shapefiles_select_fields("BoxElder_Law_Areas", out_folder_spillman, lzone_fields)
+#export_shapefiles_select_fields("BoxElder_Municipalities", out_folder_spillman, muni_fields)
 
+
+# Vela Shapefiles Export
+export_shapefiles_select_fields_rename("BoxElder_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+export_shapefiles_select_fields_rename("BoxElder_CommonPlaces", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+export_shapefiles_select_fields_rename("BoxElder_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
+export_shapefiles_select_fields_rename("BoxElder_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+
+#export_shapefiles_all_fields(vela_to_export, out_folder_vela)
+#env.workspace = out_folder_vela
+#arcpy.Rename_management("BoxElder_COMMUNITY.shp", "BoxElder_Communities.shp")
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC

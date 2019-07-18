@@ -23,20 +23,20 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-juab_db = r"C:\E911\JuabCo\UtahValley_Spillman_Data_State_Plane_New.gdb"
-staging_db = r"C:\E911\JuabCo\Juab_staging.gdb"
-env.workspace = juab_db
+boxelder_db = r"C:\E911\Box Elder CO\BoxElder_Spillman_UTM.gdb"
+staging_db = r"C:\E911\Box Elder CO\BoxElder_Staging.gdb"
+env.workspace = boxelder_db
 env.overwriteOutput = True
 
-juab_streets = os.path.join(juab_db, "Streets")
-#juab_addpts = "AddressPoints_TEST_current"
-#current_addpts = os.path.join(staging_db, juab_addpts)
-juab_addpts = "AddressPoints_20190531"    # Point to current addpts in staging_db
-current_addpts = os.path.join(staging_db, juab_addpts)
+boxelder_streets = os.path.join(boxelder_db, "BoxElder_Streets")
+#boxelder_addpts = "AddressPoints_TEST_current"
+#current_addpts = os.path.join(staging_db, boxelder_addpts)
+boxelder_addpts = "AddressPoints_20190718"    # Point to current addpts in staging_db
+current_addpts = os.path.join(staging_db, boxelder_addpts)
 
 today = time.strftime("%Y%m%d")
 #new_addpts = "AddressPoints_SGID_export_" + today
-new_addpts = "AddressPoints_SGID_export_20190531"    # Use if SGID data was already exported
+new_addpts = "AddressPoints_SGID_export_20190718"    # Use if SGID data was already exported
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # SGID_addpts = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
@@ -61,7 +61,7 @@ def get_SGID_addpts(out_db):
     new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
         arcpy.Delete_management(new_pts)
-    where_SGID = "CountyID IN ('49031', '49041', '49055')"
+    where_SGID = "CountyID IN ('49003', '49041', '49055')"
     print("Exporting SGID address points to: {}".format(new_pts))
     arcpy.FeatureClassToFeatureClass_conversion (sgid_pts, out_db, new_pts, where_SGID)
   
@@ -94,7 +94,7 @@ def remove_duplicates(current, working):
 
     # Create list of features in the current address points feature class
     current_dict = {}
-    fields = ['FullAdd']
+    fields = ['FULLADDR']
     with arcpy.da.SearchCursor(current, fields) as cursor:
         print("Looping through rows in {} ...".format(current))
         for row in cursor:
@@ -188,7 +188,7 @@ def check_nearby_roads(working, streets, gdb):
     
     # Convert roads to pandas dataframe
     # Make sure this points to the correct ObjectID field in the attribute table
-    street_fields = ['OID@', 'FROMLEFT', 'TOLEFT', 'FROMRIGHT', 'TORIGHT', 'FULLNAME']
+    street_fields = ['OID@', 'L_F_ADD', 'L_T_ADD', 'R_F_ADD', 'R_T_ADD', 'STREET']
     streets_arr = arcpy.da.FeatureClassToNumPyArray(streets, street_fields)
     streets_df = pd.DataFrame(data = streets_arr)
     print(streets_df.head(5).to_string())
@@ -196,13 +196,13 @@ def check_nearby_roads(working, streets, gdb):
     # Join address points to near table
     join1_df = near_df.join(addpts_df.set_index('OID@'), on='IN_FID')
     print(join1_df.head(5).to_string())
-    path = r'C:\E911\JuabCo\Addpts_working_folder\juab_neartable_join1.csv'
+    path = r'C:\E911\Box Elder CO\Addpts_working_folder\boxelder_neartable_join1.csv'
     join1_df.to_csv(path)
     
     # Join streets to near table
     join2_df = join1_df.join(streets_df.set_index('OID@'), on='NEAR_FID')
     print(join2_df.head(5).to_string())
-    path = r'C:\E911\JuabCo\Addpts_working_folder\juab_neartable_join2.csv'
+    path = r'C:\E911\Box Elder CO\Addpts_working_folder\boxelder_neartable_join2.csv'
     join2_df.to_csv(path)
     
     # Convert NaNs to blank strings
@@ -210,7 +210,7 @@ def check_nearby_roads(working, streets, gdb):
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
     near_df_updated = join2_df.apply(logic_checks, axis=1)
-    path = r'C:\E911\JuabCo\Addpts_working_folder\juab_neartable_updated.csv'
+    path = r'C:\E911\Box Elder CO\Addpts_working_folder\boxelder_neartable_updated.csv'
     near_df_updated.to_csv(path)
     
     # Separate rows with a good nearby street into a separate dataframe
@@ -230,14 +230,14 @@ def check_nearby_roads(working, streets, gdb):
     filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
     # Re-sort data frame on address point ID for final data set
     final_df = filtered_df.sort_values('IN_FID')
-    path = r'C:\E911\JuabCo\Addpts_working_folder\juab_neartable_final.csv'
+    path = r'C:\E911\Box Elder CO\Addpts_working_folder\boxelder_neartable_final.csv'
     final_df.to_csv(path)
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
     join_df.columns = ['IN_FID', 'Notes_near', 'edit_dist']
-    join_path = r'C:\E911\JuabCo\Addpts_working_folder\juab_neartable_join.csv'
+    join_path = r'C:\E911\Box Elder CO\Addpts_working_folder\boxelder_neartable_join.csv'
     join_df.to_csv(join_path)
         
     # Convert CSV output into table and join to working address points FC
@@ -282,10 +282,10 @@ def logic_checks(row):
     """
     goodstreet = False
     goodnum = False
-    if row['Street'] == row['FULLNAME']:
+    if row['Street'] == row['STREET']:
         goodstreet = True
-        if (int(row['AddNum'].split()[0]) >= row['FROMLEFT'] and int(row['AddNum'].split()[0]) <= row['TOLEFT']) or (
-                int(row['AddNum'].split()[0]) >= row['FROMRIGHT'] and int(row['AddNum'].split()[0]) <= row['TORIGHT']):
+        if (int(row['AddNum'].split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].split()[0]) <= row['L_T_ADD']) or (
+                int(row['AddNum'].split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].split()[0]) <= row['R_T_ADD']):
             goodnum = True
     # Update Notes field based on if street and number are good from near analysis
     if goodstreet and goodnum:
@@ -296,15 +296,15 @@ def logic_checks(row):
         row['Notes'] = 'near street not found'
     row['goodstreet'] = goodstreet
     row['goodnum'] = goodnum
-    row['edit_dist'] = Lv.distance(row['Street'], row['FULLNAME'])
+    row['edit_dist'] = Lv.distance(row['Street'], row['STREET'])
     # Check edit distance for roads that might have typos, predir, or sufdir errors
     if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
         row['Notes'] = 'no near st: possible typo predir or sufdir error'
     # Check for likely predir/sufdir errors: road nearly matches, range is good
     # Replace needed in logic to catch potential range in address number (e.g., '188-194')
     if row['Notes'] == 'no near st: possible typo predir or sufdir error':
-        if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['FROMLEFT'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['TOLEFT']) or (
-                int(row['AddNum'].replace('-', ' ').split()[0]) >= row['FROMRIGHT'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['TORIGHT']):
+        if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+                int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
             row['goodnum'] = goodnum      
@@ -323,7 +323,7 @@ mark_near_addpts(current_addpts, working_addpts)
 
 arcpy.Delete_management("working_nodups")
 arcpy.Delete_management('in_memory\\near_table')
-check_nearby_roads(working_addpts, juab_streets, staging_db)
+check_nearby_roads(working_addpts, boxelder_streets, staging_db)
 
 
 print("Script shutting down ...")
@@ -334,7 +334,7 @@ print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 
 # Plot histogram of Edit Distances
 print("Creating edit distance histogram ...")
-df = pd.read_csv(r'C:\E911\JuabCo\Addpts_working_folder\juab_neartable_final.csv')
+df = pd.read_csv(r'C:\E911\Box Elder CO\Addpts_working_folder\boxelder_neartable_final.csv')
 plt.figure(figsize=(6,4))
 plt.hist(df['edit_dist'], bins = np.arange(0, df['edit_dist'].max(), 1)-0.5, color='red', edgecolor='black')
 plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
