@@ -55,7 +55,7 @@ fields = ['Notes']
 arcpy.SelectLayerByLocation_management("sgid_roads_lyr", "HAVE_THEIR_CENTER_IN", roads_buff,
                                                      "", "", "INVERT")
 outname = os.path.join(staging_db, "SGID_roads_to_review_" + today)
-arcpy.CopyFeatures("sgid_roads_lyr", outname)
+arcpy.CopyFeatures_management("sgid_roads_lyr", outname)
 
 
 print("Script shutting down ...")
