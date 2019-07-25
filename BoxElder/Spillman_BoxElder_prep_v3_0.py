@@ -29,9 +29,6 @@ streets_cad_wgs84 = os.path.join(wgs84_db, "BoxElder_Streets_CAD")
 #  Functions  #
 ###############
 
-# NEED FUNCTION TO CREATE STREETS_ALL IN THE BUFFER AREA?
-
-
 def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete_files):
     # Creates new GDBs by renaming originals with today's date
     # Then copies new ones (with today's date) with original name
@@ -74,18 +71,13 @@ def blanks_to_nulls(streets):
 
     field_list = []
     for field in fields:
-        # print field.name
         if field.name in flist:
-            # print("{} appended to field_list".format(field.name))
             field_list.append(field)
 
     with arcpy.da.UpdateCursor(streets, flist) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            # print row
             for i in range(len(field_list)):
-                # if (field_list[i].type == "String" and row[i] == '') or\
-                #         (field_list[i].type == "String" and row[i] == ' '):
                 if row[i] == '' or row[i] == ' ':
                     print("Updating field: {0} on ObjectID: {1}".format(field_list[i].name, row[0]))
                     update_count += 1
@@ -110,7 +102,6 @@ def calc_street(streets):
             row[4] = row[4].lstrip().rstrip()
             row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
             row[4] = row[4][:30]
-#            print("New value for {0} is: {1}".format(fields[4], row[4]))
             update_count += 1
             cursor.updateRow(row)
     print("Total count of updates to {0}: {1}".format(fields[4], update_count))
@@ -412,34 +403,23 @@ def copy_tbzones(tbzones_table):
     arcpy.TableToTable_conversion(in_rows, wgs84_db, "tbzones")
 
 
-## NEED FUNCTION TO CREATE STREETS_ALL
-#def create_streets_all(streets):
-#    lincoln = os.path.join(utm_db, "LincolnCo_Streets")
-#    mohave = os.path.join(utm_db, "MohaveCo_Streets")
-#    buff_utah = os.path.join(utm_db, "Streets_In_Buffer_Utah")
+# NEED FUNCTION TO CREATE STREETS_ALL
+def create_streets_all(streets):
+    external = os.path.join(utm_db, "BoxElder_Streets_External")
 #    streets_temp = os.path.join(utm_db, "BoxElder_Streets_temp")
-#    streets_all = os.path.join(utm_db, "BoxElder_Streets_All")
+    streets_all = os.path.join(utm_db, "BoxElder_Streets_All")
 #    if arcpy.Exists(streets_temp):
 #        print("Deleting {} ...".format(streets_temp))
 #        arcpy.Delete_management(streets_temp)
-#    if arcpy.Exists(streets_all):
-#        print("Deleting {} ...".format(streets_all))
-#        arcpy.Delete_management(streets_all)
-#
-#    # Get streets into a single FC
-#    print("Combining buffer streets data into {} ...".format(streets_temp))
-#    arcpy.CopyFeatures_management(streets, streets_temp)
-#    arcpy.MakeFeatureLayer_management(lincoln, "lincoln_lyr")
-#    arcpy.MakeFeatureLayer_management(mohave, "mohave_lyr")
-#    arcpy.MakeFeatureLayer_management(buff_utah, "buff_utah_lyr")
-#    arcpy.Append_management("lincoln_lyr", streets_temp, "NO_TEST")
-#    arcpy.Append_management("mohave_lyr", streets_temp, "NO_TEST")
-#    arcpy.Append_management("buff_utah_lyr", streets_temp, "NO_TEST")
-#
-#    # Clip down to buffer area
-#    print("Clipping streets down to Washington County buffer ...")
-#    clip_feature = os.path.join(wgs84_db, "WashingtonCo_Buffer")
-#    arcpy.Clip_analysis(streets_temp, clip_feature, streets_all)
+    if arcpy.Exists(streets_all):
+        print("Deleting {} ...".format(streets_all))
+        arcpy.Delete_management(streets_all)
+
+    # Get streets into a single FC
+    print("Combining external streets data into {} ...".format(streets_all))
+    arcpy.CopyFeatures_management(streets, streets_all)
+    arcpy.MakeFeatureLayer_management(external, "external_lyr")
+    arcpy.Append_management("external_lyr", streets_all, "NO_TEST")
 
 
 def project_to_wgs84(input_features):
@@ -452,11 +432,11 @@ def project_to_wgs84(input_features):
 
 
 def spillman_polygon_prep(streets):
-    # Null out the appropriate data on streets layer
+    # Null out the appropriate fields on streets layer
     update_count = 0
     # where_clause = ""
     fields = ['LCITYCD', 'RCITYCD', 'LZ_LEFT', 'LZ_RIGHT', 'LA_LEFT', 'LA_RIGHT', 'FZ_LEFT', 'FZ_RIGHT',
-              'FA_LEFT', 'FA_RIGHT', 'EZ_LEFT', 'EZ_RIGHT', 'EA_LEFT', 'EA_RIGHT']
+              'FA_LEFT', 'FA_RIGHT', 'EZ_LEFT', 'EZ_RIGHT', 'EA_LEFT', 'EA_RIGHT', 'MZ_LEFT', 'MZ_RIGHT', 'LS_ZONE']
     with arcpy.da.UpdateCursor(streets, fields) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
@@ -513,6 +493,42 @@ def export_shapefiles_select_fields_rename(fc, folder, field_list, outname):
     arcpy.FeatureClassToFeatureClass_conversion(fc, folder, outname, field_mapping=fms)
 
 
+def populate_LS_ZONE(streets):
+    env.workspace = wgs84_db
+    # Copy LZ_LEFT field into LS_ZONE field
+    update_count_1 = 0
+    print("Copying 'LZ_LEFT' into 'LS_ZONE' field ...")
+    fields_1 = ['LS_ZONE', 'LZ_LEFT']
+    with arcpy.da.UpdateCursor(streets, fields_1) as uCursor:
+        for row in uCursor:
+            row[0] = row[1]
+            update_count_1 += 1
+            uCursor.updateRow(row)
+        print("Number of updates is: {}".format(update_count_1))
+        
+    # Populate LS_ZONE on freeways and ramps as 'UHP'
+    update_count_2 = 0
+    print("Calculating LS_ZONE on freeways and ramps as 'UHP' ...")
+    where_2 = "STREETTYPE = 'FWY' OR STREETTYPE = 'RAMP'"
+    with arcpy.da.UpdateCursor(streets, 'LS_ZONE', where_2) as uCursor:
+        for row in uCursor:
+            row[0] = 'UHP'
+            update_count_2 += 1
+            uCursor.updateRow(row)
+        print("Number of updates is: {}".format(update_count_2))
+    
+    # Populate LS_ZONE for highways not in city PD jurisdiction
+    update_count_3 = 0
+    print("Calculating LS_ZONE on highways not in a city PD jurisdiction as 'UHP' ...")
+    where_3 = "HWYNAME IS NOT NULL AND LS_ZONE IN ('WEST','NORTH','SOUTH')"
+    with arcpy.da.UpdateCursor(streets, 'LS_ZONE', where_3) as uCursor:
+        for row in uCursor:
+            row[0] = 'UHP'
+            update_count_3 += 1
+            uCursor.updateRow(row)
+        print("Number of updates is: {}".format(update_count_3))
+        
+
 #######################################
 #  Prep variables for function calls  #
 #######################################
@@ -532,6 +548,9 @@ tbzones = os.path.join(utm_db, "tbzones")
 FCs_to_project = ["BoxElder_Streets", "BoxElder_CityCodes", "BoxElder_CommonPlaces", "BoxElder_CP_EXITS_FC", "BoxElder_CP_MP_FC",
                          "BoxElder_MISC_Zones", "BoxElder_EMS_Zones", "BoxElder_EMS_Areas", "BoxElder_Fire_Zones", "BoxElder_Fire_Areas",
                          "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_Municipalities"]
+
+# Create variables for populating LS zones
+ls_zones = os.path.join(wgs84_db, "UHP_LS_Zones")
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -574,6 +593,7 @@ mz_fields = ["NAME", "MZ", "Shape_Length", "Shape_Area"]
 citycd_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
 muni_fields = ["SHORTDESC", "POPLASTCENSUS", "Shape_Length", "Shape_Area"]
 milepost_fields = ["ALIAS", "CITYCD", "ADDRESS"]
+exit_fields = ["alias", "citycd", "address"]
 
 # Vela Shapefile field lists
 vela_addpt_fields = ["FULLADDR", "ADDRNUM", "PREDIR", "STREETNAME", "STREETTYPE", "SUFDIR", "UNIT_TYPE", "UNIT_ID", "STREET", "X", "Y"]
@@ -610,40 +630,46 @@ calc_location(streets_fc_utm)
 create_streets_CAD(streets_fc_utm)
 create_address_pts_CAD(address_pts)
 copy_tbzones(tbzones)
+create_streets_all(streets_fc_utm)
 project_to_wgs84(FCs_to_project)
 spillman_polygon_prep(streets_cad_wgs84)
 
-## NOT USED IN BOX ELDER PSAP
-#create_streets_all(streets_fc_utm)
+## FUNCTIONS NOT USED IN BOX ELDER PSAP:
+
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
 # When complete, run code below to export shapefiles            #
 #################################################################
 
+# Assign LS_Zones to streets_CAD (wgs84) segments
+#populate_LS_ZONE(streets_cad_wgs84)
+
 # Spillman Shapefiles Export
-export_shapefiles_select_fields("BoxElder_Streets", out_folder_spillman, street_fields)
-export_shapefiles_select_fields("BoxElder_CityCodes", out_folder_spillman, citycd_fields)
-export_shapefiles_select_fields("BoxElder_Law_Zones", out_folder_spillman, lzone_fields)
-export_shapefiles_select_fields("BoxElder_Fire_Zones", out_folder_spillman, fzone_fields)
-export_shapefiles_select_fields("BoxElder_MISC_Zones", out_folder_spillman, mz_fields)
-export_shapefiles_select_fields_rename("BoxElder_CP_MP_FC", out_folder_spillman, milepost_fields, "BoxElder_Mileposts")
-
-
-# Shapefiles that aren't needed for PSAP, but are available:
+#export_shapefiles_select_fields("BoxElder_AddressPoints", out_folder_spillman, addpt_fields)
 #export_shapefiles_select_fields("BoxElder_CommonPlaces", out_folder_spillman, commplc_fields)
+#export_shapefiles_select_fields("BoxElder_CityCodes", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("BoxElder_EMS_Zones", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("BoxElder_EMS_Areas", out_folder_spillman, earea_fields)
+#export_shapefiles_select_fields("BoxElder_Fire_Zones", out_folder_spillman, fzone_fields)
 #export_shapefiles_select_fields("BoxElder_Fire_Areas", out_folder_spillman, fzone_fields)
+#export_shapefiles_select_fields("BoxElder_Law_Zones", out_folder_spillman, lzone_fields)
 #export_shapefiles_select_fields("BoxElder_Law_Areas", out_folder_spillman, lzone_fields)
+#export_shapefiles_select_fields("BoxElder_MISC_Zones", out_folder_spillman, mz_fields)
+#export_shapefiles_select_fields("BoxElder_Streets", out_folder_spillman, street_fields)
+#export_shapefiles_select_fields_rename("BoxElder_CP_MP_FC", out_folder_spillman, milepost_fields, "BoxElder_Mileposts")
+#export_shapefiles_select_fields_rename("BoxElder_CP_Exits_FC", out_folder_spillman, milepost_fields, "BoxElder_Exits")
 #export_shapefiles_select_fields("BoxElder_Municipalities", out_folder_spillman, muni_fields)
+
+# Shapefiles that aren't needed for PSAP, but are available:
+
 
 
 # Vela Shapefiles Export
-export_shapefiles_select_fields_rename("BoxElder_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-export_shapefiles_select_fields_rename("BoxElder_CommonPlaces", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-export_shapefiles_select_fields_rename("BoxElder_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
-export_shapefiles_select_fields_rename("BoxElder_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+#export_shapefiles_select_fields_rename("BoxElder_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+#export_shapefiles_select_fields_rename("BoxElder_CommonPlaces", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+#export_shapefiles_select_fields_rename("BoxElder_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
+#export_shapefiles_select_fields_rename("BoxElder_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
 
 #export_shapefiles_all_fields(vela_to_export, out_folder_vela)
 #env.workspace = out_folder_vela
