@@ -390,11 +390,30 @@ def create_address_pts_CAD(addpts):
     # Calculate XY values for points without them (WGS84 coords)
     print("Calculating XY values in WGS84 ...")
     arcpy.AddXY_management(addpts_CAD_wgs84)
+    
+    # Add new X/Y fields to FC to hold XY values
+    arcpy.AddField_management(addpts_CAD_wgs84, "X", "DOUBLE")
+    arcpy.AddField_management(addpts_CAD_wgs84, "Y", "DOUBLE")    
+    # Copy XY values from "POINT_X" and "POINT_Y" into "X" and "Y"
+    print("Copying POINT_X/POINT_Y into X/Y fields ...")
+    update_count = 0
+    fields = ['X', 'POINT_X', 'Y', 'POINT_Y']
+    with arcpy.da.UpdateCursor(addpts_CAD_wgs84, fields) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            row[0] = row[1]
+            row[2] = row[3]
+            update_count += 1
+            cursor.updateRow(row)
+    print("Total count of row updates is: {}".format(update_count))
+    # Delete "POINT_X" and "POINT_Y" fields
+    print("Deleting POINT_X and POINT_Y fields ...")
+    arcpy.DeleteField_management(addpts_CAD_wgs84, ["POINT_X", "POINT_Y"])
 
-    # Rename fields to just "X" and "Y"
-    print("Renaming X and Y fields ...")
-    arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_X', 'X')
-    arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_Y', 'Y')
+#    # Rename fields to just "X" and "Y"
+#    print("Renaming X and Y fields ...")
+#    arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_X', 'X')
+#    arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_Y', 'Y')
 
 
 def copy_tbzones(tbzones_table):
@@ -535,8 +554,9 @@ def populate_LS_ZONE(streets):
 
 WGS84_files_to_delete = ["BoxElder_Streets", "BoxElder_CityCodes", "BoxElder_CommonPlaces", "BoxElder_CP_EXITS_FC", "BoxElder_CP_MP_FC",
                          "BoxElder_MISC_Zones", "BoxElder_EMS_Zones", "BoxElder_EMS_Areas", "BoxElder_Fire_Zones", "BoxElder_Fire_Areas",
-                         "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_Municipalities", "tbzones"]
-UTM_files_to_delete = ["BoxElder_Streets_CAD"]
+                         "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_AddressPoints_CAD",
+                         "BoxElder_Municipalities", "tbzones"]
+UTM_files_to_delete = ["BoxElder_Streets_CAD", "BoxElder_AddressPoints_CAD"]
 
 # Create variables for address points
 address_pts = os.path.join(utm_db, "BoxElder_AddressPoints")
@@ -548,9 +568,6 @@ tbzones = os.path.join(utm_db, "tbzones")
 FCs_to_project = ["BoxElder_Streets", "BoxElder_CityCodes", "BoxElder_CommonPlaces", "BoxElder_CP_EXITS_FC", "BoxElder_CP_MP_FC",
                          "BoxElder_MISC_Zones", "BoxElder_EMS_Zones", "BoxElder_EMS_Areas", "BoxElder_Fire_Zones", "BoxElder_Fire_Areas",
                          "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_Municipalities"]
-
-# Create variables for populating LS zones
-ls_zones = os.path.join(wgs84_db, "UHP_LS_Zones")
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -617,18 +634,18 @@ vela_to_export = ["BoxElder_EMS_Zones", "BoxElder_Fire_Zones", "BoxElder_Law_Zon
 #  Call Functions Below  #
 ##########################
 
-create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-blanks_to_nulls(streets_fc_utm)
-calc_street(streets_fc_utm)
-calc_salias1(streets_fc_utm)
-calc_salias2(streets_fc_utm)
-calc_salias4(streets_fc_utm)
-highway_to_sr_us(streets_fc_utm)
-calc_salias3(streets_fc_utm)
-street_blank_to_null(streets_fc_utm)
-calc_location(streets_fc_utm)
-create_streets_CAD(streets_fc_utm)
-create_address_pts_CAD(address_pts)
+#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+#blanks_to_nulls(streets_fc_utm)
+#calc_street(streets_fc_utm)
+#calc_salias1(streets_fc_utm)
+#calc_salias2(streets_fc_utm)
+#calc_salias4(streets_fc_utm)
+#highway_to_sr_us(streets_fc_utm)
+#calc_salias3(streets_fc_utm)
+#street_blank_to_null(streets_fc_utm)
+#calc_location(streets_fc_utm)
+#create_streets_CAD(streets_fc_utm)
+#create_address_pts_CAD(address_pts)
 copy_tbzones(tbzones)
 create_streets_all(streets_fc_utm)
 project_to_wgs84(FCs_to_project)
