@@ -621,9 +621,9 @@ vela_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "
 vela_muni_fields = ["NAME", "POPLASTCENSUS"]
 
 # Vela Shapefile outnames
-vela_addpt_out = "BoxElder_AddressPoints"
+vela_addpt_out = "AddressPoints"
 vela_commplc_out = "BoxElder_CommonPlaces"
-vela_street_out = "BoxElder_Streets"
+vela_street_out = "Box_Elder_Street_Centerline"
 vela_muni_out = "BoxElder_Municipalities"
 
 # Additional Vela Shapefiles to export
@@ -646,10 +646,10 @@ vela_to_export = ["BoxElder_EMS_Zones", "BoxElder_Fire_Zones", "BoxElder_Law_Zon
 #calc_location(streets_fc_utm)
 #create_streets_CAD(streets_fc_utm)
 #create_address_pts_CAD(address_pts)
-copy_tbzones(tbzones)
-create_streets_all(streets_fc_utm)
-project_to_wgs84(FCs_to_project)
-spillman_polygon_prep(streets_cad_wgs84)
+#copy_tbzones(tbzones)
+#create_streets_all(streets_fc_utm)
+#project_to_wgs84(FCs_to_project)
+#spillman_polygon_prep(streets_cad_wgs84)
 
 ## FUNCTIONS NOT USED IN BOX ELDER PSAP:
 
@@ -665,6 +665,9 @@ spillman_polygon_prep(streets_cad_wgs84)
 # Spillman Shapefiles Export
 #export_shapefiles_select_fields("BoxElder_AddressPoints", out_folder_spillman, addpt_fields)
 #export_shapefiles_select_fields("BoxElder_CommonPlaces", out_folder_spillman, commplc_fields)
+#export_shapefiles_select_fields("BoxElder_Streets", out_folder_spillman, street_fields)
+#export_shapefiles_select_fields_rename("BoxElder_CP_MP_FC", out_folder_spillman, milepost_fields, "BoxElder_Mileposts")
+#export_shapefiles_select_fields_rename("BoxElder_CP_Exits_FC", out_folder_spillman, milepost_fields, "BoxElder_Exits")
 #export_shapefiles_select_fields("BoxElder_CityCodes", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("BoxElder_EMS_Zones", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("BoxElder_EMS_Areas", out_folder_spillman, earea_fields)
@@ -673,19 +676,15 @@ spillman_polygon_prep(streets_cad_wgs84)
 #export_shapefiles_select_fields("BoxElder_Law_Zones", out_folder_spillman, lzone_fields)
 #export_shapefiles_select_fields("BoxElder_Law_Areas", out_folder_spillman, lzone_fields)
 #export_shapefiles_select_fields("BoxElder_MISC_Zones", out_folder_spillman, mz_fields)
-#export_shapefiles_select_fields("BoxElder_Streets", out_folder_spillman, street_fields)
-#export_shapefiles_select_fields_rename("BoxElder_CP_MP_FC", out_folder_spillman, milepost_fields, "BoxElder_Mileposts")
-#export_shapefiles_select_fields_rename("BoxElder_CP_Exits_FC", out_folder_spillman, milepost_fields, "BoxElder_Exits")
 #export_shapefiles_select_fields("BoxElder_Municipalities", out_folder_spillman, muni_fields)
 
 # Shapefiles that aren't needed for PSAP, but are available:
 
 
-
 # Vela Shapefiles Export
-#export_shapefiles_select_fields_rename("BoxElder_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-#export_shapefiles_select_fields_rename("BoxElder_CommonPlaces", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+#export_shapefiles_select_fields_rename("BoxElder_AddressPoints", out_folder_vela, vela_addpt_fields, vela_addpt_out)
 #export_shapefiles_select_fields_rename("BoxElder_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
+#export_shapefiles_select_fields_rename("BoxElder_CommonPlaces", out_folder_vela, vela_commplc_fields, vela_commplc_out)
 #export_shapefiles_select_fields_rename("BoxElder_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
 
 #export_shapefiles_all_fields(vela_to_export, out_folder_vela)
