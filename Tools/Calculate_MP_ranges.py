@@ -27,12 +27,7 @@ streets = os.path.join(db, "SGID_I8084_only_TEST_WGS84")
 # outname = os.path.join(db, "SGID_I8084_only_TEST_" + today)
 env.workspace = db
 env.overwriteOutput = True
-
 multiplier = 100
-
-# # Create layer to work with
-# arcpy.management.MakeFeatureLayer(streets, "streets_lyr")
-
 
 # Get list of fields in the feature class
 flist = arcpy.ListFields(streets)
@@ -51,7 +46,6 @@ if 'TMPADR' not in field_list:
 
 # Calculate FMPADR and TMPADR fields by multiplying T/F MILE fields
 # Select streets where FROM milepost is less than TO milepost (pointed in correct direction)
-# sel = arcpy.management.SelectLayerByAttribute("streets_lyr", "NEW_SELECTION", where_clause)
 update_count = 0
 where_clause = "DOT_F_MILE < DOT_T_MILE"
 #             0          1           2          3
@@ -149,9 +143,6 @@ with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
         update_count += 1
         cursor.updateRow(row)
 print(f"Total count of updates is: {update_count}")
-
-# # Export layer to a feature class
-# arcpy.management.CopyFeatures("streets_lyr", outname)
 
 
 print("Script shutting down ...")
