@@ -113,13 +113,13 @@ today = time.strftime("%Y%m%d")
 spill_dir = r"C:\E911\Beaver Co\0 Shapefiles"
 spillman_folder = "Spillman_Shapefiles_Beaver_" + today
 out_folder_spillman = os.path.join(spill_dir, spillman_folder)
-vela_dir = r"C:\E911\Beaver Co\0 Vela Files"
-vela_folder = "Vela_Shapefiles_Beaver_" + today
-out_folder_vela = os.path.join(vela_dir, vela_folder)
+vesta_dir = r"C:\E911\Beaver Co\0 VESTA Files"
+vesta_folder = "VESTA_Shapefiles_Beaver_" + today
+out_folder_vesta = os.path.join(vesta_dir, vesta_folder)
 
 # Comment out this line if the folder already exists (like if code was already run once today)
 os.mkdir(out_folder_spillman)
-os.mkdir(out_folder_vela)
+os.mkdir(out_folder_vesta)
 
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
@@ -147,21 +147,21 @@ parcel_fields = ["Label", "NAME", "ACRES"]
 county_fields = ["NAME"]
 # other_fields = ["NAME", "CITYCD", "Length", "Area"]
 
-# Vela Shapefile field lists
-vela_addpt_fields = ["FullAdd", "AddNum", "PrefixDir", "StreetName", "StreetType", "SuffixDir", "UnitID", "STREET", "X",
+# VESTA Shapefile field lists
+vesta_addpt_fields = ["FullAdd", "AddNum", "PrefixDir", "StreetName", "StreetType", "SuffixDir", "UnitID", "STREET", "X",
                      "Y"] #, "ZipCode", "State", "COMM"]
-vela_commplc_fields = ["ALIAS", "CITYCD", "STREET", "BEGNUMB", "ENDNUMB", "FULL_ADDRE", "COMM"]
-vela_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "PREDIR", "STREETNAME", "STREETTYPE",
+vesta_commplc_fields = ["ALIAS", "CITYCD", "STREET", "BEGNUMB", "ENDNUMB", "FULL_ADDRE", "COMM"]
+vesta_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "PREDIR", "STREETNAME", "STREETTYPE",
                       "SUFDIR", "ALIAS1", "ALIAS1TYPE", "ALIAS2", "ALIAS2TYPE", "ACSALIAS", "ACSNAME", "ACSSUF",
                       "ZIPLEFT", "ZIPRIGHT", "STREET", "COMM_LEFT", "COMM_RIGHT", "Shape_Length"]
-vela_muni_fields = ["NAME", "POPLASTCENSUS", "CITYCD"]
-# Vela Shapefile outnames
-vela_addpt_out = "AddressPoints"
-vela_commplc_out = "CommonPlaces"
-vela_street_out = "Streets"
-vela_muni_out = "Municipalities"
-# Additional Vela Shapefiles to export
-vela_to_export = ["Ems_zone", "Fire_zone", "Law_zone", "Communities"]
+vesta_muni_fields = ["NAME", "POPLASTCENSUS", "CITYCD"]
+# VESTA Shapefile outnames
+vesta_addpt_out = "AddressPoints"
+vesta_commplc_out = "CommonPlaces"
+vesta_street_out = "Streets"
+vesta_muni_out = "Municipalities"
+# Additional VESTA Shapefiles to export
+vesta_to_export = ["Ems_zone", "Fire_zone", "Law_zone", "Communities"]
 
 ##########################
 #  Call Functions Below  #
@@ -190,13 +190,13 @@ export_shapefiles_select_fields("GNIS_PlaceNames", out_folder_spillman, gnis_fie
 export_shapefiles_select_fields("Parcels", out_folder_spillman, parcel_fields)
 export_shapefiles_select_fields("Beaver_County", out_folder_spillman, county_fields)
 
-# Vela Shapefiles Export
-#export_shapefiles_select_fields_rename("AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-#export_shapefiles_select_fields_rename("CommonPlaces", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-#export_shapefiles_select_fields_rename("Streets", out_folder_vela, vela_street_fields, vela_street_out)
-#export_shapefiles_select_fields_rename("Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
-#export_shapefiles_all_fields(vela_to_export, out_folder_vela)
-#env.workspace = out_folder_vela
+# VESTA Shapefiles Export
+#export_shapefiles_select_fields_rename("AddressPoints_CAD", out_folder_vesta, vesta_addpt_fields, vesta_addpt_out)
+#export_shapefiles_select_fields_rename("CommonPlaces", out_folder_vesta, vesta_commplc_fields, vesta_commplc_out)
+#export_shapefiles_select_fields_rename("Streets", out_folder_vesta, vesta_street_fields, vesta_street_out)
+#export_shapefiles_select_fields_rename("Municipalities", out_folder_vesta, vesta_muni_fields, vesta_muni_out)
+#export_shapefiles_all_fields(vesta_to_export, out_folder_vesta)
+#env.workspace = out_folder_vesta
 #arcpy.Rename_management("Communities.shp", "Communities.shp")
 
 print("Script shutting down ...")
