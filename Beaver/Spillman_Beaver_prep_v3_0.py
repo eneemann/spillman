@@ -18,10 +18,10 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-# utm_db = r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb"
-# wgs84_db = r"C:\E911\Beaver Co\Beaver_Spillman_WGS84.gdb"
-utm_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_UTM.gdb"
-wgs84_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_WGS84.gdb"
+ utm_db = r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb"
+ wgs84_db = r"C:\E911\Beaver Co\Beaver_Spillman_WGS84.gdb"
+#utm_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_UTM.gdb"
+#wgs84_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_WGS84.gdb"
 env.workspace = utm_db
 fc_layer = "Streets"
 streets_fc_utm = os.path.join(utm_db, fc_layer)
@@ -533,10 +533,10 @@ FCs_to_project = ["AddressPoints", "Beaver_County", "CityCodes", "CommonPlaces",
 # Create variables for shapefiles
 FCs_to_export = FCs_to_project
 today = time.strftime("%Y%m%d")
-spill_dir = r"C:\E911\Beaver Co_TEST\0 Shapefiles"
+spill_dir = r"C:\E911\Beaver Co\0 Shapefiles"
 spillman_folder = "Spillman_Shapefiles_Beaver_" + today
 out_folder_spillman = os.path.join(spill_dir, spillman_folder)
-vela_dir = r"C:\E911\Beaver Co_TEST\0 Vela Files"
+vela_dir = r"C:\E911\Beaver Co\0 Vela Files"
 vela_folder = "Vela_Shapefiles_Beaver_" + today
 out_folder_vela = os.path.join(vela_dir, vela_folder)
 
