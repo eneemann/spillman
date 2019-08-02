@@ -25,27 +25,14 @@ env.workspace = beaver_db
 env.overwriteOutput = True
 
 beaver_streets = os.path.join(beaver_db, "Streets")
-#beaver_addpts = "AddressPoints_TEST_current"
-#current_addpts = os.path.join(staging_db, beaver_addpts)
-#beaver_addpts = "zzz_AddPts_NW_TEST_current"    # Test on small set of points (5K)
-beaver_addpts = "AddressPoints_20190326"
+beaver_addpts = "AddressPoints_20190802"
 current_addpts = os.path.join(staging_db, beaver_addpts)
 
 today = time.strftime("%Y%m%d")
-# new_addpts = "aaa_possible_newSGID_addpts_" + today
-# possible_addpts = os.path.join(staging_db, new_addpts)
-#new_addpts = "AddressPoints_TEST_possible_WGS84"
-#possible_addpts = os.path.join(staging_db, new_addpts)
-#new_addpts = "zzz_AddPts_NW_TEST_possible"    # Test on small set of points (5K)
-new_addpts = "AddressPoints_SGID_export_20190326"    # Test of export from SGID (3K)
+new_addpts = "AddressPoints_SGID_export_20190802"
 possible_addpts = os.path.join(staging_db, new_addpts)
 
-# SGID_addpts = r"Database Connections\sde@SGID10@sgid.agrc.utah.gov.sde\SGID10.LOCATION.AddressPoints"
-# SGID_addpts_wgs84 = os.path.join(staging_db, "SGID_addpts_wgs84")
-
 # Copy current address points into a working FC
-#working_addpts = os.path.join(staging_db, "AddressPoints_TEST_working_" + today)
-#arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
 arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 
@@ -228,6 +215,7 @@ def check_nearby_roads(working, streets, gdb):
         
     # Convert CSV output into table and join to working address points FC
     env.workspace = gdb
+    env.qualifiedFieldNames = False
     if arcpy.Exists("neartable_join"):
         arcpy.Delete_management("neartable_join")
     arcpy.TableToTable_conversion(join_path, gdb, "neartable_join")
