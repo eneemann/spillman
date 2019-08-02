@@ -228,6 +228,7 @@ def check_nearby_roads(working, streets, gdb):
         
     # Convert CSV output into table and join to working address points FC
     env.workspace = gdb
+    env.qualifiedFieldNames = False
     if arcpy.Exists("neartable_join"):
         arcpy.Delete_management("neartable_join")
     arcpy.TableToTable_conversion(join_path, gdb, "neartable_join")
