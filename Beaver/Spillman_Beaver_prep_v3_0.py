@@ -18,8 +18,8 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
- utm_db = r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb"
- wgs84_db = r"C:\E911\Beaver Co\Beaver_Spillman_WGS84.gdb"
+utm_db = r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb"
+wgs84_db = r"C:\E911\Beaver Co\Beaver_Spillman_WGS84.gdb"
 #utm_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_UTM.gdb"
 #wgs84_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_WGS84.gdb"
 env.workspace = utm_db
