@@ -16,6 +16,12 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 today = time.strftime("%Y%m%d")
 
+# Check out Network Analyst license if available. Fail if the Network Analyst license is not available.
+if arcpy.CheckExtension("network") == "Available":
+    arcpy.CheckOutExtension("network")
+else:
+    raise arcpy.ExecuteError("Network Analyst Extension license is not available.")
+
 ## Prep data for network
 
 # Set up variables
@@ -37,7 +43,7 @@ original_network = r"C:\E911\WeberArea\Staging103\QuickestRoute.gdb\QuickestRout
 output_xml_file = r"C:\E911\WeberArea\Staging103\Network Dataset Template\NDTemplate.xml"
 if arcpy.Exists(output_xml_file):
     arcpy.Delete_management(output_xml_file)
-arcpy.na.CreateTemplateFromNetworkDataset(original_network, output_xml_file)
+arcpy.nax.CreateTemplateFromNetworkDataset(original_network, output_xml_file)
 
 # Import current "Streets_Map" data
 network_streets = os.path.join(network_dataset, 'Streets')
@@ -63,10 +69,11 @@ print("Total count of TrvlTime updates is {}".format(update_count))
 update_count_oneway = 0
 #                    0         1  
 fields_oneway = ['ONEWAY', 'One_Way']
-with arcpy.da.UpdateCursor(network_streets, fields) as cursor:
+with arcpy.da.UpdateCursor(network_streets, fields_oneway) as cursor:
     print("Looping through rows to calculate One_Way field ...")
     for row in cursor:
         if row[0] == '0' or row[0] == None:
+#        if row[0] == '0':      
             row[1] = 'B'
             update_count_oneway += 1
         elif row[0] == '1':
@@ -123,25 +130,18 @@ with arcpy.da.UpdateCursor(network_streets, fields3, where_clause3) as cursor:
         cursor.updateRow(row)
 print("Total count of ramp and interstate Multiplier updates is {}".format(update_count3))
 
-## Create network dataset
-
-# Check out Network Analyst license if available. Fail if the Network Analyst license is not available.
-if arcpy.CheckExtension("network") == "Available":
-    arcpy.CheckOutExtension("network")
-else:
-    raise arcpy.ExecuteError("Network Analyst Extension license is not available.")
-    
+## Create network dataset   
 # Use previously created XML template
 xml_template = output_xml_file
 
 # Create the new network dataset in the output location using the template.
 # The output location must already contain feature classes with the same
 # names and schema as the original network
-arcpy.na.CreateNetworkDatasetFromTemplate(xml_template, network_dataset)
+arcpy.nax.CreateNetworkDatasetFromTemplate(xml_template, network_dataset)
 print("Done creating network, now building it ...")
 
 # Build the new network dataset
-arcpy.na.BuildNetwork(os.path.join(network_dataset, "QuickestRoute_ND"))
+arcpy.nax.BuildNetwork(os.path.join(network_dataset, "QuickestRoute_ND"))
 print("Done building the network ...")
 
 arcpy.CheckInExtension("network")
@@ -151,4 +151,3 @@ print("Script shutting down ...")
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
-
