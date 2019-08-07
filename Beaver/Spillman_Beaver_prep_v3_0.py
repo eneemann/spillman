@@ -507,7 +507,7 @@ def export_shapefiles_select_fields_rename(fc, folder, field_list, outname):
 
 WGS84_files_to_delete = ["AddressPoints", "AddressPoints_CAD", "Beaver_County", "CityCodes", "CommonPlaces", "CommonPlaces_Exits",
                          "CommonPlaces_All", "CommonPlaces_MP", "CommonPlaces_RRMP", "CommonPlaces_RRX", "Ems_zone",
-                         "Fire_zone", "Law_area", "Law_zone", "Streets", "Streets_CAD", "tbzones"]
+                         "Fire_zone", "Law_area", "Law_zone", "Streets", "Streets_CAD", "Communities", "railroads", "tbzones"]
 UTM_files_to_delete = ["AddressPoints_CAD", "Streets_CAD", "CommonPlaces_All"]
 
 # Create variables for address points
@@ -541,8 +541,10 @@ vela_folder = "Vela_Shapefiles_Beaver_" + today
 out_folder_vela = os.path.join(vela_dir, vela_folder)
 
 # Comment out this line if the folder already exists (like if code was already run once today)
-os.mkdir(out_folder_spillman)
-os.mkdir(out_folder_vela)
+if os.path.isdir(out_folder_spillman) == False:
+    os.mkdir(out_folder_spillman)
+#if os.path.isdir(out_folder_vela) == False:
+#    os.mkdir(out_folder_vela)
 
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
@@ -614,16 +616,16 @@ vela_to_export = ["Ems_zone", "Fire_zone", "Law_zone", "Communities"]
 
 # Spillman Shapefiles Export
 export_shapefiles_select_fields("AddressPoints", out_folder_spillman, addpt_fields)
-export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
-export_shapefiles_select_fields("CommonPlaces_Exits", out_folder_spillman, exit_fields)
-export_shapefiles_select_fields("CommonPlaces_MP", out_folder_spillman, milepost_fields)
+#export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
+#export_shapefiles_select_fields("CommonPlaces_Exits", out_folder_spillman, exit_fields)
+#export_shapefiles_select_fields("CommonPlaces_MP", out_folder_spillman, milepost_fields)
 #export_shapefiles_select_fields("CommonPlaces_RRMP", out_folder_spillman, rrmp_fields)
-export_shapefiles_select_fields("CommonPlaces_RRX", out_folder_spillman, rrx_fields)
+#export_shapefiles_select_fields("CommonPlaces_RRX", out_folder_spillman, rrx_fields)
 export_shapefiles_select_fields("Streets", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields("Ems_zone", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("Fire_zone", out_folder_spillman, fzone_fields)
 #export_shapefiles_select_fields("Law_zone", out_folder_spillman, lzone_fields)
-#export_shapefiles_select_fields("Law_area", out_folder_spillman, larea_fields)
+export_shapefiles_select_fields("Law_area", out_folder_spillman, larea_fields)
 #export_shapefiles_select_fields("CityCodes", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("Municipalities", out_folder_spillman, muni_fields)
 #export_shapefiles_select_fields("railroads", out_folder_spillman, railroad_fields)
