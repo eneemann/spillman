@@ -29,6 +29,7 @@ fclist = fiona.listlayers(database)
 
 def find_empty_geom(db, data):
     lyr = fiona.open(db, layer=data)
+    print('working on {} feature class ...'.format(lyr.name,))
 
     if lyr.schema['geometry'] == ('Point' or 'MultiPoint'):
         print('{} geometry type is: {}, looping through features ...'.format(lyr.name, lyr.schema['geometry']))
