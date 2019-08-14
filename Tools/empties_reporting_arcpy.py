@@ -20,9 +20,7 @@ print('The script start time is {}'.format(readable_start))
 database = r'C:\E911\StGeorgeDispatch_TEST\Bad_Geometries_TEST.gdb'
 env.workspace = database
 fclist = arcpy.ListFeatureClasses()
-
-
-               
+            
 ###############
 #  Functions  #
 ###############
