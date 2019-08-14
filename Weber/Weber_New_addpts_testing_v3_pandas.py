@@ -185,18 +185,18 @@ def check_nearby_roads(working, streets, gdb):
     # Join address points to near table
     join1_df = near_df.join(addpts_df.set_index('OBJECTID'), on='IN_FID')
     print(join1_df.head(5).to_string())
-    path = r'C:\Users\eneemann\Desktop\neartable_join1.csv'
+    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_join1.csv'
     join1_df.to_csv(path)
     
     # Join streets to near table
     join2_df = join1_df.join(streets_df.set_index('OBJECTID_1'), on='NEAR_FID')
     print(join2_df.head(5).to_string())
-    path = r'C:\Users\eneemann\Desktop\neartable_join2.csv'
+    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_join2.csv'
     join2_df.to_csv(path)
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
     near_df_updated = join2_df.apply(logic_checks, axis=1)
-    path = r'C:\Users\eneemann\Desktop\neartable_updated.csv'
+    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_updated.csv'
     near_df_updated.to_csv(path)
     
     # Separate rows with a good nearby street into a separate dataframe
@@ -216,14 +216,14 @@ def check_nearby_roads(working, streets, gdb):
     filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
     # Re-sort data frame on address point ID for final data set
     final_df = filtered_df.sort_values('IN_FID')
-    path = r'C:\Users\eneemann\Desktop\neartable_final.csv'
+    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_final.csv'
     final_df.to_csv(path)
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
     join_df.columns = ['IN_FID', 'Notes_near', 'edit_dist']
-    join_path = r'C:\Users\eneemann\Desktop\neartable_join.csv'
+    join_path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_join.csv'
     join_df.to_csv(join_path)
         
     # Convert CSV output into table and join to working address points FC
@@ -318,7 +318,7 @@ print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 
 
 print("Creating edit distance histogram ...")
-df = pd.read_csv(r'C:\Users\eneemann\Desktop\neartable_final.csv')
+df = pd.read_csv(r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_final.csv')
 plt.figure(figsize=(6,4))
 plt.hist(df['edit_dist'], bins = np.arange(0, df['edit_dist'].max(), 1)-0.5, color='red', edgecolor='black')
 plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
