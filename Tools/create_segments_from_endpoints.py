@@ -41,9 +41,6 @@ arcpy.AddField_management(segments, "Y_END", "TEXT", "", "", 50)
 csv_file = r"C:\E911\StGeorgeDispatch\Street_data_20190821.csv"
 df = pd.read_csv(csv_file)
 
-#for index, row in df.iterrows():
-#    print(row['STREET'])
-
 # Populate feature class
 #################################################################
 #   Step 5: Populate FC with point from Uber trip/html file   #
@@ -82,7 +79,6 @@ for index, row in df.iterrows():
         print('Inserting line...')
         print(values)
         iCur.insertRow(values)
-
 
 
 print("Script shutting down ...")
