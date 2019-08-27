@@ -61,18 +61,19 @@ def report_empty_geom(db, lyr):
             if row[2] is None:
                 print("     OID {} has null (None) geometry".format(row[0]))
                 bad_geom = True
-                report_dict[row[0]] = [{'problem':'null geometry', 'action':'delete'}]
+                report_dict[row[0]] = {'problem':'null geometry', 'action':'delete'}
             # Check shape centroid has a null coordinate
             elif row[1][0] == None or row[1][1] == None:
                 print("     OID {} has empty geometry".format(row[0]))
                 bad_geom = True
-                report_dict[row[0]] = [{'problem':'empty geometry', 'action':'delete or repair'}]
+                report_dict[row[0]] = {'problem':'empty geometry', 'action':'delete or repair'}
             if bad_geom == True:
 #                print("     --> Deleting OID {} ... ".format(row[0]))
                 empty_count += 1
     print("Total number of empty geometries: {}".format(empty_count))
-    pprint.pprint(report_dict)
-    return report_dict
+    report = {'empties': report_dict}
+    pprint.pprint(report)
+    return report
 
 
 ##########################
@@ -82,7 +83,6 @@ def report_empty_geom(db, lyr):
 if __name__ == '__main__':
     for fc in sorted(fclist):
         report = report_empty_geom(database, fc)
-#        delete_empty_geom(database, fc)
 
 print('Script shutting down ...')
 # Stop timer and print end time in UTC
