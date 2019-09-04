@@ -29,16 +29,13 @@ env.overwriteOutput = True
 stgeorge_streets = os.path.join(stgeorge_db, "StGeorge_Dispatch_Streets")
 #stgeorge_addpts = "AddressPoints_TEST_current"
 #current_addpts = os.path.join(staging_db, stgeorge_addpts)
-stgeorge_addpts = "AddressPoints_20190430"    # Point to current addpts in staging_db
+stgeorge_addpts = "AddressPoints_20190904"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, stgeorge_addpts)
 
 today = time.strftime("%Y%m%d")
 new_addpts = "AddressPoints_SGID_export_" + today
 #new_addpts = "AddressPoints_SGID_export_20190408"    # Use if SGID data was already exported
 possible_addpts = os.path.join(staging_db, new_addpts)
-
-# SGID_addpts = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
-# SGID_addpts_wgs84 = os.path.join(staging_db, "SGID_addpts_wgs84")
 
 # Copy current address points into a working FC
 working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
@@ -59,7 +56,7 @@ def get_SGID_addpts(out_db):
     new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
         arcpy.Delete_management(new_pts)
-    where_SGID = "CountyID = '49053'"
+    where_SGID = "CountyID = '49053'"   # Washington County
     print("Exporting SGID address points to: {}".format(new_pts))
     arcpy.FeatureClassToFeatureClass_conversion (sgid_pts, out_db, new_pts, where_SGID)
   
