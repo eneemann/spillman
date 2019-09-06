@@ -27,13 +27,13 @@ env.workspace = stgeorge_db
 env.overwriteOutput = True
 
 stgeorge_streets = os.path.join(stgeorge_db, "StGeorge_Dispatch_Streets")
-#stgeorge_addpts = "AddressPoints_TEST_current"
-#current_addpts = os.path.join(staging_db, stgeorge_addpts)
 stgeorge_addpts = "AddressPoints_20190904"    # Point to current addpts in staging_db
+#stgeorge_addpts = "AddressPoints_update_20190904"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, stgeorge_addpts)
 
 today = time.strftime("%Y%m%d")
 new_addpts = "AddressPoints_SGID_export_" + today
+#new_addpts = "Addpts_more_to_test_20190906"
 #new_addpts = "AddressPoints_SGID_export_20190408"    # Use if SGID data was already exported
 possible_addpts = os.path.join(staging_db, new_addpts)
 
