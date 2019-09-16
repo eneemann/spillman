@@ -118,8 +118,10 @@ vesta_folder = "VESTA_Shapefiles_Beaver_" + today
 out_folder_vesta = os.path.join(vesta_dir, vesta_folder)
 
 # Comment out this line if the folder already exists (like if code was already run once today)
-os.mkdir(out_folder_spillman)
-os.mkdir(out_folder_vesta)
+if os.path.isdir(out_folder_spillman) == False:
+    os.mkdir(out_folder_spillman)
+if os.path.isdir(out_folder_vesta) == False:
+    os.mkdir(out_folder_vesta)
 
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
@@ -155,6 +157,7 @@ vesta_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", 
                       "SUFDIR", "ALIAS1", "ALIAS1TYPE", "ALIAS2", "ALIAS2TYPE", "ACSALIAS", "ACSNAME", "ACSSUF",
                       "ZIPLEFT", "ZIPRIGHT", "STREET", "COMM_LEFT", "COMM_RIGHT", "Shape_Length"]
 vesta_muni_fields = ["NAME", "POPLASTCENSUS", "CITYCD"]
+
 # VESTA Shapefile outnames
 vesta_addpt_out = "AddressPoints"
 vesta_commplc_out = "CommonPlaces"
