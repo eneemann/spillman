@@ -554,8 +554,8 @@ def populate_LS_ZONE(streets):
 
 WGS84_files_to_delete = ["BoxElder_Streets", "BoxElder_CityCodes", "BoxElder_CommonPlaces", "BoxElder_CP_EXITS_FC", "BoxElder_CP_MP_FC",
                          "BoxElder_MISC_Zones", "BoxElder_EMS_Zones", "BoxElder_EMS_Areas", "BoxElder_Fire_Zones", "BoxElder_Fire_Areas",
-                         "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_AddressPoints_CAD",
-                         "BoxElder_Municipalities", "tbzones"]
+                         "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_AddressPoints",
+                         "BoxElder_AddressPoints_CAD", "BoxElder_Municipalities", "tbzones"]
 UTM_files_to_delete = ["BoxElder_Streets_CAD", "BoxElder_AddressPoints_CAD"]
 
 # Create variables for address points
@@ -567,7 +567,7 @@ tbzones = os.path.join(utm_db, "tbzones")
 # Create variables for projecting
 FCs_to_project = ["BoxElder_Streets", "BoxElder_CityCodes", "BoxElder_CommonPlaces", "BoxElder_CP_EXITS_FC", "BoxElder_CP_MP_FC",
                          "BoxElder_MISC_Zones", "BoxElder_EMS_Zones", "BoxElder_EMS_Areas", "BoxElder_Fire_Zones", "BoxElder_Fire_Areas",
-                         "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_Municipalities"]
+                         "BoxElder_Law_Zones", "BoxElder_Law_Areas", "BoxElder_Streets_CAD", "BoxElder_Municipalities", "BoxElder_AddressPoints"]
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -664,7 +664,7 @@ vela_to_export = ["BoxElder_EMS_Zones", "BoxElder_Fire_Zones", "BoxElder_Law_Zon
 
 # Spillman Shapefiles Export
 #export_shapefiles_select_fields("BoxElder_AddressPoints", out_folder_spillman, addpt_fields)
-#export_shapefiles_select_fields("BoxElder_CommonPlaces", out_folder_spillman, commplc_fields)
+export_shapefiles_select_fields("BoxElder_CommonPlaces", out_folder_spillman, commplc_fields)
 #export_shapefiles_select_fields("BoxElder_Streets", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields_rename("BoxElder_CP_MP_FC", out_folder_spillman, milepost_fields, "BoxElder_Mileposts")
 #export_shapefiles_select_fields_rename("BoxElder_CP_Exits_FC", out_folder_spillman, milepost_fields, "BoxElder_Exits")
