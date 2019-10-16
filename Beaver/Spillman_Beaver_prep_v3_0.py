@@ -625,7 +625,7 @@ export_shapefiles_select_fields("Streets", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields("Ems_zone", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("Fire_zone", out_folder_spillman, fzone_fields)
 #export_shapefiles_select_fields("Law_zone", out_folder_spillman, lzone_fields)
-export_shapefiles_select_fields("Law_area", out_folder_spillman, larea_fields)
+#export_shapefiles_select_fields("Law_area", out_folder_spillman, larea_fields)
 #export_shapefiles_select_fields("CityCodes", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("Municipalities", out_folder_spillman, muni_fields)
 #export_shapefiles_select_fields("railroads", out_folder_spillman, railroad_fields)
@@ -650,13 +650,3 @@ print("Script shutting down ...")
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
-
-
-
-
-
-
-
-
-
-
