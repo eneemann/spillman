@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr  8 12:34:35 2019
+Created on Mon Apr 8 12:34:35 2019
 @author: eneemann
 Script to detect possible address points by comparing new data to current data
 """
@@ -25,27 +25,15 @@ env.workspace = millard_db
 env.overwriteOutput = True
 
 millard_streets = os.path.join(millard_db, "Streets")
-#millard_addpts = "AddressPoints_TEST_current"
-#current_addpts = os.path.join(staging_db, millard_addpts)
-#millard_addpts = "zzz_AddPts_NW_TEST_current"    # Test on small set of points (5K)
-millard_addpts = "AddressPoints_20190408"
+millard_addpts = "AddressPoints_20191029"
 current_addpts = os.path.join(staging_db, millard_addpts)
 
 today = time.strftime("%Y%m%d")
-# new_addpts = "aaa_possible_newSGID_addpts_" + today
-# possible_addpts = os.path.join(staging_db, new_addpts)
-#new_addpts = "AddressPoints_TEST_possible_WGS84"
-#possible_addpts = os.path.join(staging_db, new_addpts)
-#new_addpts = "zzz_AddPts_NW_TEST_possible"    # Test on small set of points (5K)
-new_addpts = "AddressPoints_SGID_export_20190408"    # Test of export from SGID (3K)
+new_addpts = "AddressPoints_SGID_export_20191028"
+#new_addpts = "Britt_addpts_20191028"
 possible_addpts = os.path.join(staging_db, new_addpts)
 
-# SGID_addpts = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
-# SGID_addpts_wgs84 = os.path.join(staging_db, "SGID_addpts_wgs84")
-
 # Copy current address points into a working FC
-#working_addpts = os.path.join(staging_db, "AddressPoints_TEST_working_" + today)
-#arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
 arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 
@@ -69,6 +57,49 @@ def get_SGID_addpts(out_db):
     arcpy.FeatureClassToFeatureClass_conversion (sgid_pts, out_db, new_pts, where_SGID)
   
 
+# Calculate spelled out sufdir field to align with spillman notation
+def clean_addpts(working):
+    arcpy.management.AlterField(working, 'SuffixDir', field_length=5)
+    sufdir_count = 0
+    type_count = 0
+    # Calculate "Street" field where applicable
+#    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
+    #              0            1             2             3          4          5         6
+    fields = ['PrefixDir', 'StreetName', 'SuffixDir', 'StreetType', 'Street', 'AddNum', 'FullAdd']
+    with arcpy.da.UpdateCursor(working, fields) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            if row[1] == 'MAIN' or row[1] == 'CENTER':
+                row[3] = None
+                type_count += 1
+                
+            if row[2] == 'N':
+                row[2] = 'NORTH'
+                sufdir_count += 1
+            elif row[2] == 'S':
+                row[2] = 'SOUTH'
+                sufdir_count += 1
+            elif row[2] == 'E':
+                row[2] = 'EAST'
+                sufdir_count += 1
+            elif row[2] == 'W':
+                row[2] = 'WEST'
+                sufdir_count += 1
+                
+            if row[0] is None: row[0] = ''
+            if row[2] is None: row[2] = ''
+            if row[3] is None: row[3] = ''
+            parts = [row[0], row[1], row[2], row[3]]
+            row[4] = " ".join(parts)
+            row[4] = row[4].lstrip().rstrip()
+            row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
+            row[6] = str(row[5]) + " " + row[4]
+            
+            cursor.updateRow(row)
+    print("Total count of updates to {0} field: {1}".format(fields[2], sufdir_count))       
+    print("Total count of updates to {0} field: {1}".format(fields[3], type_count))
+
+# For SGID addpts
 def calc_street(working):
     update_count = 0
     # Calculate "Street" field where applicable
@@ -88,6 +119,24 @@ def calc_street(working):
             update_count += 1
             cursor.updateRow(row)
     print("Total count of updates to {0} field: {1}".format(fields[4], update_count))
+    
+
+# For Adam Britt's addpts
+#def calc_street(working):
+#    update_count = 0
+#    # Calculate "Street" field where applicable
+##    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
+#    fields = ['FULLADDR', 'Street']
+#    with arcpy.da.UpdateCursor(working, fields) as cursor:
+#        print("Looping through rows in FC ...")
+#        for row in cursor:
+#            row[0] = row[0].strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
+#            print(row[0])
+#            row[1] = row[0].split(" ", 1)[1].strip()
+##            print "New value for {0} is: {1}".format(fields[4], row[4])
+#            update_count += 1
+#            cursor.updateRow(row)
+#    print("Total count of updates to {0} field: {1}".format(fields[1], update_count))
 
 
 def remove_duplicates(current, working):
@@ -107,6 +156,7 @@ def remove_duplicates(current, working):
     # Loop through working layer and select features that aren't in current millard add pts list (avoid duplicates)
     # Export these features out to a non-duplicates FC
     fields = ['FullAdd', 'Notes']
+#    fields = ['FULLADDR', 'Notes']
     with arcpy.da.UpdateCursor("working_lyr", fields) as cursor:
         print("Looping through rows in {} ...".format("working_lyr"))
         for row in cursor:
@@ -163,9 +213,9 @@ def check_nearby_roads(working, streets, gdb):
     address points layer using the 'IN_FID' field to update the 'Notes' field in a FC.
     """
     func_start_time = time.time()
-    # look at features that aren't name duplicates or likely spatial duplicates
+    # look at features that aren't name duplicates
     where_clause = "Notes = 'not name duplicate'"
-    # Need to make a layer from working address points feature class here
+    # Need to make a layer from possible address points feature class here
     arcpy.MakeFeatureLayer_management(working, "working_nodups", where_clause)
     result = arcpy.GetCount_management("working_nodups")
     total = int(result.getOutput(0))
@@ -180,13 +230,14 @@ def check_nearby_roads(working, streets, gdb):
     
     # Convert neartable to pandas dataframe
     neartable_arr = arcpy.da.TableToNumPyArray(neartable, '*')
-    near_df = pd.DataFrame(data = neartable_arr)
+    near_df =pd.DataFrame(data = neartable_arr)
     print(near_df.head(5).to_string())
     
     # Convert address points to pandas dataframe
-    addpt_fields = ['OBJECTID', 'AddNum', 'Street', 'Notes']
+#    addpt_fields = ['OBJECTID', 'AddNum', 'Street', 'Notes']
+    addpt_fields = ['OBJECTID', 'ADDRNUM', 'Street', 'Notes']
     addpts_arr = arcpy.da.FeatureClassToNumPyArray(working, addpt_fields)
-    addpts_df = pd.DataFrame(data = addpts_arr)
+    addpts_df =pd.DataFrame(data = addpts_arr)
     print(addpts_df.head(5).to_string())
     
     # Convert roads to pandas dataframe
@@ -216,21 +267,32 @@ def check_nearby_roads(working, streets, gdb):
     is_goodstreet = near_df_updated['goodstreet'] == True      # Create indexes
     # Grab rows with good streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest good street to the address point
-    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK')
     
     # Separate rows with no good nearby street into a separate dataframe
     not_goodstreet = near_df_updated['goodstreet'] == False    # Create indexes
     # Grab rows with bad streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest bad street to the address point
-    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK')
     
-    # Combine good and bad street dataframes, sort so good streets are at the top, then remove duplicates of address points
+    # Combine good and bad street dataframes, sort so good streets are at the top
     # If a good streets are found, nearest one will be used; otherwise nearest bad street will be used ("near street not found")
-    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
+#    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
+    # Sort by multiple columns (goodstreet, then goodnum) to ensure 2nd nearest street with good num will get used
+#    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['goodstreet', 'goodnum'], ascending=False).drop_duplicates('IN_FID')
+    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'],
+                                       ascending=[True,False, False, True, True])
+    filtered_df.to_csv(r'C:\E911\MillardCo\Addpts_working_folder\millard_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
-    final_df = filtered_df.sort_values('IN_FID')
+    final_df = filtered_df.drop_duplicates('IN_FID')
     path = r'C:\E911\MillardCo\Addpts_working_folder\millard_neartable_final.csv'
     final_df.to_csv(path)
+    
+#    # Testing best method to sort data to resturn best candidate for non-matches
+#    test_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'], ascending=[True,False, False, True, True])
+#    test_df.to_csv(r'C:\E911\MillardCo\Addpts_working_folder\millard_neartable_test_edit.csv')
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist']]
@@ -253,14 +315,14 @@ def check_nearby_roads(working, streets, gdb):
     arcpy.CopyFeatures_management(joined_table, working + "_final")
                                                           
     # Update 'Notes' field in working address points with joined table notes
-    # ---> ArcPy makes a mess of the field names after the join, so we need to make
+    # ArcPy makes a mess of the field names after the join, so we need to make
     # sure the proper fields are pulled and updated
-    field1 = os.path.basename(working) + "_Notes"
-    field2 = "neartable_join" + "_Notes_near"
-    fields = [field1, field2]
-    for field in fields:
-        print(field)
-#    fields = ['Notes', 'Notes_near']
+#    field1 = os.path.basename(working) + "_Notes"
+#    field2 = "neartable_join" + "_Notes_near"
+#    fields = [field1, field2]
+#    for field in fields:
+#        print(field)
+    fields = ['Notes', 'Notes_near']
     with arcpy.da.UpdateCursor(working + "_final", fields) as cursor:
         print("Looping through rows in {} to update 'Notes' field ...".format(os.path.basename(working) + "_final"))
         for row in cursor:
@@ -272,7 +334,8 @@ def check_nearby_roads(working, streets, gdb):
                                  
     print("Time elapsed in 'check_nearby_roads' function: {:.2f}s".format(time.time() - func_start_time))
     
-    
+
+# For SGID addpts
 def logic_checks(row):
     """
     Function calculates new values for 'Notes' field by comparing address
@@ -305,15 +368,62 @@ def logic_checks(row):
                 int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
-            row['goodnum'] = goodnum      
+            row['goodnum'] = goodnum
+    # Check for a good house number regardless of street name match or condition
+    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+            int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        goodnum = True
+        row['goodnum'] = goodnum
     return row
-    
+
+
+# For Adam Britt's addpts
+#def logic_checks(row):
+#    """
+#    Function calculates new values for 'Notes' field by comparing address
+#    point to nearby streets' name and address range
+#    """
+#    goodstreet = False
+#    goodnum = False
+#    if row['Street'] == row['STREET']:
+#        goodstreet = True
+#        if (int(row['ADDRNUM'].split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].split()[0]) <= row['L_T_ADD']) or (
+#                int(row['ADDRNUM'].split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].split()[0]) <= row['R_T_ADD']):
+#            goodnum = True
+#    # Update Notes field based on if street and number are good from near analysis
+#    if goodstreet and goodnum:
+#        row['Notes'] = 'good address point'
+#    elif goodstreet and not goodnum:
+#        row['Notes'] = 'near street found, but address range mismatch'
+#    elif not goodstreet:
+#        row['Notes'] = 'near street not found'
+#    row['goodstreet'] = goodstreet
+#    row['goodnum'] = goodnum
+#    row['edit_dist'] = Lv.distance(row['Street'], row['STREET'])
+#    # Check edit distance for roads that might have typos, predir, or sufdir errors
+#    if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
+#        row['Notes'] = 'no near st: possible typo predir or sufdir error'
+#    # Check for likely predir/sufdir errors: road nearly matches, range is good
+#    # Replace needed in logic to catch potential range in address number (e.g., '188-194')
+#    if row['Notes'] == 'no near st: possible typo predir or sufdir error':
+#        if (int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+#                int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+#            goodnum = True
+#            row['Notes'] = 'no near st: likely predir or sufdir error'
+#            row['goodnum'] = goodnum
+#    # Check for a good house number regardless of street name match or condition
+#    if (int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+#            int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+#        goodnum = True
+#        row['goodnum'] = goodnum
+#    return row
 
 ##########################
 #  Call Functions Below  #
 ##########################
 
-get_SGID_addpts(staging_db)
+#get_SGID_addpts(staging_db)
+#clean_addpts(working_addpts)
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
@@ -340,13 +450,3 @@ plt.title('Address/Street Edit Distance Histogram')
 plt.xlabel('Edit Distance')
 plt.ylabel('Count')
 plt.show()
-
-
-
-
-
-
-
-
-
-
