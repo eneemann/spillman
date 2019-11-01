@@ -53,16 +53,17 @@ def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete
     arcpy.Copy_management(new_name_wgs84, original_wgs84)
     # delete WGS84 and UTM files that will be recreated and reprojected later on
     env.workspace = original_wgs84
-    print("Deleting old files from WGS84 gdb ...")
     for fc in WGS84_delete_files:
-        print("Deleting {} ...".format(fc))
-        arcpy.Delete_management(fc)
+        if arcpy.Exists(fc):
+            print("Deleting {} ...".format(fc))
+            arcpy.Delete_management(fc)
     # reassign workspace to utm GDB
     env.workspace = original_utm
     print("Deleting old files from UTM gdb ...")
     for fc in UTM_delete_files:
-        print("Deleting {} ...".format(fc))
-        arcpy.Delete_management(fc)
+        if arcpy.Exists(fc):
+            print("Deleting {} ...".format(fc))
+            arcpy.Delete_management(fc)
 
 
 def blanks_to_nulls(streets):
@@ -499,13 +500,22 @@ FCs_to_project = ["AddressPoints", "Boundary_County", "CityCodes", "CommonPlaces
 # Create variables for shapefiles
 FCs_to_export = FCs_to_project
 today = time.strftime("%Y%m%d")
-# out_folder = r"C:\Users\eneemann\Desktop\Neemann\Spillman\TestData\MillardCo\Shapefiles\TEST_Shapefiles_Millard"
-main_dir = r"C:\E911\MillardCo\0 Shapefiles"
-folder = "Spillman_Shapefiles_Millard_" + today
-out_folder = os.path.join(main_dir, folder)
-os.mkdir(out_folder)
+spill_dir = r"C:\E911\MillardCo\0 Shapefiles"
+spillman_folder = "Spillman_Shapefiles_Millard_" + today
+out_folder_spillman = os.path.join(spill_dir, spillman_folder)
+vela_dir = r"C:\E911\MillardCo\0 Vela Files"
+vela_folder = "Vela_Shapefiles_Millard_" + today
+out_folder_vela = os.path.join(vela_dir, vela_folder)
+
+
+# Comment out this line if the folder already exists (like if code was already run once today)
+if os.path.isdir(out_folder_spillman) == False:
+    os.mkdir(out_folder_spillman)
+if os.path.isdir(out_folder_vela) == False:
+    os.mkdir(out_folder_vela)
+
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
-# export_shapefiles_all_fields(FCs_to_export, out_folder)
+# export_shapefiles_all_fields(FCs_to_export, out_folder_spillman)
 # Option 2: Individually exports each FC to shapefile, trims output down to specified fields
 # -----> See last set of function calls
 
@@ -546,18 +556,18 @@ citycd_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
 # Run code to here, then pause to use Spillman tools in ArcMap #
 ################################################################
 env.workspace = wgs84_db
-export_shapefiles_select_fields("AddressPoints", out_folder, addpt_fields)
-export_shapefiles_select_fields("CommonPlaces", out_folder, commplc_fields)
-export_shapefiles_select_fields("Mileposts", out_folder, milepost_fields)
-export_shapefiles_select_fields("Streets", out_folder, street_fields)
-export_shapefiles_select_fields("EMSAreas", out_folder, earea_fields)
-export_shapefiles_select_fields("EMSZones", out_folder, ezone_fields)
-export_shapefiles_select_fields("FireAreas", out_folder, farea_fields)
-export_shapefiles_select_fields("FireZones", out_folder, fzone_fields)
-export_shapefiles_select_fields("LawAreas", out_folder, larea_fields)
-export_shapefiles_select_fields("LawZones", out_folder, lzone_fields)
-export_shapefiles_select_fields("CityCodes", out_folder, citycd_fields)
-# export_shapefiles_select_fields("_other_", out_folder, other_fields)
+export_shapefiles_select_fields("AddressPoints", out_folder_spillman, addpt_fields)
+#export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
+#export_shapefiles_select_fields("Mileposts", out_folder_spillman, milepost_fields)
+export_shapefiles_select_fields("Streets", out_folder_spillman, street_fields)
+#export_shapefiles_select_fields("EMSAreas", out_folder_spillman, earea_fields)
+#export_shapefiles_select_fields("EMSZones", out_folder_spillman, ezone_fields)
+#export_shapefiles_select_fields("FireAreas", out_folder_spillman, farea_fields)
+#export_shapefiles_select_fields("FireZones", out_folder_spillman, fzone_fields)
+#export_shapefiles_select_fields("LawAreas", out_folder_spillman, larea_fields)
+#export_shapefiles_select_fields("LawZones", out_folder_spillman, lzone_fields)
+#export_shapefiles_select_fields("CityCodes", out_folder_spillman, citycd_fields)
+# export_shapefiles_select_fields("_other_", out_folder_spillman, other_fields)
 
 
 print("Script shutting down ...")
@@ -565,13 +575,4 @@ print("Script shutting down ...")
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
-
-
-
-
-
-
-
-
-
 
