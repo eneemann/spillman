@@ -5,6 +5,8 @@ Created on Wed May  1 08:34:21 2019
 Script to detect possible address points by comparing new data to current data
 
 Need to call get_SGID_addpts function first, then comment out the call and run the script
+
+13 Nov 2019: applied major update to sorting logic (EMN)
 """
 
 import arcpy
@@ -27,7 +29,7 @@ env.workspace = stgeorge_db
 env.overwriteOutput = True
 
 stgeorge_streets = os.path.join(stgeorge_db, "StGeorge_Dispatch_Streets")
-stgeorge_addpts = "AddressPoints_20190904"    # Point to current addpts in staging_db
+stgeorge_addpts = "AddressPoints_20191108"    # Point to current addpts in staging_db
 #stgeorge_addpts = "AddressPoints_update_20190904"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, stgeorge_addpts)
 
@@ -48,6 +50,7 @@ arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 ###############
 #  Functions  #
 ###############
+
 
 def get_SGID_addpts(out_db):
     today = time.strftime("%Y%m%d")
@@ -208,27 +211,38 @@ def check_nearby_roads(working, streets, gdb):
     is_goodstreet = near_df_updated['goodstreet'] == True      # Create indexes
     # Grab rows with good streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest good street to the address point
-    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK')
     
     # Separate rows with no good nearby street into a separate dataframe
     not_goodstreet = near_df_updated['goodstreet'] == False    # Create indexes
     # Grab rows with bad streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest bad street to the address point
-    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK')
     
     # Combine good and bad street dataframes, sort so good streets are at the top, then remove duplicates of address points
     # If a good streets are found, nearest one will be used; otherwise nearest bad street will be used ("near street not found")
-    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
+#    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
+    # Sort by multiple columns (goodstreet, then goodnum) to ensure 2nd nearest street with good num will get used
+#    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['goodstreet', 'goodnum'], ascending=False).drop_duplicates('IN_FID')
+    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'],
+                                       ascending=[True,False, False, True, True])
+    filtered_df.to_csv(r'C:\E911\Beaver Co\Addpts_working_folder\beaver_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
-    final_df = filtered_df.sort_values('IN_FID')
-    path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_final.csv'
+    final_df = filtered_df.drop_duplicates('IN_FID')
+    path = r'C:\E911\Beaver Co\Addpts_working_folder\beaver_neartable_final.csv'
     final_df.to_csv(path)
+    
+#    # Testing best method to sort data to resturn best candidate for non-matches
+#    test_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'], ascending=[True,False, False, True, True])
+#    test_df.to_csv(r'C:\E911\Beaver Co\Addpts_working_folder\beaver_neartable_test_edit.csv')
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
     join_df.columns = ['IN_FID', 'Notes_near', 'edit_dist']
-    join_path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_join.csv'
+    join_path = r'C:\E911\Beaver Co\Addpts_working_folder\beaver_neartable_join.csv'
     join_df.to_csv(join_path)
         
     # Convert CSV output into table and join to working address points FC
@@ -243,10 +257,9 @@ def check_nearby_roads(working, streets, gdb):
     # Copy joined table to "_final" feature class
     # This is a copy of the address points feature class with new joined fields
     arcpy.CopyFeatures_management(joined_table, working + "_final")
-
-        
+                                                          
     # Update 'Notes' field in working address points with joined table notes
-    # ---> ArcPy makes a mess of the field names after the join, so we need to make
+    # ArcPy makes a mess of the field names after the join, so we need to make
     # sure the proper fields are pulled and updated
 #    field1 = os.path.basename(working) + "_Notes"
 #    field2 = "neartable_join" + "_Notes_near"
@@ -298,7 +311,12 @@ def logic_checks(row):
                 int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
-            row['goodnum'] = goodnum      
+            row['goodnum'] = goodnum
+    # Check for a good house number regardless of street name match or condition
+    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+            int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        goodnum = True
+        row['goodnum'] = goodnum
     return row
     
 
@@ -306,7 +324,7 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-get_SGID_addpts(staging_db)
+#get_SGID_addpts(staging_db)
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
