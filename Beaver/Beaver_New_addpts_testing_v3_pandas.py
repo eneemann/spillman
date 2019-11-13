@@ -3,6 +3,8 @@
 Created on Tue Mar 26 11:23:54 2019
 @author: eneemann
 Script to detect possible address points by comparing new data to current data
+
+11 Oct 2019: applied major update to sorting logic (EMN)
 """
 
 import arcpy
