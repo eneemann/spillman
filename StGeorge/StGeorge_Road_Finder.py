@@ -19,8 +19,8 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
-SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
-current_streets = os.path.join(staging_db, "StGeorge_Dispatch_Streets_20190820")
+SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
+current_streets = os.path.join(staging_db, "StG_Streets_update_20191108")
 sgid_roads = os.path.join(SGID, "SGID10.TRANSPORTATION.Roads")
 env.workspace = staging_db
 env.overwriteOutput = True
