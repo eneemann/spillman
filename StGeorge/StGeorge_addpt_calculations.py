@@ -40,7 +40,7 @@ def blanks_to_nulls(pts):
     with arcpy.da.UpdateCursor(pts, flist) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            for i in range(len(field_list)):
+            for i in range(len(flist)):
                 if row[i] == '' or row[i] == ' ':
 #                    print("Updating field: {0} on ObjectID: {1}".format(field_list[i].name, row[0]))
                     update_count += 1
@@ -103,13 +103,4 @@ print("Script shutting down ...")
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
-
-
-
-
-
-
-
-
-
 
