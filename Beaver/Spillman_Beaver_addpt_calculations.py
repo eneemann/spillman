@@ -90,6 +90,32 @@ def calc_label(pts):
             cursor.updateRow(row)
     print("Total count of updates to {0} field: {1}".format(fields[0], update_count))
 
+
+def strip_fields(pts):
+    update_count = 0
+    # Use update cursor to convert blanks to null (None) for each field
+
+    fields = arcpy.ListFields(pts)
+
+    field_list = []
+    for field in fields:
+        print(field.type)
+        if field.type == 'String':
+            field_list.append(field.name)
+            
+    print(field_list)
+
+    with arcpy.da.UpdateCursor(pts, field_list) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            for i in range(len(field_list)):
+                if isinstance(row[i], str):
+                    row[i] = row[i].strip()
+                    update_count += 1
+            cursor.updateRow(row)
+    print("Total count of stripped fields is: {}".format(update_count))
+    
+    
 ##########################
 #  Call Functions Below  #
 ##########################
@@ -97,6 +123,7 @@ def calc_label(pts):
 blanks_to_nulls(addpts)
 calc_street(addpts)
 calc_label(addpts)
+strip_fields(addpts)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
