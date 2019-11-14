@@ -40,7 +40,7 @@ def blanks_to_nulls(pts):
     with arcpy.da.UpdateCursor(pts, flist) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            for i in range(len(field_list)):
+            for i in range(len(flist)):
                 if row[i] == '' or row[i] == ' ':
                     print("Updating field: {0} on ObjectID: {1}".format(field_list[i].name, row[0]))
                     update_count += 1
