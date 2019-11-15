@@ -122,9 +122,9 @@ def strip_fields(pts):
 #  Call Functions Below  #
 ##########################
 
-#blanks_to_nulls(addpts)
-#calc_street(addpts)
-#calc_label(addpts)
+blanks_to_nulls(addpts)
+calc_street(addpts)
+calc_label(addpts)
 strip_fields(addpts)
 
 print("Script shutting down ...")
