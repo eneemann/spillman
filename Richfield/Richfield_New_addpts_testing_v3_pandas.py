@@ -29,7 +29,7 @@ env.overwriteOutput = True
 rich_streets = os.path.join(rich_db, "streets")
 #rich_addpts = "AddressPoints_TEST_current"
 #current_addpts = os.path.join(staging_db, rich_addpts)
-rich_addpts = "address_points_20190521"    # Point to current addpts in staging_db
+rich_addpts = "address_points_20191120"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, rich_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -54,8 +54,8 @@ arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 def get_SGID_addpts(out_db):
     today = time.strftime("%Y%m%d")
-    SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
-    sgid_pts = os.path.join(SGID, "SGID10.LOCATION.AddressPoints")
+    SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
+    sgid_pts = os.path.join(SGID, "SGID.LOCATION.AddressPoints")
     new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
         arcpy.Delete_management(new_pts)
@@ -286,7 +286,6 @@ def logic_checks(row):
         row['Notes'] = 'good address point'
     elif goodstreet and not goodnum:
         row['Notes'] = 'near street found, but address range mismatch'
-    elif not goodstreet:
         row['Notes'] = 'near street not found'
     row['goodstreet'] = goodstreet
     row['goodnum'] = goodnum
