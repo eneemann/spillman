@@ -4,7 +4,7 @@ Created on Wed Oct 16 08:27:29 2019
 
 @author: eneemann
 
-EMN: Initial scrip to calculate address point fields for Beaver
+EMN: Initial scrip to calculate address point fields for St George
 """
 
 import arcpy
