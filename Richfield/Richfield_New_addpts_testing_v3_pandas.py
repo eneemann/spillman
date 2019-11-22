@@ -29,7 +29,7 @@ env.overwriteOutput = True
 rich_streets = os.path.join(rich_db, "streets")
 #rich_addpts = "AddressPoints_TEST_current"
 #current_addpts = os.path.join(staging_db, rich_addpts)
-rich_addpts = "address_points_20191120"    # Point to current addpts in staging_db
+rich_addpts = "address_points_update_20191119"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, rich_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -77,8 +77,7 @@ def calc_street(working):
             if row[3] is None: row[3] = ''
             parts = [row[0], row[1], row[2], row[3]]
             row[4] = " ".join(parts)
-            row[4] = row[4].lstrip().rstrip()
-            row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
+            row[4] = row[4].strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
 #            print "New value for {0} is: {1}".format(fields[4], row[4])
             update_count += 1
             cursor.updateRow(row)

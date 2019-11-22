@@ -18,8 +18,9 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
-#addpts = os.path.join(stage_db, "address_points_update_20191119")
-addpts = os.path.join(stage_db, "address_points_update_20191119_TEST")
+addpts = os.path.join(stage_db, "address_points_update_20191119")
+#addpts = os.path.join(stage_db, "address_points_update_20191119_TEST")
+#addpts = os.path.join(stage_db, "streets_update_20191119")
 env.workspace = stage_db
 
 ###############
@@ -131,6 +132,14 @@ def blanks_to_nulls(pts):
     for field in fields:
         if field.name in flist:
             field_list.append(field)
+            
+#    field_list = []
+#    for field in fields:
+#        print(field.type)
+#        if field.type == 'String':
+#            field_list.append(field.name)
+#            
+#    print(field_list)
 
     with arcpy.da.UpdateCursor(pts, flist) as cursor:
         print("Looping through rows in FC ...")
@@ -216,11 +225,11 @@ def strip_fields(pts):
 ##########################
 #  Call Functions Below  #
 ##########################
-calc_unit_from_fulladd(addpts)
-calc_prefixdir_from_street(addpts)
-calc_suffixdir_from_street(addpts)
-calc_streettype_from_street(addpts)
-calc_streetname_from_street(addpts)
+#calc_unit_from_fulladd(addpts)
+#calc_prefixdir_from_street(addpts)
+#calc_suffixdir_from_street(addpts)
+#calc_streettype_from_street(addpts)
+#calc_streetname_from_street(addpts)
 blanks_to_nulls(addpts)
 #calc_street(addpts)
 calc_label(addpts)
