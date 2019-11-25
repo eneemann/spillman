@@ -378,7 +378,7 @@ def create_address_pts_CAD(addpts):
     arcpy.MakeFeatureLayer_management(addpts, "addpts_lyr", where_clause)
     # Select where streets are not NULL and have valid address ranges
     sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
-    # Export selected streets to 'address_points_CAD' feature class
+    # Export selected addpts to 'address_points_CAD' feature class
     addpts_CAD = os.path.join(utm_db, "address_points_CAD")
     print("Exporting {} ...".format(addpts_CAD))
     arcpy.CopyFeatures_management(sel, addpts_CAD)
@@ -526,7 +526,8 @@ def populate_LS_ZONE(streets, zones_fc):
 WGS84_files_to_delete = ["address_points", "address_points_CAD",
                          "citycodes", "common_places",
                          "ems_zones", "fire_zones", "law_zones", "MZ_Zones",
-                         "streets", "streets_CAD", "tbzones"]
+                         "streets", "streets_CAD", "tbzones", "common_places_Exits",
+                         "common_places_Mileposts", "municipalities"]
 UTM_files_to_delete = ["address_points_CAD", "streets_CAD"]
 
 # Create variables for address points
@@ -611,26 +612,26 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #  Call Functions Below  #
 ##########################
 
-#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-#blanks_to_nulls(streets_fc_utm)
-#calc_street(streets_fc_utm)
-#calc_salias1(streets_fc_utm)
-#calc_salias2(streets_fc_utm)
-#calc_salias4(streets_fc_utm)
-#highway_to_sr_us(streets_fc_utm)
-#calc_salias3(streets_fc_utm)
-#street_blank_to_null(streets_fc_utm)
-#calc_location(streets_fc_utm)
-#create_streets_CAD(streets_fc_utm)
-#create_address_pts_CAD(address_pts)
-#copy_tbzones(tbzones)
-#project_to_wgs84(FCs_to_project)
-#spillman_polygon_prep(streets_cad_wgs84)
+create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+blanks_to_nulls(streets_fc_utm)
+calc_street(streets_fc_utm)
+calc_salias1(streets_fc_utm)
+calc_salias2(streets_fc_utm)
+calc_salias4(streets_fc_utm)
+highway_to_sr_us(streets_fc_utm)
+calc_salias3(streets_fc_utm)
+street_blank_to_null(streets_fc_utm)
+calc_location(streets_fc_utm)
+create_streets_CAD(streets_fc_utm)
+create_address_pts_CAD(address_pts)
+copy_tbzones(tbzones)
+project_to_wgs84(FCs_to_project)
+spillman_polygon_prep(streets_cad_wgs84)
 
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
-# When complete, run code below to export shapefiles            #
+# When complete, run code below to calc LS & export shapefiles  #
 #################################################################
 
 # Assign LS_Zones to streets_CAD (wgs84) segments
@@ -652,10 +653,10 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_spillman, milepost_fields, mileposts_out)
 
 ## Vela Shapefiles Export
-export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
-export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+#export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+#export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+#export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
+#export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
 
 #export_shapefiles_all_fields(vela_to_export, out_folder_vela)
 #env.workspace = out_folder_vela
