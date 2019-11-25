@@ -591,7 +591,7 @@ exits_out = "exits"
 mileposts_out = "mileposts"
 
 # Vela Shapefile field lists
-vela_addpt_fields = ["FullAdd", "ADDRESS", "PrefixDir", "StreetName", "StreetType", "SuffixDir", "UnitID", "STREET", "X",
+vela_addpt_fields = ["ADDRESS", "PrefixDir", "StreetName", "StreetType", "SuffixDir", "UnitID", "STREET", "X",
                      "Y"] #, "ZipCode", "State", "COMM"]
 vela_commplc_fields = ["ALIAS", "CITYCD", "STREET", "BEGNUMB", "ENDNUMB", "ADDRESS"]
 vela_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "PREDIR", "STREETNAME", "STREETTYPE",
@@ -600,10 +600,10 @@ vela_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "
 vela_muni_fields = ["NAME", "CITYCD"]
 
 # Vela Shapefile outnames
-vela_addpt_out = "address_points"
-vela_commplc_out = "common_places"
-vela_street_out = "streets"
-vela_muni_out = "municipalities"
+vela_addpt_out = "AddressPoints"
+vela_commplc_out = "CommonPlacePoints"
+vela_street_out = "Streets"
+vela_muni_out = "Cities"
 
 # Additional Vela Shapefiles to export
 vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
@@ -612,21 +612,21 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #  Call Functions Below  #
 ##########################
 
-create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-blanks_to_nulls(streets_fc_utm)
-calc_street(streets_fc_utm)
-calc_salias1(streets_fc_utm)
-calc_salias2(streets_fc_utm)
-calc_salias4(streets_fc_utm)
-highway_to_sr_us(streets_fc_utm)
-calc_salias3(streets_fc_utm)
-street_blank_to_null(streets_fc_utm)
-calc_location(streets_fc_utm)
-create_streets_CAD(streets_fc_utm)
-create_address_pts_CAD(address_pts)
-copy_tbzones(tbzones)
-project_to_wgs84(FCs_to_project)
-spillman_polygon_prep(streets_cad_wgs84)
+#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+#blanks_to_nulls(streets_fc_utm)
+#calc_street(streets_fc_utm)
+#calc_salias1(streets_fc_utm)
+#calc_salias2(streets_fc_utm)
+#calc_salias4(streets_fc_utm)
+#highway_to_sr_us(streets_fc_utm)
+#calc_salias3(streets_fc_utm)
+#street_blank_to_null(streets_fc_utm)
+#calc_location(streets_fc_utm)
+#create_streets_CAD(streets_fc_utm)
+#create_address_pts_CAD(address_pts)
+#copy_tbzones(tbzones)
+#project_to_wgs84(FCs_to_project)
+#spillman_polygon_prep(streets_cad_wgs84)
 
 
 #################################################################
@@ -647,20 +647,19 @@ spillman_polygon_prep(streets_cad_wgs84)
 #export_shapefiles_select_fields("MZ_Zones", out_folder_spillman, mzone_fields)
 #export_shapefiles_select_fields("citycodes", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fields)
-#export_shapefiles_select_fields("citycodes", out_folder_spillman, citycd_fields)
-#export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fields)
 #export_shapefiles_select_fields_rename("common_places_Exits", out_folder_spillman, exit_fields, exits_out)
 #export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_spillman, milepost_fields, mileposts_out)
 
 ## Vela Shapefiles Export
-#export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-#export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-#export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
-#export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
+export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
 
 #export_shapefiles_all_fields(vela_to_export, out_folder_vela)
 #env.workspace = out_folder_vela
 #arcpy.Rename_management("COMMUNITY.shp", "Communities.shp")
+#arcpy.Rename_management("law_zones.shp", "LawZones.shp")
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
