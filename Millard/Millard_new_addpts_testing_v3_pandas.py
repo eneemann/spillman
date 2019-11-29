@@ -47,7 +47,7 @@ arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 def get_SGID_addpts(out_db):
     today = time.strftime("%Y%m%d")
-    SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
+    SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
     sgid_pts = os.path.join(SGID, "SGID10.LOCATION.AddressPoints")
     new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
