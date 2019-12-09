@@ -18,15 +18,15 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
+today = time.strftime("%Y%m%d")
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
-current_streets = os.path.join(staging_db, "StG_Streets_update_20191108")
+current_streets = os.path.join(staging_db, "StG_Streets_update_" + today)
 sgid_roads = os.path.join(SGID, "SGID10.TRANSPORTATION.Roads")
 env.workspace = staging_db
 env.overwriteOutput = True
 
 # Export roads from SGID into new FC based on desired counties
-today = time.strftime("%Y%m%d")
 export_roads = os.path.join(staging_db, "Roads_SGID_export_" + today)
 
 # Create a 10m buffer around current streets data to use for selection
