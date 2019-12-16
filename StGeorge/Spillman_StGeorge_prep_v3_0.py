@@ -607,7 +607,7 @@ vela_addpt_fields = ["FullAdd", "AddNum", "PrefixDir", "StreetName", "StreetType
                      "Y"] #, "ZipCode", "State", "COMM"]
 vela_commplc_fields = ["ALIAS", "CITYCD", "STREET", "BEGNUMB", "ENDNUMB", "FULL_ADDRE", "COMM"]
 vela_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "PREDIR", "STREETNAME", "STREETTYPE",
-                      "SUFDIR", "ALIAS1", "ALIAS1TYPE", "ALIAS2", "ALIAS2TYPE", "ACSALIAS", "ACSNAME", "ACSSUF",
+                      "SUFDIR", "FULLNAME", "ALIAS1", "ALIAS1TYPE", "ALIAS2", "ALIAS2TYPE", "ACSALIAS", "ACSNAME", "ACSSUF",
                       "ZIPLEFT", "ZIPRIGHT", "STREET", "COMM_LEFT", "COMM_RIGHT", "Shape_Length"]
 vela_law_fields = ["NAME", "ZONEID"]
 vela_muni_fields = ["NAME", "POPLASTCENSUS", "CITYCD"]
@@ -627,23 +627,23 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 #  Call Functions Below  #
 ##########################
 
-create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-blanks_to_nulls(streets_fc_utm)
-calc_street(streets_fc_utm)
-calc_salias1(streets_fc_utm)
-calc_salias2(streets_fc_utm)
-calc_salias4(streets_fc_utm)
-highway_to_sr_us(streets_fc_utm)
-calc_salias3(streets_fc_utm)
-street_blank_to_null(streets_fc_utm)
-calc_location(streets_fc_utm)
-create_streets_CAD(streets_fc_utm)
-create_address_pts_CAD(address_pts)
-copy_tbzones(tbzones)
-create_streets_all(streets_fc_utm)
-project_to_wgs84(FCs_to_project)
-spillman_polygon_prep(streets_cad_wgs84)
-recalc_location(streets_cad_wgs84)
+#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+#blanks_to_nulls(streets_fc_utm)
+#calc_street(streets_fc_utm)
+#calc_salias1(streets_fc_utm)
+#calc_salias2(streets_fc_utm)
+#calc_salias4(streets_fc_utm)
+#highway_to_sr_us(streets_fc_utm)
+#calc_salias3(streets_fc_utm)
+#street_blank_to_null(streets_fc_utm)
+#calc_location(streets_fc_utm)
+#create_streets_CAD(streets_fc_utm)
+#create_address_pts_CAD(address_pts)
+#copy_tbzones(tbzones)
+#create_streets_all(streets_fc_utm)
+#project_to_wgs84(FCs_to_project)
+#spillman_polygon_prep(streets_cad_wgs84)
+#recalc_location(streets_cad_wgs84)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
@@ -664,7 +664,7 @@ recalc_location(streets_cad_wgs84)
 # Vela Shapefiles Export
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Common_Place_Points", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
+export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Law_Zones", out_folder_vela, vela_law_fields, vela_law_out)
 
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
