@@ -17,12 +17,13 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
-fc_name = "Streets_interstate_updates_20190730"
+db = r"C:\E911\UintahBasin\UB_Staging.gdb"
+fc_name = "UBStreets_updates_20191209"
 env.workspace = db
 fc_layer = os.path.join(db, fc_name)
-fields = ['OBJECTID', 'PREDIR', 'STREETNAME', 'STREETTYPE', 'SUFDIR', 'ALIAS1', 'ALIAS1TYPE', 'ALIAS2', 'ALIAS2TYPE',
-              'ACSALIAS', 'ACSNAME', 'ACSSUF', 'SALIAS1', 'SALIAS2', 'SALIAS3', 'SALIAS4']
+fields = ['OBJECTID', 'FULLNAME', 'PREDIR', 'STREETNAME', 'STREETTYPE', 'SUFDIR', 'ALIAS1', 'ALIAS1TYPE', 'ALIAS2', 'ALIAS2TYPE',
+              'ACSALIAS', 'ACSNAME', 'ACSSUF', 'SALIAS1', 'SALIAS2', 'SALIAS3', 'SALIAS4', 'HWYNAME', 'DOT_RTNAME', 'DOT_RTPART', 'ACCURACY', 'ACCESS',
+              'NOTES', 'SOURCE', 'COUNIQUE', 'SURFTYPE', 'LOCALFUNC', 'MAINTJURIS', 'USAGENOTES', 'FED_RDID', 'DOT_FUNC', 'DOT_COFUND']
 
 ###############
 #  Functions  #
