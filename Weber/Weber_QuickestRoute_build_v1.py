@@ -93,6 +93,7 @@ update_count1 = 0
 fields1 = ['TrvlTime', 'Multiplier']
 # where_clause1 = "HWYNAME IS NOT NULL AND HWYNAME NOT IN ('I-15', 'I-80', 'I-84') AND STREETTYPE <> 'RAMP'"
 # 3/11/2019 Update: added 'STREETTYPE IS NULL' to where clause to catch highway segments correctly
+# 1/2/2020 Update: added some segments with 'QR FIX' in HWYNAME field to improve routing with 1.5 multiplier
 where_clause1 = "HWYNAME IS NOT NULL AND HWYNAME NOT IN ('I-15', 'I-80', 'I-84') AND (STREETTYPE <> 'RAMP' OR STREETTYPE IS NULL)"
 with arcpy.da.UpdateCursor(network_streets, fields1, where_clause1) as cursor:
     print("Looping through rows to multiply TrvlTime on state and federal highways ...")
