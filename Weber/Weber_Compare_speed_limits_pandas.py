@@ -114,16 +114,16 @@ def check_nearby_roads(points, streets, gdb):
     # Combine good and bad street dataframes, sort so good streets are at the top
     # If a good streets are found, nearest one will be used; otherwise nearest bad street will be used ("near street not found")
     # Sort by multiple columns (samestreet, then samenum) to ensure 2nd nearest street with good num will get used
-    filtered_df = samestreets_df.append(badstreets_df).sort_values(['IN_FID','samestreet', 'samenum', 'edit_dist', 'NEAR_DIST'],
-                                       ascending=[True,False, False, True, True])
+    filtered_df = samestreets_df.append(badstreets_df).sort_values(['NEAR_FID', 'samestreet', 'edit_dist', 'NEAR_DIST', 'samenum'],
+                                       ascending=[True, False, True, True, False])
     filtered_df.to_csv(r'C:\E911\WeberArea\Staging103\Speed_limit_working_folder\weber_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
-    final_df = filtered_df.drop_duplicates('IN_FID')
+    final_df = filtered_df.drop_duplicates('NEAR_FID')
     path = r'C:\E911\WeberArea\Staging103\Speed_limit_working_folder\weber_neartable_final.csv'
     final_df.to_csv(path)
     
     # Create new dataframe that will be used to join to streets feature class with arcpy
-    join_df = final_df[['NEAR_FID', 'SPEED_up', 'Notes', 'edit_dist']]
+    join_df = final_df[['IN_FID', 'NEAR_FID', 'SPEED_up', 'STREET_up', 'Notes', 'edit_dist']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
 #    join_df.columns = ['NEAR_FID', 'Notes_near', 'edit_dist']
     join_path = r'C:\E911\WeberArea\Staging103\Speed_limit_working_folder\weber_neartable_join.csv'
@@ -197,7 +197,10 @@ def logic_checks(row):
     elif samestreet and not samenum and not samespeed:
         row['Notes'] = 'match - speed limit changed, bad number'
     elif not samestreet:
-        row['Notes'] = 'different street'
+        if samespeed:
+            row['Notes'] = 'different street'
+        else:
+            row['Notes'] = 'different street - speed limit changed'              
         
     return row
  
