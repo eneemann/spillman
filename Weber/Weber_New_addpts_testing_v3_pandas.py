@@ -27,7 +27,7 @@ env.workspace = weber_db
 env.overwriteOutput = True
 
 weber_streets = os.path.join(weber_db, "Streets_Map")
-weber_addpts = "AddressPoints_old_20190204"    # Point to current addpts in staging_db
+weber_addpts = "AddressPoints_SGB_20200116"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, weber_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -282,37 +282,41 @@ def logic_checks(row):
     """
     goodstreet = False
     goodnum = False
-    if row['Street'] == row['STREET']:
-        goodstreet = True
-        if (int(row['AddNum'].split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].split()[0]) <= row['L_T_ADD']) or (
-                int(row['AddNum'].split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].split()[0]) <= row['R_T_ADD']):
-            goodnum = True
-    # Update Notes field based on if street and number are good from near analysis
-    if goodstreet and goodnum:
-        row['Notes'] = 'good address point'
-    elif goodstreet and not goodnum:
-        row['Notes'] = 'near street found, but address range mismatch'
-    elif not goodstreet:
-        row['Notes'] = 'near street not found'
-    row['goodstreet'] = goodstreet
-    row['goodnum'] = goodnum
-    row['edit_dist'] = Lv.distance(row['Street'], row['STREET'])
-    # Check edit distance for roads that might have typos, predir, or sufdir errors
-    if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
-        row['Notes'] = 'no near st: possible typo predir or sufdir error'
-    # Check for likely predir/sufdir errors: road nearly matches, range is good
-    # Replace needed in logic to catch potential range in address number (e.g., '188-194')
-    if row['Notes'] == 'no near st: possible typo predir or sufdir error':
-        if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-                int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
-            goodnum = True
-            row['Notes'] = 'no near st: likely predir or sufdir error'
-            row['goodnum'] = goodnum
-    # Check for a good house number regardless of street name match or condition
-    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-            int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
-        goodnum = True
+    add_num = ''.join(i for i in row['AddNum'] if i.isdigit())
+    
+    if add_num.isdigit():
+        if row['Street'] == row['STREET']:
+            goodstreet = True
+            if (int(add_num.split()[0]) >= row['L_F_ADD'] and int(add_num.split()[0]) <= row['L_T_ADD']) or (
+                    int(add_num.split()[0]) >= row['R_F_ADD'] and int(add_num.split()[0]) <= row['R_T_ADD']):
+                goodnum = True
+        # Update Notes field based on if street and number are good from near analysis
+        if goodstreet and goodnum:
+            row['Notes'] = 'good address point'
+        elif goodstreet and not goodnum:
+            row['Notes'] = 'near street found, but address range mismatch'
+        elif not goodstreet:
+            row['Notes'] = 'near street not found'
+        row['goodstreet'] = goodstreet
         row['goodnum'] = goodnum
+        row['edit_dist'] = Lv.distance(row['Street'], row['STREET'])
+        # Check edit distance for roads that might have typos, predir, or sufdir errors
+        if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
+            row['Notes'] = 'no near st: possible typo predir or sufdir error'
+        # Check for likely predir/sufdir errors: road nearly matches, range is good
+        # Replace needed in logic to catch potential range in address number (e.g., '188-194')
+        if row['Notes'] == 'no near st: possible typo predir or sufdir error':
+            if (int(add_num.replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+                    int(add_num.replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+                goodnum = True
+                row['Notes'] = 'no near st: likely predir or sufdir error'
+                row['goodnum'] = goodnum
+        # Check for a good house number regardless of street name match or condition
+        if (int(add_num.replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+                int(add_num.replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+            goodnum = True
+            row['goodnum'] = goodnum
+    
     return row
     
 
@@ -320,7 +324,11 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
+#section_time = time.time()
 #get_SGID_addpts(staging_db)
+#print("Time elapsed in 'get_SGID_addpts' function: {:.2f}s".format(time.time() - section_time))
+
+
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, possible_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
@@ -339,7 +347,7 @@ print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 
 
 print("Creating edit distance histogram ...")
-df = pd.read_csv(r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_final.csv')
+df = pd.read_csv(r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_final.csv')
 plt.figure(figsize=(6,4))
 plt.hist(df['edit_dist'], bins = np.arange(0, df['edit_dist'].max(), 1)-0.5, color='red', edgecolor='black')
 plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
@@ -347,8 +355,3 @@ plt.title('Address/Street Edit Distance Histogram')
 plt.xlabel('Edit Distance')
 plt.ylabel('Count')
 plt.show()
-
-
-
-
-
