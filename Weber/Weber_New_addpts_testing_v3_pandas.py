@@ -3,6 +3,8 @@
 Created on Mon Mar 5 08:39:07 2019
 @author: eneemann
 Script to detect possible address points by comparing new data to current data
+
+Need to call get_SGID_addpts function first, then comment out the call and run the script
 """
 
 import arcpy
@@ -25,28 +27,18 @@ env.workspace = weber_db
 env.overwriteOutput = True
 
 weber_streets = os.path.join(weber_db, "Streets_Map")
-#weber_addpts = "AddressPoints_TEST_current"
-#current_addpts = os.path.join(staging_db, weber_addpts)
-#weber_addpts = "zzz_AddPts_NW_TEST_current"    # Test on small set of points (5K)
-weber_addpts = "AddressPoints_old_20190204"    # Test of export from SGID (105K)
+weber_addpts = "AddressPoints_old_20190204"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, weber_addpts)
 
 today = time.strftime("%Y%m%d")
-# new_addpts = "aaa_possible_newSGID_addpts_" + today
-# possible_addpts = os.path.join(staging_db, new_addpts)
-#new_addpts = "AddressPoints_TEST_possible_WGS84"
-#possible_addpts = os.path.join(staging_db, new_addpts)
-#new_addpts = "zzz_AddPts_NW_TEST_possible"    # Test on small set of points (5K)
-new_addpts = "AddressPoints_SGID_export_20190304"    # Test of export from SGID (105K)
+new_addpts = "AddressPoints_SGID_export_" + today
+#new_addpts = "Addpts_more_to_test_20190906"
+#new_addpts = "AddressPoints_SGID_export_20190408"    # Use if SGID data was already exported
 possible_addpts = os.path.join(staging_db, new_addpts)
 
-# SGID_addpts = r"Database Connections\sde@SGID10@sgid.agrc.utah.gov.sde\SGID10.LOCATION.AddressPoints"
-# SGID_addpts_wgs84 = os.path.join(staging_db, "SGID_addpts_wgs84")
 
 # Copy current address points into a working FC
-#working_addpts = os.path.join(staging_db, "AddressPoints_TEST_working_" + today)
-#arcpy.CopyFeatures_management(possible_addpts, working_addpts)
-working_addpts = os.path.join(staging_db, "zzz_AddPts_NW_TEST_working1_" + today)
+working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
 arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 
 # Add field to working FC for notes
@@ -203,27 +195,38 @@ def check_nearby_roads(working, streets, gdb):
     is_goodstreet = near_df_updated['goodstreet'] == True      # Create indexes
     # Grab rows with good streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest good street to the address point
-    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK')
     
     # Separate rows with no good nearby street into a separate dataframe
     not_goodstreet = near_df_updated['goodstreet'] == False    # Create indexes
     # Grab rows with bad streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest bad street to the address point
-    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK')
     
     # Combine good and bad street dataframes, sort so good streets are at the top, then remove duplicates of address points
     # If a good streets are found, nearest one will be used; otherwise nearest bad street will be used ("near street not found")
-    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
+#    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
+    # Sort by multiple columns (goodstreet, then goodnum) to ensure 2nd nearest street with good num will get used
+#    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['goodstreet', 'goodnum'], ascending=False).drop_duplicates('IN_FID')
+    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'],
+                                       ascending=[True,False, False, True, True])
+    filtered_df.to_csv(r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
-    final_df = filtered_df.sort_values('IN_FID')
-    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_final.csv'
+    final_df = filtered_df.drop_duplicates('IN_FID')
+    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_final.csv'
     final_df.to_csv(path)
+    
+#    # Testing best method to sort data to resturn best candidate for non-matches
+#    test_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'], ascending=[True,False, False, True, True])
+#    test_df.to_csv(r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_test_edit.csv')
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
     join_df.columns = ['IN_FID', 'Notes_near', 'edit_dist']
-    join_path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_join.csv'
+    join_path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_join.csv'
     join_df.to_csv(join_path)
         
     # Convert CSV output into table and join to working address points FC
@@ -242,12 +245,12 @@ def check_nearby_roads(working, streets, gdb):
     # Update 'Notes' field in working address points with joined table notes
     # ArcPy makes a mess of the field names after the join, so we need to make
     # sure the proper fields are pulled and updated
-    field1 = os.path.basename(working) + "_Notes"
-    field2 = "neartable_join" + "_Notes_near"
-    fields = [field1, field2]
-    for field in fields:
-        print(field)
-#    fields = ['Notes', 'Notes_near']
+#    field1 = os.path.basename(working) + "_Notes"
+#    field2 = "neartable_join" + "_Notes_near"
+#    fields = [field1, field2]
+#    for field in fields:
+#        print(field)
+    fields = ['Notes', 'Notes_near']
     with arcpy.da.UpdateCursor(working + "_final", fields) as cursor:
         print("Looping through rows in {} to update 'Notes' field ...".format(os.path.basename(working) + "_final"))
         for row in cursor:
@@ -292,7 +295,12 @@ def logic_checks(row):
                 int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
-            row['goodnum'] = goodnum      
+            row['goodnum'] = goodnum
+    # Check for a good house number regardless of street name match or condition
+    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+            int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        goodnum = True
+        row['goodnum'] = goodnum
     return row
     
 
