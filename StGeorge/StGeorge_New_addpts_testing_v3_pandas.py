@@ -228,21 +228,21 @@ def check_nearby_roads(working, streets, gdb):
 #    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['goodstreet', 'goodnum'], ascending=False).drop_duplicates('IN_FID')
     filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'],
                                        ascending=[True,False, False, True, True])
-    filtered_df.to_csv(r'C:\E911\Beaver Co\Addpts_working_folder\beaver_neartable_all.csv')
+    filtered_df.to_csv(r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
     final_df = filtered_df.drop_duplicates('IN_FID')
-    path = r'C:\E911\Beaver Co\Addpts_working_folder\beaver_neartable_final.csv'
+    path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_final.csv'
     final_df.to_csv(path)
     
 #    # Testing best method to sort data to resturn best candidate for non-matches
 #    test_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'], ascending=[True,False, False, True, True])
-#    test_df.to_csv(r'C:\E911\Beaver Co\Addpts_working_folder\beaver_neartable_test_edit.csv')
+#    test_df.to_csv(r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_test_edit.csv')
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
     join_df.columns = ['IN_FID', 'Notes_near', 'edit_dist']
-    join_path = r'C:\E911\Beaver Co\Addpts_working_folder\beaver_neartable_join.csv'
+    join_path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_join.csv'
     join_df.to_csv(join_path)
         
     # Convert CSV output into table and join to working address points FC
