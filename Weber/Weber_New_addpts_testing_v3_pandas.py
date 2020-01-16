@@ -49,6 +49,18 @@ arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 #  Functions  #
 ###############
 
+def get_SGID_addpts(out_db):
+    today = time.strftime("%Y%m%d")
+    SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
+    sgid_pts = os.path.join(SGID, "SGID.LOCATION.AddressPoints")
+    new_pts = "AddressPoints_SGID_export_" + today
+    if arcpy.Exists(new_pts):
+        arcpy.Delete_management(new_pts)
+    where_SGID = "CountyID IN ('49057', '49029')"   # Weber, Morgan County
+    print("Exporting SGID address points to: {}".format(new_pts))
+    arcpy.FeatureClassToFeatureClass_conversion (sgid_pts, out_db, new_pts, where_SGID)
+
+
 def calc_street(working):
     update_count = 0
     # Calculate "Street" field where applicable
@@ -308,6 +320,7 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
+#get_SGID_addpts(staging_db)
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, possible_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
