@@ -32,8 +32,7 @@ current_addpts = os.path.join(staging_db, weber_addpts)
 
 today = time.strftime("%Y%m%d")
 new_addpts = "AddressPoints_SGID_export_" + today
-#new_addpts = "Addpts_more_to_test_20190906"
-#new_addpts = "AddressPoints_SGID_export_20190408"    # Use if SGID data was already exported
+#new_addpts = "AddressPoints_SGID_export_20200116"     # Use if SGID data was already exported
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 
@@ -175,25 +174,25 @@ def check_nearby_roads(working, streets, gdb):
     print(near_df.head(5).to_string())
     
     # Convert address points to pandas dataframe
-    addpt_fields = ['OBJECTID', 'AddNum', 'Street', 'ZipCode', 'Notes']
+    addpt_fields = ['OID@', 'AddNum', 'Street', 'ZipCode', 'Notes']
     addpts_arr = arcpy.da.FeatureClassToNumPyArray(working, addpt_fields)
     addpts_df =pd.DataFrame(data = addpts_arr)
     print(addpts_df.head(5).to_string())
     
     # Convert roads to pandas dataframe
-    street_fields = ['OBJECTID_1', 'L_F_ADD', 'L_T_ADD', 'R_F_ADD', 'R_T_ADD', 'STREET']
+    street_fields = ['OID@', 'L_F_ADD', 'L_T_ADD', 'R_F_ADD', 'R_T_ADD', 'STREET']
     streets_arr = arcpy.da.FeatureClassToNumPyArray(streets, street_fields)
     streets_df =pd.DataFrame(data = streets_arr)
     print(streets_df.head(5).to_string())
     
     # Join address points to near table
-    join1_df = near_df.join(addpts_df.set_index('OBJECTID'), on='IN_FID')
+    join1_df = near_df.join(addpts_df.set_index('OID@'), on='IN_FID')
     print(join1_df.head(5).to_string())
     path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_join1.csv'
     join1_df.to_csv(path)
     
     # Join streets to near table
-    join2_df = join1_df.join(streets_df.set_index('OBJECTID_1'), on='NEAR_FID')
+    join2_df = join1_df.join(streets_df.set_index('OID@'), on='NEAR_FID')
     print(join2_df.head(5).to_string())
     path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_join2.csv'
     join2_df.to_csv(path)
