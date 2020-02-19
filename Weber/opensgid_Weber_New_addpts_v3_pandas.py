@@ -31,9 +31,9 @@ weber_addpts = "AddressPoints_SGB_20200116"    # Point to current addpts in stag
 current_addpts = os.path.join(staging_db, weber_addpts)
 
 today = time.strftime("%Y%m%d")
-new_addpts = "AddressPoints_SGID_export_" + today
+#new_addpts = "AddressPoints_SGID_export_" + today
 #new_addpts = "Addpts_more_to_test_20190906"
-#new_addpts = "AddressPoints_SGID_export_20190408"    # Use if SGID data was already exported
+new_addpts = "AddressPoints_SGID_export_20200121"    # Use if SGID data was already exported
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 
