@@ -20,7 +20,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
-lines = r"temp_street_segments"    # points to an empty line feature class
+lines = r"temp_street_segments_20200218"    # points to an empty line feature class
 segments = os.path.join(staging_db, lines)
 
 env.workspace = staging_db
@@ -28,17 +28,17 @@ env.overwriteOutput = True
 today = time.strftime("%Y%m%d")
 
 # Add fields to feature class
-arcpy.AddField_management(segments, "STREET", "TEXT", "", "", 50)
-arcpy.AddField_management(segments, "CITYCD", "TEXT", "", "", 3)
-arcpy.AddField_management(segments, "BEG", "TEXT", "", "", 5)
-arcpy.AddField_management(segments, "END", "TEXT", "", "", 5)
-arcpy.AddField_management(segments, "X_START", "TEXT", "", "", 50)
-arcpy.AddField_management(segments, "Y_START", "TEXT", "", "", 50)
-arcpy.AddField_management(segments, "X_END", "TEXT", "", "", 50)
-arcpy.AddField_management(segments, "Y_END", "TEXT", "", "", 50)
+#arcpy.AddField_management(segments, "STREET", "TEXT", "", "", 50)
+#arcpy.AddField_management(segments, "CITYCD", "TEXT", "", "", 3)
+#arcpy.AddField_management(segments, "BEG", "TEXT", "", "", 5)
+#arcpy.AddField_management(segments, "END", "TEXT", "", "", 5)
+#arcpy.AddField_management(segments, "X_START", "TEXT", "", "", 50)
+#arcpy.AddField_management(segments, "Y_START", "TEXT", "", "", 50)
+#arcpy.AddField_management(segments, "X_END", "TEXT", "", "", 50)
+#arcpy.AddField_management(segments, "Y_END", "TEXT", "", "", 50)
 
 # Import CSV
-csv_file = r"C:\E911\StGeorgeDispatch\Street_data_20190821.csv"
+csv_file = r"C:\E911\StGeorgeDispatch\Street_data_20200218.csv"
 df = pd.read_csv(csv_file)
 
 # Populate feature class
