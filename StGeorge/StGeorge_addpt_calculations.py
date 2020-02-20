@@ -4,7 +4,7 @@ Created on Wed Oct 16 08:27:29 2019
 
 @author: eneemann
 
-EMN: Initial scrip to calculate address point fields for St George
+EMN: Initial script to calculate address point fields for St George
 """
 
 import arcpy
@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
-addpts = os.path.join(stage_db, "StG_AddPts_update_20191108")
+addpts = os.path.join(stage_db, "StG_AddPts_update_20200214")
 #addpts = os.path.join(stage_db, "StG_Streets_update_20191108")
 #addpts = os.path.join(stage_db, "StG_CP_update_20191108")
 env.workspace = stage_db
@@ -124,9 +124,9 @@ def strip_fields(pts):
 #  Call Functions Below  #
 ##########################
 
-#blanks_to_nulls(addpts)
-#calc_street(addpts)
-#calc_label(addpts)
+blanks_to_nulls(addpts)
+calc_street(addpts)
+calc_label(addpts)
 strip_fields(addpts)
 
 print("Script shutting down ...")
