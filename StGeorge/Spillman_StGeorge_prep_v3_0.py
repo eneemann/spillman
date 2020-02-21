@@ -29,8 +29,6 @@ streets_cad_wgs84 = os.path.join(wgs84_db, "StGeorge_Dispatch_Streets_CAD")
 #  Functions  #
 ###############
 
-# NEED FUNCTION TO CREATE STREETS_ALL IN THE BUFFER AREA?
-
 
 def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete_files):
     # Creates new GDBs by renaming originals with today's date
@@ -402,23 +400,6 @@ def create_address_pts_CAD(addpts):
     arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_X', 'X')
     arcpy.AlterField_management(addpts_CAD_wgs84, 'POINT_Y', 'Y')
 
-    # # Copy XY values from "POINT_X" and "POINT_Y" into "X" and "Y"
-    # print("Copying POINT_X/POINT_Y into X/Y fields ..."
-    # update_count = 0
-    # fields = ['X', 'POINT_X', 'Y', 'POINT_Y']
-    # with arcpy.da.UpdateCursor(addpts_CAD_wgs84, fields) as cursor:
-    #     print("Looping through rows in FC ..."
-    #     for row in cursor:
-    #         row[0] = row[1]
-    #         # print("New value for {0} is: {1}".format(fields[0], row[0])
-    #         row[2] = row[3]
-    #         update_count += 1
-    #         cursor.updateRow(row)
-    # print("Total count of row updates in {0} is: {1}".format(addpts_CAD_wgs84.split("\\")[-1], update_count)
-    # # Delete "POINT_X" and "POINT_Y" fields
-    # print("Deleting POINT_X and POINT_Y fields ..."
-    # arcpy.DeleteField_management(addpts_CAD_wgs84, ["POINT_X", "POINT_Y"])
-
 
 def copy_tbzones(tbzones_table):
     print("Copying tbzones table from UTM to WGS84 geodatabase ...")
@@ -440,7 +421,7 @@ def create_streets_all(streets):
         print("Deleting {} ...".format(streets_all))
         arcpy.Delete_management(streets_all)
 
-    # Get address points into a single FC
+    # Get streets into a single FC
     print("Combining buffer streets data into {} ...".format(streets_temp))
     arcpy.CopyFeatures_management(streets, streets_temp)
     arcpy.MakeFeatureLayer_management(lincoln, "lincoln_lyr")
@@ -627,23 +608,23 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 #  Call Functions Below  #
 ##########################
 
-#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-#blanks_to_nulls(streets_fc_utm)
-#calc_street(streets_fc_utm)
-#calc_salias1(streets_fc_utm)
-#calc_salias2(streets_fc_utm)
-#calc_salias4(streets_fc_utm)
-#highway_to_sr_us(streets_fc_utm)
-#calc_salias3(streets_fc_utm)
-#street_blank_to_null(streets_fc_utm)
-#calc_location(streets_fc_utm)
-#create_streets_CAD(streets_fc_utm)
-#create_address_pts_CAD(address_pts)
-#copy_tbzones(tbzones)
-#create_streets_all(streets_fc_utm)
-#project_to_wgs84(FCs_to_project)
-#spillman_polygon_prep(streets_cad_wgs84)
-#recalc_location(streets_cad_wgs84)
+create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+blanks_to_nulls(streets_fc_utm)
+calc_street(streets_fc_utm)
+calc_salias1(streets_fc_utm)
+calc_salias2(streets_fc_utm)
+calc_salias4(streets_fc_utm)
+highway_to_sr_us(streets_fc_utm)
+calc_salias3(streets_fc_utm)
+street_blank_to_null(streets_fc_utm)
+calc_location(streets_fc_utm)
+create_streets_CAD(streets_fc_utm)
+create_address_pts_CAD(address_pts)
+copy_tbzones(tbzones)
+create_streets_all(streets_fc_utm)
+project_to_wgs84(FCs_to_project)
+spillman_polygon_prep(streets_cad_wgs84)
+recalc_location(streets_cad_wgs84)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
@@ -664,7 +645,7 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 # Vela Shapefiles Export
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Common_Place_Points", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
+#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Law_Zones", out_folder_vela, vela_law_fields, vela_law_out)
 
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
