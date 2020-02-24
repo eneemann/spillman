@@ -16,7 +16,7 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-utm_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_UTM.gdb"
+utm_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_UTM_good.gdb"
 wgs84_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
 # utm_db = r"C:\E911\StGeorgeDispatch_TEST_Feb\StGeorgeDispatch_UTM.gdb"
 # wgs84_db = r"C:\E911\StGeorgeDispatch_TEST_Feb\StGeorgeDispatch_WGS84.gdb"
