@@ -17,8 +17,10 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
-addpts = os.path.join(stage_db, "StG_AddPts_update_20200214")
+#stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
+stage_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
+#addpts = os.path.join(stage_db, "StG_AddPts_update_20200214")
+addpts = os.path.join(stage_db, "StGeorge_Dispatch_AddressPoints_CAD")
 #addpts = os.path.join(stage_db, "StG_Streets_update_20191108")
 #addpts = os.path.join(stage_db, "StG_CP_update_20191108")
 env.workspace = stage_db
@@ -50,7 +52,7 @@ def calc_prefixdir_from_street(pts):
     update_count = 0
     # Use update cursor to calculate prefixdir from street field
     fields = ['STREET', 'PrefixDir']
-    where_clause = "STREET IS NOT NULL AND PrefixDir IS NULL"
+    where_clause = "STREET IS NOT NULL AND (PrefixDir IS NULL OR PrefixDir = '')"
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
@@ -66,7 +68,7 @@ def calc_suffixdir_from_street(pts):
     update_count = 0
     # Use update cursor to calculate suffixdir from street field
     fields = ['STREET', 'SuffixDir']
-    where_clause = "STREET IS NOT NULL AND SuffixDir IS NULL"
+    where_clause = "STREET IS NOT NULL AND (SuffixDir IS NULL OR SuffixDir = '')"
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
@@ -89,7 +91,7 @@ def calc_streettype_from_street(pts):
     update_count = 0
     # Use update cursor to calculate suffixdir from street field
     fields = ['STREET', 'StreetType']
-    where_clause = "STREET IS NOT NULL AND StreetType IS NULL"
+    where_clause = "STREET IS NOT NULL AND (StreetType IS NULL OR StreetType = '')"
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
@@ -113,7 +115,7 @@ def calc_streetname_from_street(pts):
     # Use update cursor to calculate suffixdir from street field
     #            0           1            2            3             4
     fields = ['STREET', 'PrefixDir', 'SuffixDir', 'StreetType', 'StreetName']
-    where_clause = "STREET IS NOT NULL AND StreetName IS NULL"
+    where_clause = "STREET IS NOT NULL AND (StreetName IS NULL OR StreetName = '')"
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
@@ -121,13 +123,21 @@ def calc_streetname_from_street(pts):
             pre = row[1]
             suf = row[2]
             sttype = row[3]
-            temp = street.split(pre, 1)[1]
-            if suf is not None:
-                temp2 = temp.rsplit(suf, 1)[0]
-            elif sttype is not None:
-                temp2 = temp.rsplit(sttype, 1)[0]
+            if pre is not None:
+                temp = street.split(pre, 1)[1]
+                if suf is not None:
+                    temp2 = temp.rsplit(suf, 1)[0]
+                elif sttype is not None:
+                    temp2 = temp.rsplit(sttype, 1)[0]
+                else:
+                    temp2 = temp
             else:
-                temp2 = temp
+                if suf is not None:
+                    temp2 = street.rsplit(suf, 1)[0]
+                elif sttype is not None:
+                    temp2 = street.rsplit(sttype, 1)[0]
+                else:
+                    temp2 = temp
                 
             row[4] = temp2.strip()
             update_count += 1
@@ -174,6 +184,7 @@ def calc_street(pts):
     where_clause = "StreetName IS NOT NULL AND STREET IS NULL"
     fields = ['PrefixDir', 'StreetName', 'SuffixDir', 'StreetType', 'STREET']
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
+#    with arcpy.da.UpdateCursor(pts, fields) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
             if row[0] is None: row[0] = ''
@@ -239,10 +250,10 @@ def strip_fields(pts):
 #  Call Functions Below  #
 ##########################
 #calc_unit_from_fulladd(addpts)
-#calc_prefixdir_from_street(addpts)
-#calc_suffixdir_from_street(addpts)
-#calc_streettype_from_street(addpts)
-#calc_streetname_from_street(addpts)
+calc_prefixdir_from_street(addpts)
+calc_suffixdir_from_street(addpts)
+calc_streettype_from_street(addpts)
+calc_streetname_from_street(addpts)
 blanks_to_nulls(addpts)
 #calc_street(addpts)
 #calc_label(addpts)
