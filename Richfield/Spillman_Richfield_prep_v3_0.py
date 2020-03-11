@@ -373,7 +373,8 @@ def create_address_pts_CAD(addpts):
     where_clause = "ADDRESS NOT LIKE '% UNIT%' AND ADDRESS NOT LIKE '% TRLR%' AND ADDRESS NOT LIKE '% APT%' AND" \
                    " ADDRESS NOT LIKE '% STE%' AND ADDRESS NOT LIKE '% SPC%' AND ADDRESS NOT LIKE '% BSMT%' AND" \
                    " ADDRESS NOT LIKE '% LOT%' AND ADDRESS NOT LIKE '% #%' AND ADDRESS NOT LIKE '% BLDG%' AND" \
-                   " ADDRESS NOT LIKE '% HNGR%' AND ADDRESS NOT LIKE '% OFC%'"
+                   " ADDRESS NOT LIKE '% HNGR%' AND ADDRESS NOT LIKE '% OFC%' AND ADDRESS NOT LIKE '% SP %' AND" \
+                   " ADDRESS NOT LIKE '% SP %' AND ADDRESS NOT LIKE '% HANGAR%'"
     # Need to make layer from feature class here
     arcpy.MakeFeatureLayer_management(addpts, "addpts_lyr", where_clause)
     # Select where streets are not NULL and have valid address ranges
