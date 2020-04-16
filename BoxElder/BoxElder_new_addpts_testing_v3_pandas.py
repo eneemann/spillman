@@ -31,12 +31,12 @@ env.overwriteOutput = True
 boxelder_streets = os.path.join(boxelder_db, "BoxElder_Streets")
 #boxelder_addpts = "AddressPoints_TEST_current"
 #current_addpts = os.path.join(staging_db, boxelder_addpts)
-boxelder_addpts = "AddressPoints_20190718"    # Point to current addpts in staging_db
+boxelder_addpts = "BoxElder_AddressPoints_update_20200409"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, boxelder_addpts)
 
 today = time.strftime("%Y%m%d")
-#new_addpts = "AddressPoints_SGID_export_" + today
-new_addpts = "AddressPoints_SGID_export_20190718"    # Use if SGID data was already exported
+new_addpts = "AddressPoints_SGID_export_" + today
+# new_addpts = "AddressPoints_SGID_export_20190718"    # Use if SGID data was already exported
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # SGID_addpts = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
@@ -56,12 +56,12 @@ arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 def get_SGID_addpts(out_db):
     today = time.strftime("%Y%m%d")
-    SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
-    sgid_pts = os.path.join(SGID, "SGID10.LOCATION.AddressPoints")
+    SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
+    sgid_pts = os.path.join(SGID, "SGID.LOCATION.AddressPoints")
     new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
         arcpy.Delete_management(new_pts)
-    where_SGID = "CountyID IN ('49003', '49041', '49055')"
+    where_SGID = "CountyID IN ('49003')"
     print("Exporting SGID address points to: {}".format(new_pts))
     arcpy.FeatureClassToFeatureClass_conversion (sgid_pts, out_db, new_pts, where_SGID)
   
@@ -210,27 +210,34 @@ def check_nearby_roads(working, streets, gdb):
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
     near_df_updated = join2_df.apply(logic_checks, axis=1)
-    path = r'C:\E911\Box Elder CO\Addpts_working_folder\boxelder_neartable_updated.csv'
+    path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\neartable_updated.csv'
     near_df_updated.to_csv(path)
     
     # Separate rows with a good nearby street into a separate dataframe
     is_goodstreet = near_df_updated['goodstreet'] == True      # Create indexes
     # Grab rows with good streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest good street to the address point
-    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK')
     
     # Separate rows with no good nearby street into a separate dataframe
     not_goodstreet = near_df_updated['goodstreet'] == False    # Create indexes
     # Grab rows with bad streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest bad street to the address point
-    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK')
     
     # Combine good and bad street dataframes, sort so good streets are at the top, then remove duplicates of address points
     # If a good streets are found, nearest one will be used; otherwise nearest bad street will be used ("near street not found")
-    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
+#    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
+    # Sort by multiple columns (goodstreet, then goodnum) to ensure 2nd nearest street with good num will get used
+#    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['goodstreet', 'goodnum'], ascending=False).drop_duplicates('IN_FID')
+    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'],
+                                       ascending=[True,False, False, True, True])
+    filtered_df.to_csv(r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
-    final_df = filtered_df.sort_values('IN_FID')
-    path = r'C:\E911\Box Elder CO\Addpts_working_folder\boxelder_neartable_final.csv'
+    final_df = filtered_df.drop_duplicates('IN_FID')
+    path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_final.csv'
     final_df.to_csv(path)
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
@@ -307,7 +314,12 @@ def logic_checks(row):
                 int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
-            row['goodnum'] = goodnum      
+            row['goodnum'] = goodnum
+    # Check for a good house number regardless of street name match or condition
+    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+            int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        goodnum = True
+        row['goodnum'] = goodnum
     return row
     
 
@@ -315,7 +327,7 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-#get_SGID_addpts(staging_db)
+# get_SGID_addpts(staging_db)
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
@@ -344,3 +356,17 @@ plt.ylabel('Count')
 plt.show()
 
 df['edit_dist'].max()
+
+# Plot bar chart of Notes column
+print("Creating notes bar chart ...")
+plt.figure(figsize=(6,4))
+plt.hist(df['Notes'], color='lightblue', edgecolor='black')
+# plt.xticks(np.arange(0, df['Notes'].max(), 2))
+plt.xticks(rotation='vertical')
+plt.title('Address Point Categories')
+plt.xlabel('Category')
+plt.ylabel('Count')
+plt.show()
+
+df.groupby('Notes').count()
+
