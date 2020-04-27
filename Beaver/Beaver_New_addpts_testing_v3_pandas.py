@@ -4,6 +4,8 @@ Created on Tue Mar 26 11:23:54 2019
 @author: eneemann
 Script to detect possible address points by comparing new data to current data
 
+Need to call get_SGID_addpts function first, then comment out the call and run the script
+
 11 Oct 2019: applied major update to sorting logic (EMN)
 """
 
@@ -27,11 +29,11 @@ env.workspace = beaver_db
 env.overwriteOutput = True
 
 beaver_streets = os.path.join(beaver_db, "Streets")
-beaver_addpts = "AddressPoints_20191011"
+beaver_addpts = "AddressPoints_update_20200417"
 current_addpts = os.path.join(staging_db, beaver_addpts)
 
 today = time.strftime("%Y%m%d")
-new_addpts = "AddressPoints_SGID_export_20191011"
+new_addpts = "AddressPoints_SGID_export_" + today
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
@@ -45,6 +47,18 @@ arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 ###############
 #  Functions  #
 ###############
+
+def get_SGID_addpts(out_db):
+    today = time.strftime("%Y%m%d")
+    SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
+    sgid_pts = os.path.join(SGID, "SGID.LOCATION.AddressPoints")
+    new_pts = "AddressPoints_SGID_export_" + today
+    if arcpy.Exists(new_pts):
+        arcpy.Delete_management(new_pts)
+    where_SGID = "CountyID = '49001'"   # Beaver County
+    print("Exporting SGID address points to: {}".format(new_pts))
+    arcpy.FeatureClassToFeatureClass_conversion (sgid_pts, out_db, new_pts, where_SGID)
+
 
 # Calculate spelled out sufdir field to align with spillman notation
 def clean_addpts(working):
@@ -348,6 +362,7 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
+# get_SGID_addpts(staging_db)
 clean_addpts(working_addpts)
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, possible_addpts, working_addpts)
@@ -375,3 +390,18 @@ plt.title('Address/Street Edit Distance Histogram')
 plt.xlabel('Edit Distance')
 plt.ylabel('Count')
 plt.show()
+
+df['edit_dist'].max()
+
+# Plot bar chart of Notes column
+print("Creating notes bar chart ...")
+plt.figure(figsize=(6,4))
+plt.hist(df['Notes'], color='lightblue', edgecolor='black')
+# plt.xticks(np.arange(0, df['Notes'].max(), 2))
+plt.xticks(rotation='vertical')
+plt.title('Address Point Categories')
+plt.xlabel('Category')
+plt.ylabel('Count')
+plt.show()
+
+df.groupby('Notes').count()

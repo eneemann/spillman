@@ -4,7 +4,7 @@ Created on Wed Oct 16 08:27:29 2019
 
 @author: eneemann
 
-EMN: Initial scrip to calculate address point fields for Beaver
+EMN: Initial script to calculate address point fields for Beaver
 """
 
 import arcpy
@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\Beaver Co\Beaver_Staging.gdb"
-addpts = os.path.join(stage_db, "AddressPoints_20191011_updates")
+addpts = os.path.join(stage_db, "AddressPoints_update_20200417")
 env.workspace = stage_db
 
 ###############
@@ -78,7 +78,7 @@ def calc_label(pts):
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            if row[1] is None: row[0] = ''
+            if row[1] is None: row[1] = ''
             if row[2] is None: row[2] = ''
             if row[3] is None: row[3] = ''
             parts = [row[1], row[2], row[3]]
@@ -121,7 +121,7 @@ def strip_fields(pts):
 ##########################
 
 blanks_to_nulls(addpts)
-calc_street(addpts)
+# calc_street(addpts)
 calc_label(addpts)
 strip_fields(addpts)
 
@@ -130,13 +130,3 @@ print("Script shutting down ...")
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
-
-
-
-
-
-
-
-
-
-
