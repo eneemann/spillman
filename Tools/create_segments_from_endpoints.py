@@ -20,7 +20,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
-lines = r"temp_street_segments_20200218"    # points to an empty line feature class
+lines = r"temp_street_segments_20200506"    # points to an empty line feature class
 segments = os.path.join(staging_db, lines)
 
 env.workspace = staging_db
