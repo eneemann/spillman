@@ -466,7 +466,9 @@ def recalc_location(streets):
     # Recalculate the "LOCATION" field on Streets_CAD_WGS84
     # Null out all non-Dixie State University streets
     update_count = 0
-    where_clause = "STREET NOT LIKE 'DSU %'"
+    # where_clause = "STREET NOT LIKE 'DSU %'"
+    # 8 May 2020: Changed where clause to leave LOCATION field on 'COVID' segments
+    where_clause = "(STREET NOT LIKE 'DSU %') AND (LOCATION IS NULL OR LOCATION NOT LIKE '%COVID%')"
     fields = ['STREET', 'LOCATION']
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
