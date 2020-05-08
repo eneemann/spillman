@@ -170,7 +170,7 @@ def check_nearby_roads(working, streets, gdb):
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
     print("Generating near table ...")
-    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '100 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 5, 'GEODESIC')
+    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '400 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 5, 'GEODESIC')
     print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(neartable)))
     
     # Convert neartable to pandas dataframe
@@ -353,3 +353,16 @@ plt.ylabel('Count')
 plt.show()
 
 df['edit_dist'].max()
+
+# Plot bar chart of Notes column
+print("Creating notes bar chart ...")
+plt.figure(figsize=(6,4))
+plt.hist(df['Notes'], color='lightblue', edgecolor='black')
+# plt.xticks(np.arange(0, df['Notes'].max(), 2))
+plt.xticks(rotation='vertical')
+plt.title('Address Point Categories')
+plt.xlabel('Category')
+plt.ylabel('Count')
+plt.show()
+
+df.groupby('Notes').count()
