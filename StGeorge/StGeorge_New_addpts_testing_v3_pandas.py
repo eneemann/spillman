@@ -23,13 +23,13 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-stgeorge_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_UTM.gdb"
+stgeorge_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_UTM_good.gdb"
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 env.workspace = stgeorge_db
 env.overwriteOutput = True
 
 stgeorge_streets = os.path.join(stgeorge_db, "StGeorge_Dispatch_Streets")
-stgeorge_addpts = "StG_AddPts_update_20200214"    # Point to current addpts in staging_db
+stgeorge_addpts = "StG_AddressPoints_update_20200502"    # Point to current addpts in staging_db
 #stgeorge_addpts = "AddressPoints_update_20190904"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, stgeorge_addpts)
 
@@ -324,7 +324,7 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-#get_SGID_addpts(staging_db)
+# get_SGID_addpts(staging_db)
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
