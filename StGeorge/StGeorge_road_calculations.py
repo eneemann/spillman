@@ -18,7 +18,7 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 env.workspace = staging_db
-fc_layer = "StG_Streets_update_20200214"    # Update to working streets fc
+fc_layer = "StG_Streets_update_20200502"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
 ###############
@@ -30,7 +30,8 @@ def blanks_to_nulls(streets):
     update_count = 0
     # Use update cursor to convert blanks to null (None) for each field
     flist = ['OBJECTID', 'PREDIR', 'STREETNAME', 'STREETTYPE', 'SUFDIR', 'ALIAS1', 'ALIAS1TYPE', 'ALIAS2', 'ALIAS2TYPE',
-              'ACSALIAS', 'ACSNAME', 'ACSSUF', 'SALIAS1', 'SALIAS2', 'SALIAS3', 'SALIAS4']
+              'ACSALIAS', 'ACSNAME', 'ACSSUF', 'SALIAS1', 'SALIAS2', 'SALIAS3', 'SALIAS4', 'HWYNAME', 'DOT_RTNAME',
+              'DOT_RTPART']
     fields = arcpy.ListFields(streets)
 
     field_list = []
@@ -325,7 +326,6 @@ def calc_location(streets):
 #  Call Functions Below  #
 ##########################
 
-blanks_to_nulls(streets_fc_utm)
 calc_street(streets_fc_utm)
 calc_salias1(streets_fc_utm)
 calc_salias2(streets_fc_utm)
@@ -334,6 +334,7 @@ highway_to_sr_us(streets_fc_utm)
 calc_salias3(streets_fc_utm)
 street_blank_to_null(streets_fc_utm)
 calc_location(streets_fc_utm)
+blanks_to_nulls(streets_fc_utm)
 
 
 print("Script shutting down ...")
