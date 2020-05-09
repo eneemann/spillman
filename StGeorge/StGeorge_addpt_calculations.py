@@ -17,10 +17,10 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-#stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
-stage_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
-#addpts = os.path.join(stage_db, "StG_AddPts_update_20200214")
-addpts = os.path.join(stage_db, "StGeorge_Dispatch_AddressPoints_CAD")
+stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
+# stage_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
+addpts = os.path.join(stage_db, "StG_AddressPoints_update_20200502")
+# addpts = os.path.join(stage_db, "StGeorge_Dispatch_AddressPoints_CAD")
 #addpts = os.path.join(stage_db, "StG_Streets_update_20191108")
 #addpts = os.path.join(stage_db, "StG_CP_update_20191108")
 env.workspace = stage_db
@@ -249,14 +249,14 @@ def strip_fields(pts):
 ##########################
 #  Call Functions Below  #
 ##########################
-#calc_unit_from_fulladd(addpts)
+calc_unit_from_fulladd(addpts)
 calc_prefixdir_from_street(addpts)
 calc_suffixdir_from_street(addpts)
 calc_streettype_from_street(addpts)
 calc_streetname_from_street(addpts)
+calc_street(addpts)
+calc_label(addpts)
 blanks_to_nulls(addpts)
-#calc_street(addpts)
-#calc_label(addpts)
 strip_fields(addpts)
 
 print("Script shutting down ...")
