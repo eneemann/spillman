@@ -26,7 +26,7 @@ env.workspace = staging_db
 env.overwriteOutput = True
 
 # Create new segments FC from previous copy, rename, and truncate table
-lines = r"temp_street_segments_20200507"    # points to an empty line feature class
+lines = r"temp_street_segments_20200511"    # points to an empty line feature class
 segments = os.path.join(staging_db, lines)
 
 # # Add fields to feature class
@@ -41,7 +41,7 @@ segments = os.path.join(staging_db, lines)
 # arcpy.AddField_management(segments, "LOCATION", "TEXT", "", "", 50)
 
 # Import file
-excel_file = r"C:\E911\StGeorgeDispatch\temp_street_data_20200507.xlsx"
+excel_file = r"C:\E911\StGeorgeDispatch\temp_street_data_20200511.xlsx"
 df = pd.read_excel(excel_file)
 
 # Populate feature class
