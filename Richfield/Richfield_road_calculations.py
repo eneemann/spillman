@@ -21,6 +21,19 @@ env.workspace = staging_db
 fc_layer = "streets_update_20200515_UTM"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
+# Use to create a selection to run functions on
+if arcpy.Exists("streets_lyr"):
+    print("Deleting {} ...".format("streets_lyr"))
+    arcpy.management.Delete("streets_lyr")
+where_clause = "(STREET IS NOT NULL AND STREETNAME IS NULL) OR (STREET IS NOT NULL AND STREETNAME = '' ) OR (STREET IS NOT NULL AND STREETNAME = ' ')"
+# Need to make layer from feature class
+arcpy.management.MakeFeatureLayer(streets_fc_utm, "streets_lyr", where_clause)
+
+result = arcpy.management.GetCount("streets_lyr")
+total = int(result.getOutput(0))
+print(f"addpts_lyr layer feature count: {total}")
+
+
 ###############
 #  Functions  #
 ###############
@@ -460,20 +473,36 @@ def strip_fields(streets):
 # strip_fields(streets_fc_utm)
 
 # Calc other fields from STREET
-# calc_street(streets_fc_utm)
-# calc_prefixdir_from_street(streets_fc_utm)
-# calc_suffixdir_from_street(streets_fc_utm)
-# calc_streettype_from_street(streets_fc_utm)
-# calc_streetname_from_street(streets_fc_utm)
-# calc_salias1(streets_fc_utm)
-# calc_salias2(streets_fc_utm)
-# calc_salias4(streets_fc_utm)
-# highway_to_sr_us(streets_fc_utm)
-# calc_salias3(streets_fc_utm)
-# street_blank_to_null(streets_fc_utm)
-# calc_location(streets_fc_utm)
-blanks_to_nulls(streets_fc_utm)
-strip_fields(streets_fc_utm)
+# # calc_street(streets_fc_utm)
+# # calc_prefixdir_from_street(streets_fc_utm)
+# # calc_suffixdir_from_street(streets_fc_utm)
+# # calc_streettype_from_street(streets_fc_utm)
+# # calc_streetname_from_street(streets_fc_utm)
+# # calc_salias1(streets_fc_utm)
+# # calc_salias2(streets_fc_utm)
+# # calc_salias4(streets_fc_utm)
+# # highway_to_sr_us(streets_fc_utm)
+# # calc_salias3(streets_fc_utm)
+# # street_blank_to_null(streets_fc_utm)
+# # calc_location(streets_fc_utm)
+# blanks_to_nulls(streets_fc_utm)
+# strip_fields(streets_fc_utm)
+
+# Calc other fields from STREET on a selection
+# calc_street("streets_lyr")
+calc_prefixdir_from_street("streets_lyr")
+calc_suffixdir_from_street("streets_lyr")
+calc_streettype_from_street("streets_lyr")
+calc_streetname_from_street("streets_lyr")
+# calc_salias1("streets_lyr")
+# calc_salias2("streets_lyr")
+# calc_salias4("streets_lyr")
+# highway_to_sr_us("streets_lyr")
+# calc_salias3("streets_lyr")
+# street_blank_to_null("streets_lyr")
+# calc_location("streets_lyr")
+blanks_to_nulls("streets_lyr")
+strip_fields("streets_lyr")
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
