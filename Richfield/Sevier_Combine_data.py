@@ -29,7 +29,7 @@ today = time.strftime("%Y%m%d")
 ## Prep and variables for combining data
 
 # Set up variables, create geodatabase, if necessary
-data_dir = r"C:\E911\RichfieldComCtr\00 Working_data_area\Spillman_update_20191114"
+data_dir = r"C:\E911\RichfieldComCtr\00 Working_data_area\Spillman_update_2020xxxx"
 env.workspace = data_dir
 new_db_name = "Sevier_data_" + today
 #new_db_name = 'Sevier_data_20190415'
