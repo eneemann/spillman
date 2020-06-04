@@ -18,10 +18,21 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
-addpts = os.path.join(stage_db, "address_points_update_20191119")
-#addpts = os.path.join(stage_db, "address_points_update_20191119_TEST")
-#addpts = os.path.join(stage_db, "streets_update_20191119")
+addpts = os.path.join(stage_db, "address_points_update_20200526")
 env.workspace = stage_db
+
+# Use to create a selection to run functions on
+# if arcpy.Exists("addpts_lyr"):
+#     print("Deleting {} ...".format("addpts_lyr"))
+#     arcpy.management.Delete("addpts_lyr")
+# where_clause = "(STREET IS NOT NULL AND StreetName is NULL) OR (STREET IS NOT NULL AND StreetName = '') OR (STREET IS NOT NULL AND StreetName = ' ')"
+# # Need to make layer from feature class
+# arcpy.management.MakeFeatureLayer(addpts, "addpts_lyr", where_clause)
+# # sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
+
+# result = arcpy.management.GetCount("addpts_lyr")
+# total = int(result.getOutput(0))
+# print(f"addpts_lyr layer feature count: {total}")
 
 ###############
 #  Functions  #
@@ -125,7 +136,7 @@ def calc_streetname_from_street(pts):
 def blanks_to_nulls(pts):
     update_count = 0
     # Use update cursor to convert blanks to null (None) for each field
-    flist = ['OBJECTID', 'PrefixDir', 'StreetType', 'SuffixDir', 'UnitType', 'UnitID', 'LABEL', 'CITYCD', 'STREET']
+    flist = ['OBJECTID', 'PrefixDir', 'StreetType', 'SuffixDir', 'UnitType', 'UnitID', 'LABEL', 'CITYCD', 'STREET','COMM']
     fields = arcpy.ListFields(pts)
 
     field_list = []
@@ -234,6 +245,17 @@ blanks_to_nulls(addpts)
 #calc_street(addpts)
 calc_label(addpts)
 strip_fields(addpts)
+
+# Use below to call on a selection
+# #calc_unit_from_fulladd("addpts_lyr")
+# calc_prefixdir_from_street("addpts_lyr")
+# calc_suffixdir_from_street("addpts_lyr")
+# calc_streettype_from_street("addpts_lyr")
+# calc_streetname_from_street("addpts_lyr")
+# blanks_to_nulls("addpts_lyr")
+# #calc_street("addpts_lyr")
+# calc_label("addpts_lyr")
+# strip_fields("addpts_lyr")
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
