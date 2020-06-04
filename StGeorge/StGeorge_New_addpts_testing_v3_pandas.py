@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed May  1 08:34:21 2019
+Created on Tue Jun 2 08:51:17 2020
 @author: eneemann
-Script to detect possible address points by comparing new data to current data
+Script to compare address points to road centerlines for quality control.
+* 
 
-Need to call get_SGID_addpts function first, then comment out the call and run the script
-
-13 Nov 2019: applied major update to sorting logic (EMN)
+2 June 2020: first version of code (EMN)
 """
 
 import arcpy
