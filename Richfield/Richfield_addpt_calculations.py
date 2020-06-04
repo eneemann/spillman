@@ -28,7 +28,6 @@ env.workspace = stage_db
 # where_clause = "(STREET IS NOT NULL AND StreetName is NULL) OR (STREET IS NOT NULL AND StreetName = '') OR (STREET IS NOT NULL AND StreetName = ' ')"
 # # Need to make layer from feature class
 # arcpy.management.MakeFeatureLayer(addpts, "addpts_lyr", where_clause)
-# # sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
 
 # result = arcpy.management.GetCount("addpts_lyr")
 # total = int(result.getOutput(0))
