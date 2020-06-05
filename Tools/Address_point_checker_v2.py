@@ -90,7 +90,7 @@ arcpy.AddField_management(working_roads, "FULL_STREET", "TEXT", "", "", 50)
 ###############
 
 unit_list = ['UNIT', 'TRLR', 'APT', 'STE', 'SPC', 'BSMT', 'LOT', '#', 'BLDG',
-             'HNGR', 'OFC', 'SP', 'HANGAR', 'REAR']
+             'HNGR', 'OFC', 'OFFICE', 'SP', 'HANGAR', 'REAR']
 
 def calc_street_addpts_fulladd(working, full_add):
     update_count = 0
