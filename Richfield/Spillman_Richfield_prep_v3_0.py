@@ -134,7 +134,7 @@ def calc_salias2(streets):
     update_count = 0
     # Calculate "SALIAS2" field where applicable
     # where_clause = "ALIAS2 IS NOT NULL"
-    where_clause = "ALIAS2 IS NOT NULL AND SALIAS1 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY'"
+    where_clause = "ALIAS2 IS NOT NULL AND SALIAS2 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY'"
 
     fields = ['PREDIR', 'ALIAS2', 'ALIAS2TYPE', 'SALIAS2']
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
