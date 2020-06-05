@@ -18,8 +18,8 @@ from Levenshtein import StringMatcher as Lv
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
+# Initialize the tqdm progress bar tool
 tqdm.pandas()
-
 
 # Start timer and print start time in UTC
 start_time = time.time()
@@ -104,7 +104,7 @@ def calc_street_addpts_fulladd(working, full_add):
             if parts[0].isdigit():
                 temp = " ".join(parts[1:])
             else:
-                print(f"    Address {row[0]} does not have a valid house number")
+                print(f"    Address '{row[0]}' does not have a valid house number")
             
             final = temp
 
@@ -112,13 +112,10 @@ def calc_street_addpts_fulladd(working, full_add):
             # if found split at unit type and discard everything after
             temp_parts = temp.split(' ')
             for i in np.arange(len(temp_parts)):
-                print(i)
                 if temp_parts[i].upper() in unit_list:
-                    # print(f'{temp_parts[i]} is in the unit list')
                     splitter = temp_parts[i]
                     final = temp.split(splitter, 1)[0]
                     break
-                    # print(f'{temp_parts[i]} is NOT in the unit list')
 
             row[1] = final.strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
             update_count += 1
