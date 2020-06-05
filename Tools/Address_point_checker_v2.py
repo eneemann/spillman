@@ -16,22 +16,57 @@ import pandas as pd
 import numpy as np
 from Levenshtein import StringMatcher as Lv
 from matplotlib import pyplot as plt
+from tqdm import tqdm
+
+tqdm.pandas()
+
 
 # Start timer and print start time in UTC
 start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print(f"The script start time is {readable_start}")
+today = time.strftime("%Y%m%d")
+
+# Create variables
 working_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
 env.workspace = working_db
 env.overwriteOutput = True
 
-work_dir = 'C:\E911\RichfieldComCtr\Addpts_working_folder'
+work_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
 data_name = 'richfield'
 
 streets = os.path.join(working_db, "streets_update_20200515_UTM")  # Point to current roads in working_db
 addpts = os.path.join(working_db, "address_points_update_20200526")  # Point to current addpts in working_db
 
-today = time.strftime("%Y%m%d")
+# Input street component fields that will be used for each feature class
+street_fields = {"predir": "PREDIR",
+            "name": "STREETNAME",
+            "sufdir": "SUFDIR",
+            "type": "STREETTYPE",
+            "l_f_add": "L_F_ADD",
+            "l_t_add": "L_T_ADD",
+            "r_f_add": "R_F_ADD",
+            "r_t_add": "R_T_ADD",}
+
+
+addpt_fields = {"addnum": "AddNum",
+                "predir": "PrefixDir",
+                "name": "StreetName",
+                "sufdir": "SuffixDir",
+                "type": "StreetType"}
+
+
+# Insert full address field here in order to use it
+fulladd_field = False
+# fulladd_field = 'ADDRESS'
+
+if fulladd_field:
+    address_parts = False
+else:
+    address_parts = True
+
+print(f'Using address component fields: {address_parts}')
+
 
 # Copy current address points into a working FC and add fields
 working_addpts = os.path.join(working_db, "zzz_AddPts_working_" + today)
@@ -54,8 +89,42 @@ arcpy.AddField_management(working_roads, "FULL_STREET", "TEXT", "", "", 50)
 #  Functions  #
 ###############
 
+unit_list = ['UNIT', 'TRLR', 'APT', 'STE', 'SPC', 'BSMT', 'LOT', '#', 'BLDG',
+             'HNGR', 'OFC', 'SP', 'HANGAR', 'REAR']
 
-def calc_street_addpts(working):
+def calc_street_addpts_fulladd(working, full_add):
+    update_count = 0
+    
+    fields = [full_add, 'full_street']
+    with arcpy.da.UpdateCursor(working, fields) as cursor:
+        print("Looping through rows in addpts FC ...")
+        for row in cursor:
+            # break off and discard the house number
+            parts = row[0].split(' ')
+            if parts[0].isdigit():
+                temp = " ".join(parts[1:])
+            else:
+                print(f"    Address {row[0]} does not have a valid house number")
+            
+            final = temp
+
+            # check parts of remaining address for a unit type separator
+            # if found split at unit type and discard everything after
+            temp_parts = temp.split(' ')
+            for i in np.arange(len(temp_parts)):
+                print(i)
+                if temp_parts[i].upper() in unit_list:
+                    # print(f'{temp_parts[i]} is in the unit list')
+                    splitter = temp_parts[i]
+                    final = temp.split(splitter, 1)[0]
+                    break
+                    # print(f'{temp_parts[i]} is NOT in the unit list')
+
+            row[1] = final.strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
+            update_count += 1
+            cursor.updateRow(row)  
+
+def calc_street_addpts(working, add_flds):
     
     update_count = 0
     
@@ -75,7 +144,7 @@ def calc_street_addpts(working):
                 cursor.updateRow(row)    
     else:    
         # Calculate 'full_street' field where applicable
-        fields = ['PrefixDir', 'StreetName', 'SuffixDir', 'StreetType', 'full_street']
+        fields = [add_flds['predir'], add_flds['name'], add_flds['sufdir'], add_flds['type'], 'full_street']
         with arcpy.da.UpdateCursor(working, fields) as cursor:
             print("Looping through rows in addpts FC ...")
             for row in cursor:
@@ -94,7 +163,7 @@ def calc_street_addpts(working):
     print(f"Total count of updates: {update_count}")
     
     
-def calc_street_roads(working):
+def calc_street_roads(working, st_flds):
     
     update_count = 0
     
@@ -114,7 +183,7 @@ def calc_street_roads(working):
                 cursor.updateRow(row)
     else:
         # Calculate 'FULL_STREET' field where applicable
-        fields = ['PREDIR', 'STREETNAME', 'SUFDIR', 'STREETTYPE', 'FULL_STREET']
+        fields = [st_flds['predir'], st_flds['name'], st_flds['sufdir'], st_flds['type'], 'FULL_STREET']
         with arcpy.da.UpdateCursor(working, fields) as cursor:
             print("Looping through rows in roads FC ...")
             for row in cursor:
@@ -132,7 +201,7 @@ def calc_street_roads(working):
     print(f"Total count of updates: {update_count}")
             
             
-def check_nearby_roads(pts, streets, gdb):
+def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
     """
     Function performs near table analysis to find 8 closest roads w/i 400m of each address point.
     It then uses pandas dataframes to join address point and street attributes to near table.
@@ -157,8 +226,10 @@ def check_nearby_roads(pts, streets, gdb):
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
     print("Generating near table ...")
+    near_start_time = time.time()
     arcpy.GenerateNearTable_analysis ("temp_pts", streets, neartable, '400 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 8, 'GEODESIC')
-    print(f"Number of rows in Near Table: {arcpy.GetCount_management(neartable)}")
+    print("Time elapsed generating near table: {:.2f}s".format(time.time() - near_start_time))
+    print(f"Number of rows in near table: {arcpy.GetCount_management(neartable)}")
     
     # Convert neartable to pandas dataframe
     neartable_arr = arcpy.da.TableToNumPyArray(neartable, '*')
@@ -166,15 +237,16 @@ def check_nearby_roads(pts, streets, gdb):
     print(near_df.head(5).to_string())
     
     # Convert address points to pandas dataframe
-    addpt_fields = ['OBJECTID', 'AddNum', 'full_street', 'Notes']
-    addpts_arr = arcpy.da.FeatureClassToNumPyArray(pts, addpt_fields)
+    keep_addpt_fields = ['OBJECTID', add_flds['addnum'], 'full_street', 'Notes']
+    addpts_arr = arcpy.da.FeatureClassToNumPyArray(pts, keep_addpt_fields)
     addpts_df = pd.DataFrame(data = addpts_arr)
     print(addpts_df.head(5).to_string())
     
     # Convert roads to pandas dataframe
-    street_fields = ['OBJECTID', 'L_F_ADD', 'L_T_ADD', 'R_F_ADD', 'R_T_ADD', 'FULL_STREET']
-    streets_arr = arcpy.da.FeatureClassToNumPyArray(streets, street_fields)
-    streets_df =pd.DataFrame(data = streets_arr)
+    keep_street_fields = ['OBJECTID', st_flds['l_f_add'], st_flds['l_t_add'],
+                          st_flds['r_f_add'], st_flds['r_t_add'], 'FULL_STREET']
+    streets_arr = arcpy.da.FeatureClassToNumPyArray(streets, keep_street_fields)
+    streets_df = pd.DataFrame(data = streets_arr)
     print(streets_df.head(5).to_string())
     
     # Join address points to near table
@@ -193,7 +265,9 @@ def check_nearby_roads(pts, streets, gdb):
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
     print("Starting logic checks ...")
-    near_df_updated = join2_df.apply(logic_checks, axis=1)
+    logic_start_time = time.time()
+    near_df_updated = join2_df.progress_apply(logic_checks, axis=1, args=(add_flds, st_flds))
+    print("Time elapsed in 'logic checks': {:.2f}s".format(time.time() - logic_start_time))
     # path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\neartable_updated.csv'
     path = os.path.join(work_dir, data_name + '_neartable_updated.csv')
     near_df_updated.to_csv(path)
@@ -268,7 +342,7 @@ def check_nearby_roads(pts, streets, gdb):
     print("Time elapsed in 'check_nearby_roads' function: {:.2f}s".format(time.time() - func_start_time))
     
     
-def logic_checks(row):
+def logic_checks(row, a_flds, s_flds):
     """
     Function calculates new values for 'Notes' field by comparing address
     point to nearby roads' full street name and address range
@@ -277,8 +351,8 @@ def logic_checks(row):
     goodnum = False
     if row['full_street'] == row['FULL_STREET']:
         goodstreet = True
-        if (int(row['AddNum'].split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].split()[0]) <= row['L_T_ADD']) or (
-                int(row['AddNum'].split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].split()[0]) <= row['R_T_ADD']):
+        if (int(row[a_flds['addnum']].split()[0]) >= row[s_flds['l_f_add']] and int(row[a_flds['addnum']].split()[0]) <= row[s_flds['l_t_add']]) or (
+                int(row[a_flds['addnum']].split()[0]) >= row[s_flds['r_f_add']] and int(row[a_flds['addnum']].split()[0]) <= row[s_flds['r_t_add']]):
             goodnum = True
     # Update Notes field based on if street and number are good from near analysis
     if goodstreet and goodnum:
@@ -296,14 +370,14 @@ def logic_checks(row):
     # Check for likely predir/sufdir errors: road nearly matches, range is good
     # Replace needed in logic to catch potential range in address number (e.g., '188-194')
     if row['Notes'] == 'no near st: possible typo, predir or sufdir error':
-        if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-                int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        if (int(row[a_flds['addnum']].replace('-', ' ').split()[0]) >= row[s_flds['l_f_add']] and int(row[a_flds['addnum']].replace('-', ' ').split()[0]) <= row[s_flds['l_t_add']]) or (
+                int(row[a_flds['addnum']].replace('-', ' ').split()[0]) >= row[s_flds['r_f_add']] and int(row[a_flds['addnum']].replace('-', ' ').split()[0]) <= row[s_flds['r_t_add']]):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
             row['goodnum'] = goodnum
     # Check for a good house number regardless of street name match or condition
-    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-            int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+    if (int(row[a_flds['addnum']].replace('-', ' ').split()[0]) >= row[s_flds['l_f_add']] and int(row[a_flds['addnum']].replace('-', ' ').split()[0]) <= row[s_flds['l_t_add']]) or (
+            int(row[a_flds['addnum']].replace('-', ' ').split()[0]) >= row[s_flds['r_f_add']] and int(row[a_flds['addnum']].replace('-', ' ').split()[0]) <= row[s_flds['r_t_add']]):
         goodnum = True
         row['goodnum'] = goodnum
     return row
@@ -312,14 +386,17 @@ def logic_checks(row):
 ##########################
 #  Call Functions Below  #
 ##########################
-
-calc_street_addpts(working_addpts)
-calc_street_roads(working_roads)
+if address_parts:
+    calc_street_addpts(working_addpts, addpt_fields)
+else:
+    calc_street_addpts_fulladd(working_addpts, fulladd_field)
+        
+calc_street_roads(working_roads, street_fields)
 
 
 arcpy.Delete_management("temp_pts")
 arcpy.Delete_management('in_memory\\near_table')
-check_nearby_roads(working_addpts, working_roads, working_db)
+check_nearby_roads(working_addpts, addpt_fields, working_roads, street_fields, working_db)
 
 
 ############################
