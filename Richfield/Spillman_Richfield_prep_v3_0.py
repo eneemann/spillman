@@ -112,7 +112,9 @@ def calc_salias1(streets):
     update_count = 0
     # Calculate "SALIAS1" field where applicable
     # where_clause = "ALIAS1 IS NOT NULL"
-    where_clause = "ALIAS1 IS NOT NULL AND SALIAS1 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY'"
+    # where_clause = "ALIAS1 IS NOT NULL AND SALIAS1 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY'"
+    where_clause = """ALIAS1 IS NOT NULL AND SALIAS1 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY' OR
+    (ALIAS1 IS NOT NULL AND SALIAS1 IS NULL AND STREETTYPE IS NULL)"""
     fields = ['PREDIR', 'ALIAS1', 'ALIAS1TYPE', 'SALIAS1']
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
@@ -134,8 +136,9 @@ def calc_salias2(streets):
     update_count = 0
     # Calculate "SALIAS2" field where applicable
     # where_clause = "ALIAS2 IS NOT NULL"
-    where_clause = "ALIAS2 IS NOT NULL AND SALIAS2 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY'"
-
+    # where_clause = "ALIAS2 IS NOT NULL AND SALIAS2 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY'"
+    where_clause = """(ALIAS2 IS NOT NULL AND SALIAS2 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY') OR
+    (ALIAS2 IS NOT NULL AND SALIAS2 IS NULL AND STREETTYPE IS NULL)"""
     fields = ['PREDIR', 'ALIAS2', 'ALIAS2TYPE', 'SALIAS2']
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
@@ -622,21 +625,21 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #  Call Functions Below  #
 ##########################
 
-#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-#blanks_to_nulls(streets_fc_utm)
-#calc_street(streets_fc_utm)
-#calc_salias1(streets_fc_utm)
-#calc_salias2(streets_fc_utm)
-#calc_salias4(streets_fc_utm)
-#highway_to_sr_us(streets_fc_utm)
-#calc_salias3(streets_fc_utm)
-#street_blank_to_null(streets_fc_utm)
-#calc_location(streets_fc_utm)
-#create_streets_CAD(streets_fc_utm)
-#create_address_pts_CAD(address_pts)
-#copy_tbzones(tbzones)
-#project_to_wgs84(FCs_to_project)
-#spillman_polygon_prep(streets_cad_wgs84)
+create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+blanks_to_nulls(streets_fc_utm)
+calc_street(streets_fc_utm)
+calc_salias1(streets_fc_utm)
+calc_salias2(streets_fc_utm)
+calc_salias4(streets_fc_utm)
+highway_to_sr_us(streets_fc_utm)
+calc_salias3(streets_fc_utm)
+street_blank_to_null(streets_fc_utm)
+calc_location(streets_fc_utm)
+create_streets_CAD(streets_fc_utm)
+create_address_pts_CAD(address_pts)
+copy_tbzones(tbzones)
+project_to_wgs84(FCs_to_project)
+spillman_polygon_prep(streets_cad_wgs84)
 
 
 #################################################################
@@ -661,14 +664,14 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_spillman, milepost_fields, mileposts_out)
 
 ## Vela Shapefiles Export
-export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
-export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
-export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_vela, vela_milepost_fields, vela_milepost_out)
-export_shapefiles_select_fields_rename("law_zones", out_folder_vela, vela_law_fields, vela_law_out)
-export_shapefiles_select_fields_rename("MZ_Zones", out_folder_vela, vela_mz_fields, vela_mz_out)
-export_shapefiles_select_fields_rename("citycodes", out_folder_vela, vela_citycd_fields, vela_citycd_out)
+# export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+# export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+# export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
+# export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+# export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_vela, vela_milepost_fields, vela_milepost_out)
+# export_shapefiles_select_fields_rename("law_zones", out_folder_vela, vela_law_fields, vela_law_out)
+# export_shapefiles_select_fields_rename("MZ_Zones", out_folder_vela, vela_mz_fields, vela_mz_out)
+# export_shapefiles_select_fields_rename("citycodes", out_folder_vela, vela_citycd_fields, vela_citycd_out)
 
 #export_shapefiles_all_fields(vela_to_export, out_folder_vela)
 #env.workspace = out_folder_vela
