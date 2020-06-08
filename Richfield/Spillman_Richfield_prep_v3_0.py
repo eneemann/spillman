@@ -599,12 +599,21 @@ vela_street_fields = ["CARTOCODE", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "
                       "SUFDIR", "ALIAS1", "ALIAS1TYPE", "ALIAS2", "ALIAS2TYPE", "ACSALIAS", "ACSNAME", "ACSSUF",
                       "ZIPLEFT", "ZIPRIGHT", "STREET", "COMM_LEFT", "COMM_RIGHT", "Shape_Length"]
 vela_muni_fields = ["NAME", "CITYCD"]
+vela_milepost_fields = ["ROUTE", "MP", "FULLMPNAME"]
+vela_law_fields = ["L_ZONE", "L_AREA", "AGENCY_NAME"]
+vela_mz_fields = ["NAME", "MZ_ID"]
+vela_citycd_fields = ["NAME", "CITYCD"]
 
 # Vela Shapefile outnames
 vela_addpt_out = "AddressPoints"
 vela_commplc_out = "CommonPlacePoints"
 vela_street_out = "Streets"
 vela_muni_out = "Cities"
+
+vela_milepost_out = "Mileposts"
+vela_law_out = "LawZones"
+vela_mz_out = "MZZones"
+vela_citycd_out = "CityCodes"
 
 # Additional Vela Shapefiles to export
 vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
@@ -656,6 +665,10 @@ export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, ve
 export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
 export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
 export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_vela, vela_milepost_fields, vela_milepost_out)
+export_shapefiles_select_fields_rename("law_zones", out_folder_vela, vela_law_fields, vela_law_out)
+export_shapefiles_select_fields_rename("MZ_Zones", out_folder_vela, vela_mz_fields, vela_mz_out)
+export_shapefiles_select_fields_rename("citycodes", out_folder_vela, vela_citycd_fields, vela_citycd_out)
 
 #export_shapefiles_all_fields(vela_to_export, out_folder_vela)
 #env.workspace = out_folder_vela
