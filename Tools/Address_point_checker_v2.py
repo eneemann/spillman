@@ -31,23 +31,17 @@ today = time.strftime("%Y%m%d")
 ###################
 
 # Provide name for dataset and working directory where output geodatabase will be located
-data_name = 'richfield'
-root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
-
+data_name = 'daggett'
+# root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
+root_dir = r'C:\Temp'
 
 # Street and address point layers with full paths:
-streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20200515_UTM'  # Point to current roads layer
-addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20200526'  # Point to current addpts layer
+# addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20200526'  # Point to current addpts layer
+# streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20200515_UTM'  # Point to current roads layer
+addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.LOCATION.AddressPoints'  # Point to current addpts layer
+streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.TRANSPORTATION.Roads'  # Point to current roads layer
 
-# Input street component fields that will be used for each feature class
-street_fields = {"predir": "PREDIR",
-            "name": "STREETNAME",
-            "sufdir": "SUFDIR",
-            "type": "STREETTYPE",
-            "l_f_add": "L_F_ADD",
-            "l_t_add": "L_T_ADD",
-            "r_f_add": "R_F_ADD",
-            "r_t_add": "R_T_ADD",}
+
 
 # Input address point component fields that will be used for each feature class
 addpt_fields = {"addnum": "AddNum",
@@ -56,12 +50,41 @@ addpt_fields = {"addnum": "AddNum",
                 "sufdir": "SuffixDir",
                 "type": "StreetType"}
 
+# Input street component fields that will be used for each feature class
+# street_fields = {"predir": "PREDIR",
+#             "name": "STREETNAME",
+#             "sufdir": "SUFDIR",
+#             "type": "STREETTYPE",
+#             "l_f_add": "L_F_ADD",
+#             "l_t_add": "L_T_ADD",
+#             "r_f_add": "R_F_ADD",
+#             "r_t_add": "R_T_ADD"}
+
+street_fields = {"predir": "PREDIR",
+            "name": "NAME",
+            "sufdir": "POSTDIR",
+            "type": "POSTTYPE",
+            "l_f_add": "FROMADDR_L",
+            "l_t_add": "TOADDR_L",
+            "r_f_add": "FROMADDR_R",
+            "r_t_add": "TOADDR_R"}
+
+
 # Set flags
 # Input full address field here in order to use it, otherwise components will be used
 fulladd_field = False
-# fulladd_field = 'ADDRESS'
+# fulladd_field = 'ADDRESS'   # Example of using a full address field
 
+# Set flag if data is coming from SGID
+# Use 'internal' for internal SGID, use 'opensgid' for Open SGID
+# Provide the county fips code
+from_sgid = 'internal'     # use for internal
+# from_sgid = 'opensgid'     # use for Open SGID
+fips = '49009'
 
+# from_sgid = False
+
+# Set up variables for later in the script 
 if fulladd_field:
     address_parts = False
     print(f'Using full address field ...')
@@ -76,40 +99,80 @@ work_dir = os.path.join(root_dir, f'{data_name}_{today}')
 if os.path.isdir(work_dir) == False:
     os.mkdir(work_dir)
 
-
 # Create new working geodatabase and set environment variables
 gdb_name = f'{data_name}_gdb_{today}.gdb'
 if arcpy.Exists(os.path.join(work_dir, gdb_name)):
-    arcpy.Delete_management(os.path.join(work_dir, gdb_name))
-arcpy.CreateFileGDB_management(work_dir, gdb_name)
+    arcpy.management.Delete(os.path.join(work_dir, gdb_name))
+arcpy.management.CreateFileGDB(work_dir, gdb_name)
 working_db = os.path.join(work_dir, gdb_name)
 
 arcpy.env.workspace = working_db
 arcpy.env.overwriteOutput = True
 
-# Copy current address points into a working FC and add fields
-working_addpts = os.path.join(working_db, "AddPts_working_" + today)
-if arcpy.Exists(working_addpts):
-    arcpy.Delete_management(working_addpts)
-arcpy.CopyFeatures_management(addpts, working_addpts)
-
-arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
-arcpy.AddField_management(working_addpts, "full_street", "TEXT", "", "", 50)
-
-# Copy current roads into a working FC and add 'FULL_STREET' field
-working_roads = os.path.join(working_db, "Streets_working_" + today)
-if arcpy.Exists(working_roads):
-    arcpy.Delete_management(working_roads)
-arcpy.CopyFeatures_management(streets, working_roads)
-
-arcpy.AddField_management(working_roads, "FULL_STREET", "TEXT", "", "", 50)
+unit_list = ['UNIT', 'TRLR', 'APT', 'STE', 'SPC', 'BSMT', 'LOT', '#', 'BLDG',
+             'HNGR', 'OFC', 'OFFICE', 'SP', 'HANGAR', 'REAR']
 
 ###############
 #  Functions  #
 ###############
 
-unit_list = ['UNIT', 'TRLR', 'APT', 'STE', 'SPC', 'BSMT', 'LOT', '#', 'BLDG',
-             'HNGR', 'OFC', 'OFFICE', 'SP', 'HANGAR', 'REAR']
+
+def copy_addpts(pts, gdb):
+    # Copy current address points into a working FC and add fields
+    working = os.path.join(gdb, "AddPts_working_" + today)
+    if arcpy.Exists(working):
+        arcpy.management.Delete(working)
+    arcpy.management.CopyFeatures(pts, working)
+    
+    arcpy.management.AddField(working, "Notes", "TEXT", "", "", 50)
+    arcpy.management.AddField(working, "full_street", "TEXT", "", "", 50)
+    
+    return working
+    
+    
+def copy_streets(rds, gdb):
+    # Copy current roads into a working FC and add 'FULL_STREET' field
+    working = os.path.join(gdb, "Streets_working_" + today)
+    if arcpy.Exists(working):
+        arcpy.Delete_management(working)
+    arcpy.management.CopyFeatures(rds, working)
+
+    arcpy.management.AddField(working, "FULL_STREET", "TEXT", "", "", 50)
+    
+    return working
+
+
+def filter_sgid_data(pts, rds, gdb, fips):
+    """
+    Get addpts and roads from SGID (filtered down to specific fips code) and add
+    necessary fields to perform checks later in script
+    """
+    
+    # Copy current address points into a working FC and add fields
+    where_SGID_pts = f"CountyID = '{fips}'"      # All Relevant counties for Richfield
+    print(where_SGID_pts)
+    arcpy.management.MakeFeatureLayer(pts, "sgid_addpts_lyr", where_SGID_pts)
+    print("SGID address points layer feature count: {}".format(arcpy.GetCount_management("sgid_addpts_lyr")))
+    working_pts = os.path.join(gdb, "AddPts_working_" + today)
+    arcpy.management.CopyFeatures("sgid_addpts_lyr", working_pts)
+    arcpy.Delete_management("sgid_addpts_lyr")
+    
+    arcpy.management.AddField(working_pts, "Notes", "TEXT", "", "", 50)
+    arcpy.management.AddField(working_pts, "full_street", "TEXT", "", "", 50)
+      
+    # Copy current roads into a working FC and add 'FULL_STREET' field
+    where_SGID_rds = f"COUNTY_L = '{fips}' OR COUNTY_R = '{fips}'"      # All Relevant counties for Richfield
+    print(where_SGID_rds)
+    arcpy.management.MakeFeatureLayer(rds, "sgid_roads_lyr", where_SGID_rds)
+    print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_roads_lyr")))
+    working_rds = os.path.join(gdb, "Streets_working_" + today)
+    arcpy.management.CopyFeatures("sgid_roads_lyr", working_rds)
+    arcpy.Delete_management("sgid_roads_lyr")
+    
+    arcpy.management.AddField(working_rds, "FULL_STREET", "TEXT", "", "", 50)
+    
+    return working_pts, working_rds
+
 
 def calc_street_addpts_fulladd(working, full_add):
     update_count = 0
@@ -232,11 +295,6 @@ def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
     address points layer using the 'IN_FID' field to update the 'Notes' field in a FC.
     """
     func_start_time = time.time()
-    # Need to make a layer from working address points feature class here
-    # arcpy.MakeFeatureLayer_management(pts, "temp_pts")
-    result = arcpy.GetCount_management(pts)
-    total = int(result.getOutput(0))
-    print(f"Address points layer feature count: {total}")
 
     # Create table name (in memory) for neartable
     neartable = 'in_memory\\near_table'
@@ -398,6 +456,14 @@ def logic_checks(row, a_flds, s_flds):
 ##########################
 #  Call Functions Below  #
 ##########################
+
+if from_sgid:
+    working_addpts, working_roads = filter_sgid_data(addpts, streets, working_db, fips)
+else:
+    working_addpts = copy_addpts(addpts, working_db)
+    working_roads = copy_streets(streets, working_db)
+
+
 if address_parts:
     calc_street_addpts(working_addpts, addpt_fields)
 else:
