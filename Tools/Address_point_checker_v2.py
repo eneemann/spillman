@@ -9,7 +9,6 @@ Script to compare address points to road centerlines for quality control.
 """
 
 import arcpy
-from arcpy import env
 import os
 import time
 import pandas as pd
@@ -27,16 +26,18 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print(f"The script start time is {readable_start}")
 today = time.strftime("%Y%m%d")
 
-# Create variables
-working_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
-env.workspace = working_db
-env.overwriteOutput = True
+###################
+# Input variables #
+###################
 
-work_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
+# Provide name for dataset and working directory where output geodatabase will be located
 data_name = 'richfield'
+root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
 
-streets = os.path.join(working_db, "streets_update_20200515_UTM")  # Point to current roads in working_db
-addpts = os.path.join(working_db, "address_points_update_20200526")  # Point to current addpts in working_db
+
+# Street and address point layers with full paths:
+streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20200515_UTM'  # Point to current roads layer
+addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20200526'  # Point to current addpts layer
 
 # Input street component fields that will be used for each feature class
 street_fields = {"predir": "PREDIR",
@@ -48,28 +49,46 @@ street_fields = {"predir": "PREDIR",
             "r_f_add": "R_F_ADD",
             "r_t_add": "R_T_ADD",}
 
-
+# Input address point component fields that will be used for each feature class
 addpt_fields = {"addnum": "AddNum",
                 "predir": "PrefixDir",
                 "name": "StreetName",
                 "sufdir": "SuffixDir",
                 "type": "StreetType"}
 
-
-# Insert full address field here in order to use it
+# Set flags
+# Input full address field here in order to use it, otherwise components will be used
 fulladd_field = False
 # fulladd_field = 'ADDRESS'
 
+
 if fulladd_field:
     address_parts = False
+    print(f'Using full address field ...')
 else:
     address_parts = True
+    print(f'Using address field components ...')
 
 print(f'Using address component fields: {address_parts}')
 
+# Create new directory within root_dir to store geodatabase and CSVs
+work_dir = os.path.join(root_dir, f'{data_name}_{today}')
+if os.path.isdir(work_dir) == False:
+    os.mkdir(work_dir)
+
+
+# Create new working geodatabase and set environment variables
+gdb_name = f'{data_name}_gdb_{today}.gdb'
+if arcpy.Exists(os.path.join(work_dir, gdb_name)):
+    arcpy.Delete_management(os.path.join(work_dir, gdb_name))
+arcpy.CreateFileGDB_management(work_dir, gdb_name)
+working_db = os.path.join(work_dir, gdb_name)
+
+arcpy.env.workspace = working_db
+arcpy.env.overwriteOutput = True
 
 # Copy current address points into a working FC and add fields
-working_addpts = os.path.join(working_db, "zzz_AddPts_working_" + today)
+working_addpts = os.path.join(working_db, "AddPts_working_" + today)
 if arcpy.Exists(working_addpts):
     arcpy.Delete_management(working_addpts)
 arcpy.CopyFeatures_management(addpts, working_addpts)
@@ -78,7 +97,7 @@ arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
 arcpy.AddField_management(working_addpts, "full_street", "TEXT", "", "", 50)
 
 # Copy current roads into a working FC and add 'FULL_STREET' field
-working_roads = os.path.join(working_db, "zzz_Streets_working_" + today)
+working_roads = os.path.join(working_db, "Streets_working_" + today)
 if arcpy.Exists(working_roads):
     arcpy.Delete_management(working_roads)
 arcpy.CopyFeatures_management(streets, working_roads)
@@ -214,17 +233,17 @@ def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
     """
     func_start_time = time.time()
     # Need to make a layer from working address points feature class here
-    arcpy.MakeFeatureLayer_management(pts, "temp_pts")
-    result = arcpy.GetCount_management("temp_pts")
+    # arcpy.MakeFeatureLayer_management(pts, "temp_pts")
+    result = arcpy.GetCount_management(pts)
     total = int(result.getOutput(0))
-    print(f"temp_pts layer feature count: {total}")
+    print(f"Address points layer feature count: {total}")
 
     # Create table name (in memory) for neartable
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
     print("Generating near table ...")
     near_start_time = time.time()
-    arcpy.GenerateNearTable_analysis ("temp_pts", streets, neartable, '400 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 8, 'GEODESIC')
+    arcpy.GenerateNearTable_analysis (pts, streets, neartable, '400 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 8, 'GEODESIC')
     print("Time elapsed generating near table: {:.2f}s".format(time.time() - near_start_time))
     print(f"Number of rows in near table: {arcpy.GetCount_management(neartable)}")
     
@@ -249,24 +268,21 @@ def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
     # Join address points to near table
     join1_df = near_df.join(addpts_df.set_index('OBJECTID'), on='IN_FID')
     print(join1_df.head(5).to_string())
-    # path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_join1.csv'
-    path = os.path.join(work_dir, data_name + '_neartable_join1.csv')
-    join1_df.to_csv(path)
+    join1_path = os.path.join(work_dir, data_name + f'_neartable_{today}_join1.csv')
+    # join1_df.to_csv(join1_path)
     
     # Join streets to near table
     join2_df = join1_df.join(streets_df.set_index('OBJECTID'), on='NEAR_FID')
     print(join2_df.head(5).to_string())
-    # path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_join2.csv'
-    path = os.path.join(work_dir, data_name + '_neartable_join2.csv')
-    join2_df.to_csv(path)
+    join2_path = os.path.join(work_dir, data_name + f'_neartable_{today}_join2.csv')
+    # join2_df.to_csv(join2_path)
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
     print("Starting logic checks ...")
     logic_start_time = time.time()
     near_df_updated = join2_df.progress_apply(logic_checks, axis=1, args=(add_flds, st_flds))
     print("Time elapsed in 'logic checks': {:.2f}s".format(time.time() - logic_start_time))
-    # path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\neartable_updated.csv'
-    path = os.path.join(work_dir, data_name + '_neartable_updated.csv')
+    path = os.path.join(work_dir, data_name + f'_neartable_{today}_updated.csv')
     near_df_updated.to_csv(path)
     
     # Separate rows with a good nearby street into a separate dataframe
@@ -288,31 +304,25 @@ def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
 #    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
     # Sort by multiple columns (goodstreet, then goodnum) to ensure 2nd nearest street with good num will get used
 #    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['goodstreet', 'goodnum'], ascending=False).drop_duplicates('IN_FID')
-    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'],
-                                       ascending=[True,False, False, True, True])
-    out_name = os.path.join(work_dir, data_name + '_neartable_all.csv')
-    filtered_df.to_csv(out_name)
+    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet','goodnum', 'edit_dist', 'NEAR_DIST'],
+                                       ascending=[True, False, False, True, True])
+    all_path = os.path.join(work_dir, data_name + f'_neartable_{today}_all.csv')
+    filtered_df.to_csv(all_path)
     # Re-sort data frame on address point ID for final data set
     final_df = filtered_df.drop_duplicates('IN_FID')
-    # path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_final.csv'
-    path = os.path.join(work_dir, data_name + '_neartable_final.csv')
-    final_df.to_csv(path)
-    
-#    # Testing best method to sort data to resturn best candidate for non-matches
-#    test_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'], ascending=[True,False, False, True, True])
-#    test_df.to_csv(r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_test_edit.csv')
+    final_path = os.path.join(work_dir, data_name + f'_neartable_{today}_final.csv')
+    final_df.to_csv(final_path)
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist', 'NEAR_DIST', 'NEAR_RANK']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
     join_df.columns = ['IN_FID', 'Notes_near', 'edit_dist', 'NEAR_DIST', 'NEAR_RANK']
-    # join_path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_join.csv'
-    join_path = os.path.join(work_dir, data_name + '_neartable_join.csv')
+    join_path = os.path.join(work_dir, data_name + f'_neartable_{today}_join.csv')
     join_df.to_csv(join_path)
         
     # Convert CSV output into table and join to working address points FC
-    env.workspace = gdb
-    env.qualifiedFieldNames = False
+    arcpy.env.workspace = gdb
+    arcpy.env.qualifiedFieldNames = False
     if arcpy.Exists("neartable_join"):
         arcpy.Delete_management("neartable_join")
     arcpy.TableToTable_conversion(join_path, gdb, "neartable_join")
@@ -335,7 +345,12 @@ def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
                 if len(row[1]) > 0:
                     row[0] = row[1]
             cursor.updateRow(row)
-                                 
+    
+    # Delete temporary data                             
+    # arcpy.Delete_management("temp_pts")
+    arcpy.Delete_management('in_memory\\near_table')
+    os.remove(join_path)    
+    
     print("Time elapsed in 'check_nearby_roads' function: {:.2f}s".format(time.time() - func_start_time))
     
     
@@ -389,10 +404,6 @@ else:
     calc_street_addpts_fulladd(working_addpts, fulladd_field)
         
 calc_street_roads(working_roads, street_fields)
-
-
-arcpy.Delete_management("temp_pts")
-arcpy.Delete_management('in_memory\\near_table')
 check_nearby_roads(working_addpts, addpt_fields, working_roads, street_fields, working_db)
 
 
@@ -403,7 +414,7 @@ print("Generating a few plots and stats ...")
 
 # Plot histogram of Edit Distances
 print("Creating edit distance histogram ...")
-df = pd.read_csv(os.path.join(work_dir, data_name + '_neartable_final.csv'))
+df = pd.read_csv(os.path.join(work_dir, data_name + f'_neartable_{today}_final.csv'))
 plt.figure(figsize=(6,4))
 plt.hist(df['edit_dist'], bins = np.arange(0, df['edit_dist'].max(), 1)-0.5, color='red', edgecolor='black')
 plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
