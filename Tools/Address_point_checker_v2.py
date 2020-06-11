@@ -10,6 +10,7 @@ Script to compare address points to road centerlines for quality control.
 
 import arcpy
 import os
+import sys
 import time
 import pandas as pd
 import numpy as np
@@ -38,8 +39,10 @@ root_dir = r'C:\Temp'
 # Street and address point layers with full paths:
 # addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20200526'  # Point to current addpts layer
 # streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20200515_UTM'  # Point to current roads layer
-addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.LOCATION.AddressPoints'  # Point to current addpts layer
-streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.TRANSPORTATION.Roads'  # Point to current roads layer
+# addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.LOCATION.AddressPoints'  # Point to current addpts layer
+# streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.TRANSPORTATION.Roads'  # Point to current roads layer
+addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.location.address_points'  # Point to current addpts layer
+streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.transportation.roads'  # Point to current roads layer
 
 
 
@@ -78,39 +81,33 @@ fulladd_field = False
 # Set flag if data is coming from SGID
 # Use 'internal' for internal SGID, use 'opensgid' for Open SGID
 # Provide the county fips code
-from_sgid = 'internal'     # use for internal
-# from_sgid = 'opensgid'     # use for Open SGID
+# from_sgid = 'internal'     # use for internal
+from_sgid = 'opensgid'     # use for Open SGID
 fips = '49009'
 
-# from_sgid = False
 
-# Set up variables for later in the script 
-if fulladd_field:
-    address_parts = False
-    print(f'Using full address field ...')
-else:
-    address_parts = True
-    print(f'Using address field components ...')
 
-print(f'Using address component fields: {address_parts}')
-
-# Create new directory within root_dir to store geodatabase and CSVs
-work_dir = os.path.join(root_dir, f'{data_name}_{today}')
-if os.path.isdir(work_dir) == False:
-    os.mkdir(work_dir)
-
-# Create new working geodatabase and set environment variables
-gdb_name = f'{data_name}_gdb_{today}.gdb'
-if arcpy.Exists(os.path.join(work_dir, gdb_name)):
-    arcpy.management.Delete(os.path.join(work_dir, gdb_name))
-arcpy.management.CreateFileGDB(work_dir, gdb_name)
-working_db = os.path.join(work_dir, gdb_name)
-
-arcpy.env.workspace = working_db
-arcpy.env.overwriteOutput = True
+#############
+# Constants #
+#############
 
 unit_list = ['UNIT', 'TRLR', 'APT', 'STE', 'SPC', 'BSMT', 'LOT', '#', 'BLDG',
              'HNGR', 'OFC', 'OFFICE', 'SP', 'HANGAR', 'REAR']
+
+sgid_addpt_fields = {"addnum": "AddNum",
+                "predir": "PrefixDir",
+                "name": "StreetName",
+                "sufdir": "SuffixDir",
+                "type": "StreetType"}
+
+sgid_street_fields = {"predir": "PREDIR",
+            "name": "NAME",
+            "sufdir": "POSTDIR",
+            "type": "POSTTYPE",
+            "l_f_add": "FROMADDR_L",
+            "l_t_add": "TOADDR_L",
+            "r_f_add": "FROMADDR_R",
+            "r_t_add": "TOADDR_R"}
 
 ###############
 #  Functions  #
@@ -147,9 +144,24 @@ def filter_sgid_data(pts, rds, gdb, fips):
     Get addpts and roads from SGID (filtered down to specific fips code) and add
     necessary fields to perform checks later in script
     """
+    # Set parameters based on whether internal or opensgid is used
+    query = {'countyid': 'CountyID',
+             'county_l': 'COUNTY_L',
+             'county_r': 'COUNTY_R'}
     
+    if from_sgid == 'opensgid':
+        query = {k: v.lower() for k, v in query.items()}
+        # query = {'countyid': 'countyid',
+        #          'county_l': 'county_l',
+        #          'county_r': 'county_r'}
+    elif from_sgid == 'internal':
+        pass
+    else:
+        print(f"SGID type of '{from_sgid}' is invalid. Exiting program ...")
+        sys.exit()
+        
     # Copy current address points into a working FC and add fields
-    where_SGID_pts = f"CountyID = '{fips}'"      # All Relevant counties for Richfield
+    where_SGID_pts = f"{query['countyid']} = '{fips}'"      # All Relevant counties for Richfield
     print(where_SGID_pts)
     arcpy.management.MakeFeatureLayer(pts, "sgid_addpts_lyr", where_SGID_pts)
     print("SGID address points layer feature count: {}".format(arcpy.GetCount_management("sgid_addpts_lyr")))
@@ -161,7 +173,7 @@ def filter_sgid_data(pts, rds, gdb, fips):
     arcpy.management.AddField(working_pts, "full_street", "TEXT", "", "", 50)
       
     # Copy current roads into a working FC and add 'FULL_STREET' field
-    where_SGID_rds = f"COUNTY_L = '{fips}' OR COUNTY_R = '{fips}'"      # All Relevant counties for Richfield
+    where_SGID_rds = f"{query['county_l']} = '{fips}' OR {query['county_r']} = '{fips}'"      # All Relevant counties for Richfield
     print(where_SGID_rds)
     arcpy.management.MakeFeatureLayer(rds, "sgid_roads_lyr", where_SGID_rds)
     print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_roads_lyr")))
@@ -453,12 +465,50 @@ def logic_checks(row, a_flds, s_flds):
     return row
     
 
+#####################
+# Start Main Script #
+#####################
+  
+
+# Set up variables for later in the script 
+if fulladd_field:
+    address_parts = False
+    print(f'Using full address field ...')
+else:
+    address_parts = True
+    print(f'Using address field components ...')
+
+print(f'Using address component fields: {address_parts}')
+
+# Create new directory within root_dir to store geodatabase and CSVs
+work_dir = os.path.join(root_dir, f'{data_name}_{today}')
+if os.path.isdir(work_dir) == False:
+    os.mkdir(work_dir)
+
+# Create new working geodatabase and set environment variables
+gdb_name = f'{data_name}_gdb_{today}.gdb'
+if arcpy.Exists(os.path.join(work_dir, gdb_name)):
+    arcpy.management.Delete(os.path.join(work_dir, gdb_name))
+arcpy.management.CreateFileGDB(work_dir, gdb_name)
+working_db = os.path.join(work_dir, gdb_name)
+
+arcpy.env.workspace = working_db
+arcpy.env.overwriteOutput = True
+
+
 ##########################
 #  Call Functions Below  #
 ##########################
 
+
 if from_sgid:
+    addpt_fields, street_fields = sgid_addpt_fields, sgid_street_fields
     working_addpts, working_roads = filter_sgid_data(addpts, streets, working_db, fips)
+    if from_sgid == 'opensgid':
+        addpt_fields = {k: v.lower() for k, v in addpt_fields.items()}
+        street_fields = {k: v.lower() for k, v in street_fields.items()}
+        print(addpt_fields)
+        print(street_fields)
 else:
     working_addpts = copy_addpts(addpts, working_db)
     working_roads = copy_streets(streets, working_db)
