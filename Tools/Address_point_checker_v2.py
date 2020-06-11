@@ -91,8 +91,9 @@ fips = '49009'
 # Constants #
 #############
 
-unit_list = ['UNIT', 'TRLR', 'APT', 'STE', 'SPC', 'BSMT', 'LOT', '#', 'BLDG',
-             'HNGR', 'OFC', 'OFFICE', 'SP', 'HANGAR', 'REAR']
+unit_list = ['#', 'APT', 'BLDG', 'BSMT', 'CONDO', 'DEPT', 'FL', 'FRNT', 'HANGAR',
+             'HNGR', 'LOT', 'OFC', 'OFFICE', 'REAR', 'RM', 'SIDE', 'SP', 'SPC',
+             'STE', 'TRLR', 'UNIT']
 
 sgid_addpt_fields = {"addnum": "AddNum",
                 "predir": "PrefixDir",
@@ -560,7 +561,6 @@ print('\n')
 total_pts = df.shape[0]
 print('Stats by percentage:')
 print(df.groupby('Notes').count()['edit_dist'].apply(lambda x: 100 * x / float(total_pts)))
-
 
 print('\n' + "Script shutting down ...")
 # Stop timer and print end time in UTC
