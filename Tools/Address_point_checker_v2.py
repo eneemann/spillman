@@ -449,37 +449,41 @@ def logic_checks(row, a_flds, s_flds):
     """
     goodstreet = False
     goodnum = False
-    if row['full_street'] == row['FULL_STREET']:
-        goodstreet = True
-        if (int(row[a_flds['addnum']].split()[0]) >= row[s_flds['l_f_add']] and int(row[a_flds['addnum']].split()[0]) <= row[s_flds['l_t_add']]) or (
-                int(row[a_flds['addnum']].split()[0]) >= row[s_flds['r_f_add']] and int(row[a_flds['addnum']].split()[0]) <= row[s_flds['r_t_add']]):
-            goodnum = True
-    # Update Notes field based on if street and number are good from near analysis
-    if goodstreet and goodnum:
-        row['Notes'] = 'good address point'
-    elif goodstreet and not goodnum:
-        row['Notes'] = 'near street found, but address range mismatch'
-    elif not goodstreet:
-        row['Notes'] = 'near street not found'
-    row['goodstreet'] = goodstreet
-    row['goodnum'] = goodnum
-    row['edit_dist'] = Lv.distance(row['full_street'], row['FULL_STREET'])
-    # Check edit distance for roads that might have typos, predir, or sufdir errors
-    if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
-        row['Notes'] = 'no near st: possible typo, predir, or sufdir error'
-    # Check for likely predir/sufdir errors: road nearly matches, range is good
-    # Replace needed in logic to catch potential range in address number (e.g., '188-194')
-    if row['Notes'] == 'no near st: possible typo, predir or sufdir error':
-        if (int(row[a_flds['addnum']].replace('-', ' ').split()[0]) >= row[s_flds['l_f_add']] and int(row[a_flds['addnum']].replace('-', ' ').split()[0]) <= row[s_flds['l_t_add']]) or (
-                int(row[a_flds['addnum']].replace('-', ' ').split()[0]) >= row[s_flds['r_f_add']] and int(row[a_flds['addnum']].replace('-', ' ').split()[0]) <= row[s_flds['r_t_add']]):
-            goodnum = True
-            row['Notes'] = 'no near st: likely predir or sufdir error'
-            row['goodnum'] = goodnum
-    # Check for a good house number regardless of street name match or condition
-    if (int(row[a_flds['addnum']].replace('-', ' ').split()[0]) >= row[s_flds['l_f_add']] and int(row[a_flds['addnum']].replace('-', ' ').split()[0]) <= row[s_flds['l_t_add']]) or (
-            int(row[a_flds['addnum']].replace('-', ' ').split()[0]) >= row[s_flds['r_f_add']] and int(row[a_flds['addnum']].replace('-', ' ').split()[0]) <= row[s_flds['r_t_add']]):
-        goodnum = True
+    add_num = ''.join(i for i in row[a_flds['addnum']] if i.isdigit())
+    
+    if add_num.isdigit():
+        if row['full_street'] == row['FULL_STREET']:
+            goodstreet = True
+            if (int(add_num.split()[0]) >= row[s_flds['l_f_add']] and int(add_num.split()[0]) <= row[s_flds['l_t_add']]) or (
+                    int(add_num.split()[0]) >= row[s_flds['r_f_add']] and int(add_num.split()[0]) <= row[s_flds['r_t_add']]):
+                goodnum = True
+        # Update Notes field based on if street and number are good from near analysis
+        if goodstreet and goodnum:
+            row['Notes'] = 'good address point'
+        elif goodstreet and not goodnum:
+            row['Notes'] = 'near street found, but address range mismatch'
+        elif not goodstreet:
+            row['Notes'] = 'near street not found'
+        row['goodstreet'] = goodstreet
         row['goodnum'] = goodnum
+        row['edit_dist'] = Lv.distance(row['full_street'], row['FULL_STREET'])
+        # Check edit distance for roads that might have typos, predir, or sufdir errors
+        if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
+            row['Notes'] = 'no near st: possible typo, predir, or sufdir error'
+        # Check for likely predir/sufdir errors: road nearly matches, range is good
+        # Replace needed in logic to catch potential range in address number (e.g., '188-194')
+        if row['Notes'] == 'no near st: possible typo, predir or sufdir error':
+            if (int(add_num.replace('-', ' ').split()[0]) >= row[s_flds['l_f_add']] and int(add_num.replace('-', ' ').split()[0]) <= row[s_flds['l_t_add']]) or (
+                    int(add_num.replace('-', ' ').split()[0]) >= row[s_flds['r_f_add']] and int(add_num.replace('-', ' ').split()[0]) <= row[s_flds['r_t_add']]):
+                goodnum = True
+                row['Notes'] = 'no near st: likely predir or sufdir error'
+                row['goodnum'] = goodnum
+        # Check for a good house number regardless of street name match or condition
+        if (int(add_num.replace('-', ' ').split()[0]) >= row[s_flds['l_f_add']] and int(add_num.replace('-', ' ').split()[0]) <= row[s_flds['l_t_add']]) or (
+                int(add_num.replace('-', ' ').split()[0]) >= row[s_flds['r_f_add']] and int(add_num.replace('-', ' ').split()[0]) <= row[s_flds['r_t_add']]):
+            goodnum = True
+            row['goodnum'] = goodnum
+    
     return row
     
 
