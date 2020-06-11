@@ -32,7 +32,7 @@ today = time.strftime("%Y%m%d")
 ###################
 
 # Provide name for dataset and working directory where output geodatabase will be located
-data_name = 'daggett'
+data_name = 'cache'
 # root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
 root_dir = r'C:\Temp'
 
@@ -43,8 +43,6 @@ root_dir = r'C:\Temp'
 # streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.TRANSPORTATION.Roads'  # Point to current roads layer
 addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.location.address_points'  # Point to current addpts layer
 streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.transportation.roads'  # Point to current roads layer
-
-
 
 # Input address point component fields that will be used for each feature class
 addpt_fields = {"addnum": "AddNum",
@@ -63,28 +61,17 @@ street_fields = {"predir": "PREDIR",
             "r_f_add": "R_F_ADD",
             "r_t_add": "R_T_ADD"}
 
-# street_fields = {"predir": "PREDIR",
-#             "name": "NAME",
-#             "sufdir": "POSTDIR",
-#             "type": "POSTTYPE",
-#             "l_f_add": "FROMADDR_L",
-#             "l_t_add": "TOADDR_L",
-#             "r_f_add": "FROMADDR_R",
-#             "r_t_add": "TOADDR_R"}
-
-
 # Set flags
 # Input full address field here in order to use it, otherwise components will be used
-# fulladd_field = False
-fulladd_field = 'fulladd'   # Example of using a full address field
+fulladd_field = False
+# fulladd_field = 'fulladd'   # Example of using a full address field
 
 # Set flag if data is coming from SGID
 # Use 'internal' for internal SGID, use 'opensgid' for Open SGID
 # Provide the county fips code
 # from_sgid = 'internal'     # use for internal
 from_sgid = 'opensgid'     # use for Open SGID
-fips = '49009'
-
+county = 'Cache'
 
 
 #############
@@ -109,6 +96,36 @@ sgid_street_fields = {"predir": "PREDIR",
             "l_t_add": "TOADDR_L",
             "r_f_add": "FROMADDR_R",
             "r_t_add": "TOADDR_R"}
+
+county_fips = {"Beaver": "49001",
+        "Box Elder": "49003",
+        "Cache": "49005",
+        "Carbon": "49007",
+        "Daggett": "49009",
+        "Davis": "49011",
+        "Duchesne": "49013",
+        "Emery": "49015",
+        "Garfield": "49017",
+        "Grand": "49019",
+        "Iron": "49021",
+        "Juab": "49023",
+        "Kane": "49025",
+        "Millard": "49027",
+        "Morgan": "49029",
+        "Piute": "49031",
+        "Rich": "49033",
+        "Salt Lake": "49035",
+        "San Juan": "49037",
+        "Sanpete": "49039",
+        "Sevier": "49041",
+        "Summit": "49043",
+        "Tooele": "49045",
+        "Uintah": "49047",
+        "Utah": "49049",
+        "Wasatch": "49051",
+        "Washington": "49053",
+        "Wayne": "49055",
+        "Weber": "49057"}
 
 ###############
 #  Functions  #
@@ -470,6 +487,7 @@ def logic_checks(row, a_flds, s_flds):
 # Start Main Script #
 #####################
   
+fips = county_fips[county]
 
 # Set up variables for later in the script 
 if fulladd_field:
