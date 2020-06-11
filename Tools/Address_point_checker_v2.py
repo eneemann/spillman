@@ -54,29 +54,29 @@ addpt_fields = {"addnum": "AddNum",
                 "type": "StreetType"}
 
 # Input street component fields that will be used for each feature class
-# street_fields = {"predir": "PREDIR",
-#             "name": "STREETNAME",
-#             "sufdir": "SUFDIR",
-#             "type": "STREETTYPE",
-#             "l_f_add": "L_F_ADD",
-#             "l_t_add": "L_T_ADD",
-#             "r_f_add": "R_F_ADD",
-#             "r_t_add": "R_T_ADD"}
-
 street_fields = {"predir": "PREDIR",
-            "name": "NAME",
-            "sufdir": "POSTDIR",
-            "type": "POSTTYPE",
-            "l_f_add": "FROMADDR_L",
-            "l_t_add": "TOADDR_L",
-            "r_f_add": "FROMADDR_R",
-            "r_t_add": "TOADDR_R"}
+            "name": "STREETNAME",
+            "sufdir": "SUFDIR",
+            "type": "STREETTYPE",
+            "l_f_add": "L_F_ADD",
+            "l_t_add": "L_T_ADD",
+            "r_f_add": "R_F_ADD",
+            "r_t_add": "R_T_ADD"}
+
+# street_fields = {"predir": "PREDIR",
+#             "name": "NAME",
+#             "sufdir": "POSTDIR",
+#             "type": "POSTTYPE",
+#             "l_f_add": "FROMADDR_L",
+#             "l_t_add": "TOADDR_L",
+#             "r_f_add": "FROMADDR_R",
+#             "r_t_add": "TOADDR_R"}
 
 
 # Set flags
 # Input full address field here in order to use it, otherwise components will be used
-fulladd_field = False
-# fulladd_field = 'ADDRESS'   # Example of using a full address field
+# fulladd_field = False
+fulladd_field = 'fulladd'   # Example of using a full address field
 
 # Set flag if data is coming from SGID
 # Use 'internal' for internal SGID, use 'opensgid' for Open SGID
@@ -552,9 +552,17 @@ plt.xlabel('Category')
 plt.ylabel('Count')
 plt.show()
 
-print(df.groupby('Notes').count())
+print('Stats by total count:')
+print(df.groupby('Notes').count()['edit_dist'])
+print('\n')
 
-print("Script shutting down ...")
+# Print out percentages for each result in 'Notes'
+total_pts = df.shape[0]
+print('Stats by percentage:')
+print(df.groupby('Notes').count()['edit_dist'].apply(lambda x: 100 * x / float(total_pts)))
+
+
+print('\n' + "Script shutting down ...")
 # Stop timer and print end time in UTC
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print(f"The script end time is {readable_end}")
