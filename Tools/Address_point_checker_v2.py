@@ -44,14 +44,14 @@ root_dir = r'C:\Temp'
 addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.location.address_points'  # Point to current addpts layer
 streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.transportation.roads'  # Point to current roads layer
 
-# Input address point component fields that will be used for each feature class
+# Input address point fields
 addpt_fields = {"addnum": "AddNum",
                 "predir": "PrefixDir",
                 "name": "StreetName",
                 "sufdir": "SuffixDir",
                 "type": "StreetType"}
 
-# Input street component fields that will be used for each feature class
+# Input street fields
 street_fields = {"predir": "PREDIR",
             "name": "STREETNAME",
             "sufdir": "SUFDIR",
@@ -169,9 +169,6 @@ def filter_sgid_data(pts, rds, gdb, fips):
     
     if from_sgid == 'opensgid':
         query = {k: v.lower() for k, v in query.items()}
-        # query = {'countyid': 'countyid',
-        #          'county_l': 'county_l',
-        #          'county_r': 'county_r'}
     elif from_sgid == 'internal':
         pass
     else:
