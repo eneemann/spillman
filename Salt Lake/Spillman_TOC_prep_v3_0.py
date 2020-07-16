@@ -624,17 +624,17 @@ export_shapefiles_select_fields("TOC_CITYCD", out_folder_spillman, citycd_fields
 export_shapefiles_select_fields("TOC_Law_Zones", out_folder_spillman, lzone_fields)
 export_shapefiles_select_fields("TOC_Fire_Zones", out_folder_spillman, fzone_fields)
 export_shapefiles_select_fields("TOC_MZ", out_folder_spillman, mz_fields)
-#export_shapefiles_select_fields_rename("TOC_CP_MP_FC", out_folder_spillman, milepost_fields, "TOC_Milemarkers")
-#export_shapefiles_select_fields("RampSigns", out_folder_spillman, ramp_fields)
+export_shapefiles_select_fields_rename("TOC_CP_MP_FC", out_folder_spillman, milepost_fields, "TOC_Milemarkers")
+export_shapefiles_select_fields("RampSigns", out_folder_spillman, ramp_fields)
 
 
 # Shapefiles that aren't needed for TOC PSAP, but are available:
-#export_shapefiles_select_fields("TOC_CommonPlaces_FC", out_folder_spillman, commplc_fields)
-#export_shapefiles_select_fields("TOC_EZ_Zones", out_folder_spillman, ezone_fields)
-#export_shapefiles_select_fields("TOC_EZ_Areas", out_folder_spillman, earea_fields)
-#export_shapefiles_select_fields("TOC_Fire_Areas", out_folder_spillman, fzone_fields)
-#export_shapefiles_select_fields("TOC_Law_Areas", out_folder_spillman, lzone_fields)
-#export_shapefiles_select_fields("TOC_Municipalities", out_folder_spillman, muni_fields)
+# export_shapefiles_select_fields("TOC_CommonPlaces_FC", out_folder_spillman, commplc_fields)
+# export_shapefiles_select_fields("TOC_EZ_Zones", out_folder_spillman, ezone_fields)
+# export_shapefiles_select_fields("TOC_EZ_Areas", out_folder_spillman, earea_fields)
+# export_shapefiles_select_fields("TOC_Fire_Areas", out_folder_spillman, farea_fields)
+# export_shapefiles_select_fields("TOC_Law_Areas", out_folder_spillman, larea_fields)
+# export_shapefiles_select_fields("TOC_Municipalities", out_folder_spillman, muni_fields)
 
 
 print("Script shutting down ...")
