@@ -32,8 +32,8 @@ env.workspace = stage_db
 
 
 unit_list = ['#', 'APT', 'BLDG', 'BSMT', 'CONDO', 'DEPT', 'FL', 'FRNT', 'HANGAR',
-             'HNGR', 'LOT', 'OFC', 'OFFICE', 'REAR', 'RM', 'SIDE', 'SP', 'SPC',
-             'STE', 'TRLR', 'UNIT']
+             'HNGR', 'LOT', 'MAIN', 'OFC', 'OFFICE', 'REAR', 'RM', 'SIDE', 'SP', 'SPC',
+             'STE', 'TOP', 'TRLR', 'UNIT']
 
 
 ###############
@@ -319,7 +319,7 @@ def strip_fields(pts):
 ##########################
 #  Call Functions Below  #
 ##########################
-calc_unit_info_from_fulladd(addpts)
+# calc_unit_info_from_fulladd(addpts)
 # calc_prefixdir_from_street(addpts)
 # calc_suffixdir_from_street(addpts)
 # calc_streettype_from_street(addpts)
