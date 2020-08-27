@@ -28,14 +28,14 @@ env.workspace = stgeorge_db
 env.overwriteOutput = True
 
 stgeorge_streets = os.path.join(stgeorge_db, "StGeorge_Dispatch_Streets")
-stgeorge_addpts = "StG_AddressPoints_update_20200502"    # Point to current addpts in staging_db
+stgeorge_addpts = "StG_AddPts_update_20200821"    # Point to current addpts in staging_db
 #stgeorge_addpts = "AddressPoints_update_20190904"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, stgeorge_addpts)
 
 today = time.strftime("%Y%m%d")
-new_addpts = "AddressPoints_SGID_export_" + today
+# new_addpts = "AddressPoints_SGID_export_" + today
 #new_addpts = "Addpts_more_to_test_20190906"
-#new_addpts = "AddressPoints_SGID_export_20190408"    # Use if SGID data was already exported
+new_addpts = "AddressPoints_SGID_export_20200825"    # Use if SGID data was already exported
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
@@ -169,7 +169,7 @@ def check_nearby_roads(working, streets, gdb):
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
     print("Generating near table ...")
-    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '400 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 5, 'GEODESIC')
+    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '800 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 10, 'GEODESIC')
     print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(neartable)))
     
     # Convert neartable to pandas dataframe
