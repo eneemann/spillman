@@ -56,6 +56,8 @@ arcpy.management.SelectLayerByLocation("sgid_export_lyr", "HAVE_THEIR_CENTER_IN"
 outname = os.path.join(staging_db, "SGID_roads_to_review_" + today)
 arcpy.management.CopyFeatures("sgid_export_lyr", outname)
 
+arcpy.management.Delete(export_roads)
+
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
