@@ -119,7 +119,7 @@ live_fsa = os.path.join(staging_db, "FireServiceArea_Polygons_LIVE")
 def define_service(project_path, map_name, layer_name, fc_path_str, item_name, temp_dir_path):
 
     #: Reference a Pro project so that we can get a map and share it
-    print('getting Pro project and map...')
+    print('Getting Pro project and map info ...')
     proj = arcpy.mp.ArcGISProject(str(project_path))
 
     #: Select the right map from the project
@@ -128,7 +128,7 @@ def define_service(project_path, map_name, layer_name, fc_path_str, item_name, t
             agol_map = m
     del m
     
-    print('getting layer...')
+    print('Getting layer to update ...')
     layer_list = agol_map.listLayers()
     for l in layer_list:
         if l.name == layer_name:
@@ -146,11 +146,11 @@ def define_service(project_path, map_name, layer_name, fc_path_str, item_name, t
     #: Delete draft and definition if existing
     for file_path in (draft_path, service_definition_path):
         if file_path.exists():  #: This check can be replaced in 3.8 with missing_ok=True
-            print(f'deleting existing {file_path}...')
+            print(f'Delete existing {file_path}...')
             file_path.unlink()
 
     #: Create the service definition draft and stage it to create a service definition file
-    print('draft and stage...')
+    print('Draft and stage service definition ...')
     sharing_draft = agol_map.getWebLayerSharingDraft('HOSTING_SERVER', 'FEATURE', item_name, [layer])
     sharing_draft.exportToSDDraft(str(draft_path))
     arcpy.server.StageService(str(draft_path), str(service_definition_path))
@@ -162,9 +162,9 @@ def define_service(project_path, map_name, layer_name, fc_path_str, item_name, t
 def overwrite(org, service_definition_path, item_id, sd_id):
     # item = org.content.get(item_id)
     sd_item = org.content.get(sd_id)
-    print('updating...')
+    print('Updating service definition ...')
     sd_item.update(data=str(service_definition_path))
-    print('publishing...')
+    print('Publishing service definition ...')
     sd_item.publish(overwrite=True)
     
     
@@ -182,7 +182,7 @@ project_path = Path(r'C:\E911\WeberArea\Staging103\WeberArea.aprx')
 
 
 # Push changes to AGOL
-print(f'Staging {fc_path_str}...')
+print(f'Staging {fc_path_str} ...')
 service_definition_path = define_service(project_path, map_name, layer_name, fc_path_str, item_name, temp_dir_path)
 overwrite(gis, service_definition_path, item_id, sd_id)
 
