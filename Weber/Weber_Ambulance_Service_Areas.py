@@ -175,7 +175,7 @@ sd_id = '970bc3a3e8fb4caab2c19b020ac0032d'
 
 fc_path_str = r'C:\E911\WeberArea\Staging103\Weber_Staging.gdb\AmbulanceServiceArea_Polygons_LIVE'
 item_name = 'Ambulance Service Areas'
-layer_name = 'AmbulanceServiceArea_Polygons_LIVE'
+layer_name = 'AmbulanceServiceArea_Polygons_LIVE'  # This map layer name was held over from the paramedic map
 map_name = 'Weber_Ambulance_Service_Areas'
 temp_dir_path = Path(r'C:\E911\WeberArea\Staging103\0 Ambulance Service Areas Folder')  #: Place to store the .sd and .sddraft files
 project_path = Path(r'C:\E911\WeberArea\Staging103\WeberArea.aprx')
