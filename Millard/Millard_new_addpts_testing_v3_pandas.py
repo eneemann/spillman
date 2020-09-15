@@ -25,12 +25,12 @@ env.workspace = millard_db
 env.overwriteOutput = True
 
 millard_streets = os.path.join(millard_db, "Streets")
-millard_addpts = "AddressPoints_20191029"
+millard_addpts = "AddressPoints_20200915_update"
 current_addpts = os.path.join(staging_db, millard_addpts)
 
 today = time.strftime("%Y%m%d")
-new_addpts = "AddressPoints_SGID_export_20191028"
-#new_addpts = "Britt_addpts_20191028"
+# new_addpts = "AddressPoints_SGID_export_20191028"
+new_addpts = "Britt_addpts_20200915"
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
@@ -100,43 +100,43 @@ def clean_addpts(working):
     print("Total count of updates to {0} field: {1}".format(fields[3], type_count))
 
 # For SGID addpts
+# def calc_street(working):
+#     update_count = 0
+#     # Calculate "Street" field where applicable
+# #    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
+#     fields = ['PrefixDir', 'StreetName', 'SuffixDir', 'StreetType', 'Street']
+#     with arcpy.da.UpdateCursor(working, fields) as cursor:
+#         print("Looping through rows in FC ...")
+#         for row in cursor:
+#             if row[0] is None: row[0] = ''
+#             if row[2] is None: row[2] = ''
+#             if row[3] is None: row[3] = ''
+#             parts = [row[0], row[1], row[2], row[3]]
+#             row[4] = " ".join(parts)
+#             row[4] = row[4].lstrip().rstrip()
+#             row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
+# #            print "New value for {0} is: {1}".format(fields[4], row[4])
+#             update_count += 1
+#             cursor.updateRow(row)
+#     print("Total count of updates to {0} field: {1}".format(fields[4], update_count))
+    
+
+# For Adam Britt's addpts
 def calc_street(working):
     update_count = 0
     # Calculate "Street" field where applicable
 #    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
-    fields = ['PrefixDir', 'StreetName', 'SuffixDir', 'StreetType', 'Street']
+    fields = ['FULLADDR', 'Street']
     with arcpy.da.UpdateCursor(working, fields) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            if row[0] is None: row[0] = ''
-            if row[2] is None: row[2] = ''
-            if row[3] is None: row[3] = ''
-            parts = [row[0], row[1], row[2], row[3]]
-            row[4] = " ".join(parts)
-            row[4] = row[4].lstrip().rstrip()
-            row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
+            row[0] = row[0].strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
+            print(row[0])
+            row[1] = row[0].split(" ", 1)[1].strip()
 #            print "New value for {0} is: {1}".format(fields[4], row[4])
             update_count += 1
             cursor.updateRow(row)
-    print("Total count of updates to {0} field: {1}".format(fields[4], update_count))
-    
-
-# For Adam Britt's addpts
-#def calc_street(working):
-#    update_count = 0
-#    # Calculate "Street" field where applicable
-##    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
-#    fields = ['FULLADDR', 'Street']
-#    with arcpy.da.UpdateCursor(working, fields) as cursor:
-#        print("Looping through rows in FC ...")
-#        for row in cursor:
-#            row[0] = row[0].strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
-#            print(row[0])
-#            row[1] = row[0].split(" ", 1)[1].strip()
-##            print "New value for {0} is: {1}".format(fields[4], row[4])
-#            update_count += 1
-#            cursor.updateRow(row)
-#    print("Total count of updates to {0} field: {1}".format(fields[1], update_count))
+    print("Total count of updates to {0} field: {1}".format(fields[1], update_count))
 
 
 def remove_duplicates(current, working):
@@ -336,6 +336,48 @@ def check_nearby_roads(working, streets, gdb):
     
 
 # For SGID addpts
+# def logic_checks(row):
+#     """
+#     Function calculates new values for 'Notes' field by comparing address
+#     point to nearby streets' name and address range
+#     """
+#     goodstreet = False
+#     goodnum = False
+#     if row['Street'] == row['STREET']:
+#         goodstreet = True
+#         if (int(row['AddNum'].split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].split()[0]) <= row['L_T_ADD']) or (
+#                 int(row['AddNum'].split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].split()[0]) <= row['R_T_ADD']):
+#             goodnum = True
+#     # Update Notes field based on if street and number are good from near analysis
+#     if goodstreet and goodnum:
+#         row['Notes'] = 'good address point'
+#     elif goodstreet and not goodnum:
+#         row['Notes'] = 'near street found, but address range mismatch'
+#     elif not goodstreet:
+#         row['Notes'] = 'near street not found'
+#     row['goodstreet'] = goodstreet
+#     row['goodnum'] = goodnum
+#     row['edit_dist'] = Lv.distance(row['Street'], row['STREET'])
+#     # Check edit distance for roads that might have typos, predir, or sufdir errors
+#     if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
+#         row['Notes'] = 'no near st: possible typo predir or sufdir error'
+#     # Check for likely predir/sufdir errors: road nearly matches, range is good
+#     # Replace needed in logic to catch potential range in address number (e.g., '188-194')
+#     if row['Notes'] == 'no near st: possible typo predir or sufdir error':
+#         if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+#                 int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+#             goodnum = True
+#             row['Notes'] = 'no near st: likely predir or sufdir error'
+#             row['goodnum'] = goodnum
+#     # Check for a good house number regardless of street name match or condition
+#     if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+#             int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+#         goodnum = True
+#         row['goodnum'] = goodnum
+#     return row
+
+
+# For Adam Britt's addpts
 def logic_checks(row):
     """
     Function calculates new values for 'Notes' field by comparing address
@@ -345,8 +387,8 @@ def logic_checks(row):
     goodnum = False
     if row['Street'] == row['STREET']:
         goodstreet = True
-        if (int(row['AddNum'].split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].split()[0]) <= row['L_T_ADD']) or (
-                int(row['AddNum'].split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].split()[0]) <= row['R_T_ADD']):
+        if (int(row['ADDRNUM'].split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].split()[0]) <= row['L_T_ADD']) or (
+                int(row['ADDRNUM'].split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].split()[0]) <= row['R_T_ADD']):
             goodnum = True
     # Update Notes field based on if street and number are good from near analysis
     if goodstreet and goodnum:
@@ -364,66 +406,24 @@ def logic_checks(row):
     # Check for likely predir/sufdir errors: road nearly matches, range is good
     # Replace needed in logic to catch potential range in address number (e.g., '188-194')
     if row['Notes'] == 'no near st: possible typo predir or sufdir error':
-        if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-                int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        if (int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+                int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
             row['goodnum'] = goodnum
     # Check for a good house number regardless of street name match or condition
-    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-            int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+    if (int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+            int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
         goodnum = True
         row['goodnum'] = goodnum
     return row
-
-
-# For Adam Britt's addpts
-#def logic_checks(row):
-#    """
-#    Function calculates new values for 'Notes' field by comparing address
-#    point to nearby streets' name and address range
-#    """
-#    goodstreet = False
-#    goodnum = False
-#    if row['Street'] == row['STREET']:
-#        goodstreet = True
-#        if (int(row['ADDRNUM'].split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].split()[0]) <= row['L_T_ADD']) or (
-#                int(row['ADDRNUM'].split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].split()[0]) <= row['R_T_ADD']):
-#            goodnum = True
-#    # Update Notes field based on if street and number are good from near analysis
-#    if goodstreet and goodnum:
-#        row['Notes'] = 'good address point'
-#    elif goodstreet and not goodnum:
-#        row['Notes'] = 'near street found, but address range mismatch'
-#    elif not goodstreet:
-#        row['Notes'] = 'near street not found'
-#    row['goodstreet'] = goodstreet
-#    row['goodnum'] = goodnum
-#    row['edit_dist'] = Lv.distance(row['Street'], row['STREET'])
-#    # Check edit distance for roads that might have typos, predir, or sufdir errors
-#    if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
-#        row['Notes'] = 'no near st: possible typo predir or sufdir error'
-#    # Check for likely predir/sufdir errors: road nearly matches, range is good
-#    # Replace needed in logic to catch potential range in address number (e.g., '188-194')
-#    if row['Notes'] == 'no near st: possible typo predir or sufdir error':
-#        if (int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-#                int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
-#            goodnum = True
-#            row['Notes'] = 'no near st: likely predir or sufdir error'
-#            row['goodnum'] = goodnum
-#    # Check for a good house number regardless of street name match or condition
-#    if (int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-#            int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
-#        goodnum = True
-#        row['goodnum'] = goodnum
-#    return row
 
 ##########################
 #  Call Functions Below  #
 ##########################
 
 #get_SGID_addpts(staging_db)
-#clean_addpts(working_addpts)
+clean_addpts(working_addpts)
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
@@ -441,6 +441,7 @@ print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 
 
+# Plot histogram of Edit Distances
 print("Creating edit distance histogram ...")
 df = pd.read_csv(r'C:\E911\MillardCo\Addpts_working_folder\millard_neartable_final.csv')
 plt.figure(figsize=(6,4))
@@ -450,3 +451,18 @@ plt.title('Address/Street Edit Distance Histogram')
 plt.xlabel('Edit Distance')
 plt.ylabel('Count')
 plt.show()
+
+df['edit_dist'].max()
+
+# Plot bar chart of Notes column
+print("Creating notes bar chart ...")
+plt.figure(figsize=(6,4))
+plt.hist(df['Notes'], color='lightblue', edgecolor='black')
+# plt.xticks(np.arange(0, df['Notes'].max(), 2))
+plt.xticks(rotation='vertical')
+plt.title('Address Point Categories')
+plt.xlabel('Category')
+plt.ylabel('Count')
+plt.show()
+
+df.groupby('Notes').count()
