@@ -35,11 +35,14 @@ possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
 working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
+if arcpy.Exists(working_addpts):
+    print("Deleting {} ...".format(working_addpts))
+    arcpy.Delete_management(working_addpts)
 arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 
 # Add field to working FC for notes
 arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
-arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
+# arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 ###############
 #  Functions  #
@@ -48,7 +51,7 @@ arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 def get_SGID_addpts(out_db):
     today = time.strftime("%Y%m%d")
     SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
-    sgid_pts = os.path.join(SGID, "SGID10.LOCATION.AddressPoints")
+    sgid_pts = os.path.join(SGID, "SGID.LOCATION.AddressPoints")
     new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
         arcpy.Delete_management(new_pts)
@@ -58,46 +61,109 @@ def get_SGID_addpts(out_db):
   
 
 # Calculate spelled out sufdir field to align with spillman notation
+# def clean_addpts(working):
+#     arcpy.management.AlterField(working, 'SuffixDir', field_length=5)
+#     sufdir_count = 0
+#     type_count = 0
+#     # Calculate "Street" field where applicable
+# #    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
+#     #              0            1             2             3          4          5         6
+#     fields = ['PrefixDir', 'StreetName', 'SuffixDir', 'StreetType', 'Street', 'AddNum', 'FullAdd']
+#     with arcpy.da.UpdateCursor(working, fields) as cursor:
+#         print("Looping through rows in FC ...")
+#         for row in cursor:
+#             if row[1] == 'MAIN' or row[1] == 'CENTER':
+#                 row[3] = None
+#                 type_count += 1
+                
+#             if row[2] == 'N':
+#                 row[2] = 'NORTH'
+#                 sufdir_count += 1
+#             elif row[2] == 'S':
+#                 row[2] = 'SOUTH'
+#                 sufdir_count += 1
+#             elif row[2] == 'E':
+#                 row[2] = 'EAST'
+#                 sufdir_count += 1
+#             elif row[2] == 'W':
+#                 row[2] = 'WEST'
+#                 sufdir_count += 1
+                
+#             if row[0] is None: row[0] = ''
+#             if row[2] is None: row[2] = ''
+#             if row[3] is None: row[3] = ''
+#             parts = [row[0], row[1], row[2], row[3]]
+#             row[4] = " ".join(parts)
+#             row[4] = row[4].lstrip().rstrip()
+#             row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
+#             row[6] = str(row[5]) + " " + row[4]
+            
+#             cursor.updateRow(row)
+#     print("Total count of updates to {0} field: {1}".format(fields[2], sufdir_count))       
+#     print("Total count of updates to {0} field: {1}".format(fields[3], type_count))
+    
+    
+# Calculate abbreviated SUFDIR field to align with spillman notation
 def clean_addpts(working):
-    arcpy.management.AlterField(working, 'SuffixDir', field_length=5)
+    arcpy.management.AlterField(working, 'STREET', 'Street')
+    arcpy.AddField_management(working, "FullAdd", "TEXT", "", "", 50)
     sufdir_count = 0
     type_count = 0
     # Calculate "Street" field where applicable
 #    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
-    #              0            1             2             3          4          5         6
-    fields = ['PrefixDir', 'StreetName', 'SuffixDir', 'StreetType', 'Street', 'AddNum', 'FullAdd']
+    #             0          1            2          3           4         5        6
+    fields = ['PREDIR', 'STREETNAME', 'SUFDIR', 'STREETTYPE', 'Street', 'NUMB', 'FullAdd']
     with arcpy.da.UpdateCursor(working, fields) as cursor:
-        print("Looping through rows in FC ...")
+        print("Looping through rows to update component fields ...")
         for row in cursor:
-            if row[1] == 'MAIN' or row[1] == 'CENTER':
+            if 'MAIN ' in row[1] or 'CENTER ' in row[1]:
                 row[3] = None
                 type_count += 1
-                
-            if row[2] == 'N':
-                row[2] = 'NORTH'
+            
+            end = row[1].rsplit(' ', 1)[-1]
+            
+            if end == 'NORTH':
+                row[2] = 'N'
+                row[3] = None
+                row[1] = row[1].replace(' NORTH', '')
                 sufdir_count += 1
-            elif row[2] == 'S':
-                row[2] = 'SOUTH'
+            elif end == 'SOUTH':
+                row[2] = 'S'
+                row[3] = None
+                row[1] = row[1].replace(' SOUTH', '')
                 sufdir_count += 1
-            elif row[2] == 'E':
-                row[2] = 'EAST'
+            elif end == 'EAST':
+                row[2] = 'E'
+                row[3] = None
+                row[1] = row[1].replace(' EAST', '')
                 sufdir_count += 1
-            elif row[2] == 'W':
-                row[2] = 'WEST'
+            elif end == 'WEST':
+                row[2] = 'W'
+                row[3] = None
+                row[1] = row[1].replace(' WEST', '')
                 sufdir_count += 1
-                
+            
+            row[1] = row[1].strip()
+            cursor.updateRow(row)
+            
+    print("Total count of updates to {0} field: {1}".format(fields[2], sufdir_count))       
+    print("Total count of updates to {0} field: {1}".format(fields[3], type_count))
+    
+    # Run through cursor a second time to calculate street and fulladd fields
+    with arcpy.da.UpdateCursor(working, fields) as cursor:
+        print("Looping through rows to calculate Street and FullAdd fields ...")
+        for row in cursor:
             if row[0] is None: row[0] = ''
             if row[2] is None: row[2] = ''
             if row[3] is None: row[3] = ''
             parts = [row[0], row[1], row[2], row[3]]
             row[4] = " ".join(parts)
-            row[4] = row[4].lstrip().rstrip()
+            row[4] = row[4].strip()
             row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
             row[6] = str(row[5]) + " " + row[4]
-            
+            row[6] = row[6].strip()
+        
             cursor.updateRow(row)
-    print("Total count of updates to {0} field: {1}".format(fields[2], sufdir_count))       
-    print("Total count of updates to {0} field: {1}".format(fields[3], type_count))
 
 # For SGID addpts
 # def calc_street(working):
@@ -126,7 +192,7 @@ def calc_street(working):
     update_count = 0
     # Calculate "Street" field where applicable
 #    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
-    fields = ['FULLADDR', 'Street']
+    fields = ['FullAdd', 'Street']
     with arcpy.da.UpdateCursor(working, fields) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
@@ -225,7 +291,7 @@ def check_nearby_roads(working, streets, gdb):
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
     print("Generating near table ...")
-    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '100 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 5, 'GEODESIC')
+    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '400 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 10, 'GEODESIC')
     print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(neartable)))
     
     # Convert neartable to pandas dataframe
@@ -235,7 +301,7 @@ def check_nearby_roads(working, streets, gdb):
     
     # Convert address points to pandas dataframe
 #    addpt_fields = ['OBJECTID', 'AddNum', 'Street', 'Notes']
-    addpt_fields = ['OBJECTID', 'ADDRNUM', 'Street', 'Notes']
+    addpt_fields = ['OBJECTID', 'NUMB', 'Street', 'Notes']
     addpts_arr = arcpy.da.FeatureClassToNumPyArray(working, addpt_fields)
     addpts_df =pd.DataFrame(data = addpts_arr)
     print(addpts_df.head(5).to_string())
@@ -385,46 +451,50 @@ def logic_checks(row):
     """
     goodstreet = False
     goodnum = False
-    if row['Street'] == row['STREET']:
-        goodstreet = True
-        if (int(row['ADDRNUM'].split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].split()[0]) <= row['L_T_ADD']) or (
-                int(row['ADDRNUM'].split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].split()[0]) <= row['R_T_ADD']):
-            goodnum = True
-    # Update Notes field based on if street and number are good from near analysis
-    if goodstreet and goodnum:
-        row['Notes'] = 'good address point'
-    elif goodstreet and not goodnum:
-        row['Notes'] = 'near street found, but address range mismatch'
-    elif not goodstreet:
-        row['Notes'] = 'near street not found'
-    row['goodstreet'] = goodstreet
-    row['goodnum'] = goodnum
-    row['edit_dist'] = Lv.distance(row['Street'], row['STREET'])
-    # Check edit distance for roads that might have typos, predir, or sufdir errors
-    if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
-        row['Notes'] = 'no near st: possible typo predir or sufdir error'
-    # Check for likely predir/sufdir errors: road nearly matches, range is good
-    # Replace needed in logic to catch potential range in address number (e.g., '188-194')
-    if row['Notes'] == 'no near st: possible typo predir or sufdir error':
-        if (int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-                int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
-            goodnum = True
-            row['Notes'] = 'no near st: likely predir or sufdir error'
-            row['goodnum'] = goodnum
-    # Check for a good house number regardless of street name match or condition
-    if (int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-            int(row['ADDRNUM'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['ADDRNUM'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
-        goodnum = True
+    add_num = ''.join(i for i in row['NUMB'] if i.isdigit())
+    
+    if add_num.isdigit():
+        if row['Street'] == row['STREET']:
+            goodstreet = True
+            if (int(add_num.split()[0]) >= row['L_F_ADD'] and int(add_num.split()[0]) <= row['L_T_ADD']) or (
+                    int(add_num.split()[0]) >= row['R_F_ADD'] and int(add_num.split()[0]) <= row['R_T_ADD']):
+                goodnum = True
+        # Update Notes field based on if street and number are good from near analysis
+        if goodstreet and goodnum:
+            row['Notes'] = 'good address point'
+        elif goodstreet and not goodnum:
+            row['Notes'] = 'near street found, but address range mismatch'
+        elif not goodstreet:
+            row['Notes'] = 'near street not found'
+        row['goodstreet'] = goodstreet
         row['goodnum'] = goodnum
+        row['edit_dist'] = Lv.distance(row['Street'], row['STREET'])
+        # Check edit distance for roads that might have typos, predir, or sufdir errors
+        if row['Notes'] == 'near street not found' and row['edit_dist'] in (1, 2):
+            row['Notes'] = 'no near st: possible typo predir or sufdir error'
+        # Check for likely predir/sufdir errors: road nearly matches, range is good
+        # Replace needed in logic to catch potential range in address number (e.g., '188-194')
+        if row['Notes'] == 'no near st: possible typo predir or sufdir error':
+            if (int(add_num.replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+                    int(add_num.replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+                goodnum = True
+                row['Notes'] = 'no near st: likely predir or sufdir error'
+                row['goodnum'] = goodnum
+        # Check for a good house number regardless of street name match or condition
+        if (int(add_num.replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+                int(add_num.replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+            goodnum = True
+            row['goodnum'] = goodnum
+            
     return row
 
 ##########################
 #  Call Functions Below  #
 ##########################
 
-#get_SGID_addpts(staging_db)
+# get_SGID_addpts(staging_db)
 clean_addpts(working_addpts)
-calc_street(working_addpts)
+# calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
 mark_near_addpts(current_addpts, working_addpts)
