@@ -414,7 +414,28 @@ def combine_address_pts(addpts, add_CAD, add_mm, add_all):
     print("Combining address point data into {} ...".format(add_all))
     arcpy.CopyFeatures_management(add_CAD, add_all)
     arcpy.MakeFeatureLayer_management(add_mm, "add_mm_lyr")
-    arcpy.Append_management("add_mm_lyr", add_all, "NO_TEST")
+    
+    # Field Map milemarkers into addpts_CAD schema
+    fms = arcpy.FieldMappings()
+    
+    # NAME to DsplayName
+    fm_name = arcpy.FieldMap()
+    fm_name.addInputField("add_mm_lyr", "ADDRESS")
+    output = fm_name.outputField
+    output.name = "FULLADDR"
+    fm_name.outputField = output
+    fms.addFieldMap(fm_name)
+    
+    # NAME to Agency_ID
+    fm_agency = arcpy.FieldMap()
+    fm_agency.addInputField("add_mm_lyr", "NUMB")
+    output = fm_agency.outputField
+    output.name = "ADDRNUM"
+    fm_agency.outputField = output
+    fms.addFieldMap(fm_agency)
+    
+    # Complete the append with field mapping
+    arcpy.management.Append("add_mm_lyr", add_all, "NO_TEST", field_mapping=fms)
 
     # Project "AddressPoints_CAD_All" into WGS84
     print("Project UTM data into WGS84 ...")
