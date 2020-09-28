@@ -378,7 +378,38 @@ def create_streets_CAD(streets):
     arcpy.CopyFeatures_management(sel, outname)
 
 
-def combine_address_pts(add_CAD, add_mm, add_all):
+# NEED FUNCTION TO CREATE ADDRESS POINTS CAD
+def create_address_pts_CAD(addpts):
+    where_clause = "FULLADDR NOT LIKE '% UNIT%' AND FULLADDR NOT LIKE '% TRLR%' AND FULLADDR NOT LIKE '% APT%' AND" \
+                   " FULLADDR NOT LIKE '% STE%' AND FULLADDR NOT LIKE '% SPC%' AND FULLADDR NOT LIKE '% BSMT%' AND" \
+                   " FULLADDR NOT LIKE '% LOT%' AND FULLADDR NOT LIKE '% #%' AND FULLADDR NOT LIKE '% BLDG%' AND" \
+                   " FULLADDR NOT LIKE '% HNGR%' AND FULLADDR NOT LIKE '% OFC%'"
+    # Need to make layer from feature class here
+    arcpy.MakeFeatureLayer_management(addpts, "addpts_lyr", where_clause)
+    # Select where streets are not NULL and have valid address ranges
+    sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
+    # Export selected streets to 'AddressPoints_CAD' feature class
+    addpts_CAD = os.path.join(utm_db, "StGeorge_Dispatch_AddressPoints_CAD")
+    print("Exporting {} ...".format(addpts_CAD))
+    arcpy.CopyFeatures_management(sel, addpts_CAD)
+
+
+
+def combine_address_pts(addpts, add_CAD, add_mm, add_all):
+    # Create address_pts_CAD
+    where_clause = "FULLADDR NOT LIKE '% UNIT%' AND FULLADDR NOT LIKE '% TRLR%' AND FULLADDR NOT LIKE '% APT%' AND" \
+                   " FULLADDR NOT LIKE '% STE%' AND FULLADDR NOT LIKE '% SPC%' AND FULLADDR NOT LIKE '% BSMT%' AND" \
+                   " FULLADDR NOT LIKE '% LOT%' AND FULLADDR NOT LIKE '% #%' AND FULLADDR NOT LIKE '% BLDG%' AND" \
+                   " FULLADDR NOT LIKE '% HNGR%' AND FULLADDR NOT LIKE '% OFC%'"
+    # Need to make layer from feature class here
+    arcpy.MakeFeatureLayer_management(addpts, "addpts_lyr", where_clause)
+    sel = arcpy.SelectLayerByAttribute_management("addpts_lyr", "NEW_SELECTION", where_clause)
+    # Export selected streets to 'AddressPoints_CAD' feature class
+    # addpts_CAD = os.path.join(utm_db, "AddressPoints_CAD")
+    print("Exporting {} ...".format(add_CAD))
+    arcpy.CopyFeatures_management(sel, add_CAD)
+    
+    
     # Get address points into a single FC
     print("Combining address point data into {} ...".format(add_all))
     arcpy.CopyFeatures_management(add_CAD, add_all)
@@ -393,26 +424,29 @@ def combine_address_pts(add_CAD, add_mm, add_all):
 
     # Calculate XY values for points without them (WGS84 coords)
     print("Calculating XY values in WGS84 ...")
-    # geometry_property = [["X", "POINT_X"], ["Y", "POINT_Y"]]
-    # arcpy.CalculateGeometryAttributes_management(add_all_wgs84, geometry_property)
     arcpy.AddXY_management(add_all_wgs84)
+    
+    # Rename fields to just "X" and "Y"
+    print("Renaming X and Y fields ...")
+    arcpy.AlterField_management(add_all_wgs84, 'POINT_X', 'X')
+    arcpy.AlterField_management(add_all_wgs84, 'POINT_Y', 'Y')
 
-    # Copy XY values from "POINT_X" and "POINT_Y" into "X" and "Y"
-    print("Copying POINT_X/POINT_Y into X/Y fields ...")
-    update_count = 0
-    fields = ['X', 'POINT_X', 'Y', 'POINT_Y']
-    with arcpy.da.UpdateCursor(add_all_wgs84, fields) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[1]
-            # print("New value for {0} is: {1}".format(fields[0], row[0])
-            row[2] = row[3]
-            update_count += 1
-            cursor.updateRow(row)
-    print("Total count of row updates in {0} is: {1}".format(add_all_wgs84.split("\\")[-1], update_count))
-    # Delete "POINT_X" and "POINT_Y" fields
-    print("Deleting POINT_X and POINT_Y fields ...")
-    arcpy.DeleteField_management(add_all_wgs84, ["POINT_X", "POINT_Y"])
+    # # Copy XY values from "POINT_X" and "POINT_Y" into "X" and "Y"
+    # print("Copying POINT_X/POINT_Y into X/Y fields ...")
+    # update_count = 0
+    # fields = ['X', 'POINT_X', 'Y', 'POINT_Y']
+    # with arcpy.da.UpdateCursor(add_all_wgs84, fields) as cursor:
+    #     print("Looping through rows in FC ...")
+    #     for row in cursor:
+    #         row[0] = row[1]
+    #         # print("New value for {0} is: {1}".format(fields[0], row[0])
+    #         row[2] = row[3]
+    #         update_count += 1
+    #         cursor.updateRow(row)
+    # print("Total count of row updates in {0} is: {1}".format(add_all_wgs84.split("\\")[-1], update_count))
+    # # Delete "POINT_X" and "POINT_Y" fields
+    # print("Deleting POINT_X and POINT_Y fields ...")
+    # arcpy.DeleteField_management(add_all_wgs84, ["POINT_X", "POINT_Y"])
 
 
 def copy_tbzones(tbzones_table):
@@ -480,9 +514,10 @@ def export_shapefiles_select_fields(fc, folder, field_list):
 WGS84_files_to_delete = ["AddressPoints", "AddressPoints_CAD_All", "Boundary_County", "CityCodes", "CommonPlaces",
                          "CommonPlaces_MP", "EMSAreas", "EMSZones", "FireAreas", "FireZones", "LawAreas", "LawZones",
                          "Streets", "Streets_CAD", "tbzones"]
-UTM_files_to_delete = ["AddressPoints_CAD_All", "Streets_CAD"]
+UTM_files_to_delete = ["AddressPoints_CAD", "AddressPoints_CAD_All", "Streets_CAD"]
 
 # Create variables for address points
+address_pts = os.path.join(utm_db, "AddressPoints")
 address_pts_CAD = os.path.join(utm_db, "AddressPoints_CAD")
 address_pts_MM = os.path.join(utm_db, "AddressPoints_CAD_Milemarkers")
 address_pts_all = os.path.join(utm_db, "AddressPoints_CAD_All")
@@ -539,30 +574,30 @@ citycd_fields = ["NAME", "CITYCD", "Shape_Length", "Shape_Area"]
 #  Call Functions Below  #
 ##########################
 
-# create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-# blanks_to_nulls(streets_fc_utm)
-# calc_street(streets_fc_utm)
-# calc_salias1(streets_fc_utm)
-# calc_salias2(streets_fc_utm)
-# calc_salias4(streets_fc_utm)
-# highway_to_sr_us(streets_fc_utm)
-# calc_salias3(streets_fc_utm)
-# street_blank_to_null(streets_fc_utm)
-# calc_location(streets_fc_utm)
-# create_streets_CAD(streets_fc_utm)
-# combine_address_pts(address_pts_CAD, address_pts_MM, address_pts_all)
-# copy_tbzones(tbzones)
-# project_to_wgs84(FCs_to_project)
-# spillman_polygon_prep(streets_cad_wgs84)
+create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+blanks_to_nulls(streets_fc_utm)
+calc_street(streets_fc_utm)
+calc_salias1(streets_fc_utm)
+calc_salias2(streets_fc_utm)
+calc_salias4(streets_fc_utm)
+highway_to_sr_us(streets_fc_utm)
+calc_salias3(streets_fc_utm)
+street_blank_to_null(streets_fc_utm)
+calc_location(streets_fc_utm)
+create_streets_CAD(streets_fc_utm)
+combine_address_pts(address_pts, address_pts_CAD, address_pts_MM, address_pts_all)
+copy_tbzones(tbzones)
+project_to_wgs84(FCs_to_project)
+spillman_polygon_prep(streets_cad_wgs84)
 
 ################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap #
 ################################################################
 env.workspace = wgs84_db
-export_shapefiles_select_fields("AddressPoints", out_folder_spillman, addpt_fields)
+# export_shapefiles_select_fields("AddressPoints", out_folder_spillman, addpt_fields)
 #export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
 #export_shapefiles_select_fields("Mileposts", out_folder_spillman, milepost_fields)
-export_shapefiles_select_fields("Streets", out_folder_spillman, street_fields)
+# export_shapefiles_select_fields("Streets", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields("EMSAreas", out_folder_spillman, earea_fields)
 #export_shapefiles_select_fields("EMSZones", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("FireAreas", out_folder_spillman, farea_fields)
