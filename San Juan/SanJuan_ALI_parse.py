@@ -87,7 +87,7 @@ with open(places_file, "r+") as placefile:
 
 # Pad with leading space and remove duplicates
 all_places = list(set(all_places))
-all_places = [' ' + x for x in all_places]
+all_places = [' ' + x + ' ' for x in all_places]
 
 
 # Read raw ALI data and write out to CSV
@@ -106,9 +106,6 @@ with open(ali_file, "r+") as raw_file:
                     city_found = False
                     full_string = ' '.join(line.split())
 
-                    # print(full_string)
-                    # temp2 = [part.strip() for part in full_string]
-                    # print(temp2)
                     full_list = full_string.split()
                     # print(full_list)
                     if 'WIRELESS CALL' in full_string or ' CALLER' in full_string or ' CALLBK#' in full_string or ' VOIP 9' in full_string:
@@ -152,13 +149,18 @@ with open(ali_file, "r+") as raw_file:
                     possible_add = before_parts[1:]
                     possible_str = ' '.join(possible_add)
                     
-                    
+                    # Clean up possible_str and add whitespace to the end
                     if ' -' in possible_str:
                         possible_str = possible_str.split(' -', 1)[0]
                     elif '- ' in possible_str:
                         possible_str = possible_str.split('- ', 1)[0]
                     elif '.' in possible_str:
                         possible_str = possible_str.replace('.', '')
+                        
+                    possible_str += ' '
+                    
+                    if '15040 S MOUNTAINSIDE' in possible_str:
+                        print(possible_str)
                         
                     # if 'HILL AFB' in possible_str:
                     #     print(possible_str)
@@ -181,12 +183,16 @@ with open(ali_file, "r+") as raw_file:
                         # print(f'Multiple splitters found:   {splitters}')
                         for j in np.arange(len(splitters)):
                             term = splitters[j]
-                            result = re.search(fr"\b({term})", possible_str)
-                            beg = result.start()
+                            # result = re.search(fr"\b({term})\b | \b({term})[]", possible_str)
+                            # result = re.search((r"\b" + re.escape(term) + r"\b", possible_str))
+                            # beg = result.start()
+                            beg = possible_str.find(term)
                             # print(f'Item "{splitters[j]}" starts at: {beg}')
                             if beg > highest:
                                 highest = beg
                                 high_index = j
+                            
+                            del beg
                         
                         # print(f'The highest value is:  {highest}, at splitters index {high_index}, will use "{splitters[high_index]}"')
                         
@@ -296,6 +302,6 @@ print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 
 
-for item in all_cities:
-    if item not in all_places:
-        print(item)
+# for item in all_cities:
+#     if item not in all_places:
+#         print(item)
