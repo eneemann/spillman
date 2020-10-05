@@ -31,6 +31,7 @@ work_dir = r'C:\E911\1 - Utah ALI Data'
 ali_csv = os.path.join(work_dir, 'ali_out.csv')
 city_file = os.path.join(work_dir, 'cities.txt')
 quads_file = os.path.join(work_dir, 'addquads.txt')
+places_file = os.path.join(work_dir, 'all_places.txt')
 bad_file = os.path.join(work_dir, 'bad_cities.txt')
 not_found = os.path.join(work_dir, 'not_found.txt')
 
@@ -52,6 +53,16 @@ unique_quads = set(quads)
 
 all_cities = list(set(cities + list(unique_quads)))
 
+all_places = []
+with open(places_file, "r+") as placefile:
+    allplaces = placefile.readlines()
+    for item in allplaces:
+        all_places.append(item.upper().strip())
+
+# Pad with leading space and remove duplicates
+all_places = list(set(all_places))
+all_places = [' ' + x for x in all_places]
+
 
 col_names = ['FUNCTION CODE', 'TELEPHONE NUMBER', 'ADDRESS',
             'CITY', 'STATE', 'COMMUNITY']
@@ -72,7 +83,7 @@ sj_cities = ['ANETH', 'BLANDING', 'BLUFF', 'DEER CANYON', 'EASTLAND', 'FRY CANYO
              'SUMMIT POINT', 'UCOLO', 'WHITE MESA']
 
 sj = unique[unique.CITY.isin(sj_cities)]
-
+sj.to_csv(os.path.join(work_dir, 'ali_SanJuan_addresses.csv'))
 
 
 
