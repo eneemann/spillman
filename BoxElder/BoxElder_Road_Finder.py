@@ -26,8 +26,8 @@ sgid_roads = os.path.join(SGID, "SGID.TRANSPORTATION.Roads")
 env.workspace = staging_db
 env.overwriteOutput = True
 
-# # Export roads from SGID into new FC based on desired counties
-# export_roads = os.path.join(staging_db, "Roads_SGID_export_" + today)
+# Export roads from SGID into new FC based on desired counties
+export_roads = os.path.join(staging_db, "Roads_SGID_export_" + today)
 
 # Create a 10m buffer around current streets data to use for selection
 roads_buff = os.path.join(staging_db, "temp_roads_buffer")
@@ -38,6 +38,8 @@ arcpy.Buffer_analysis(current_streets, roads_buff, "10 Meters", "FULL", "ROUND",
 
 # Select and export roads with centroids outside of the current streets buffer
 where_SGID = "COUNTY_L IN ('49003') OR COUNTY_R IN ('49003')"      # Box Elder County
+if arcpy.Exists("sgid_roads_lyr"):
+    arcpy.Delete_management("sgid_roads_lyr")
 arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr", where_SGID)
 print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_roads_lyr")))
 arcpy.SelectLayerByLocation_management("sgid_roads_lyr", "HAVE_THEIR_CENTER_IN", roads_buff,

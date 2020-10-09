@@ -38,6 +38,8 @@ arcpy.Buffer_analysis(current_streets, roads_buff, "10 Meters", "FULL", "ROUND",
 
 # Select and export roads with centroids outside of the current streets buffer
 where_SGID = "COUNTY_L IN ('49053') OR COUNTY_R IN ('49053')"      # Washington County
+if arcpy.Exists("sgid_roads_lyr"):
+    arcpy.Delete_management("sgid_roads_lyr")
 arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr", where_SGID)
 print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_roads_lyr")))
 arcpy.SelectLayerByLocation_management("sgid_roads_lyr", "HAVE_THEIR_CENTER_IN", roads_buff,
