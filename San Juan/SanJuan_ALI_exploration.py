@@ -18,13 +18,14 @@ from matplotlib import pyplot as plt
 import re
 import timeit
 import csv
+from tqdm import tqdm
 
 # Start timer and print start time in UTC
 start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-
+tqdm.pandas()
 today = time.strftime("%Y%m%d")
 
 work_dir = r'C:\E911\1 - Utah ALI Data'
@@ -34,6 +35,7 @@ quads_file = os.path.join(work_dir, 'addquads.txt')
 places_file = os.path.join(work_dir, 'all_places.txt')
 bad_file = os.path.join(work_dir, 'bad_cities.txt')
 not_found = os.path.join(work_dir, 'not_found.txt')
+uni_file = os.path.join(work_dir, 'ali_unique_addresses.csv')
 
 cities = []
 with open(city_file, "r+") as file:
@@ -87,16 +89,10 @@ sj.to_csv(os.path.join(work_dir, 'ali_SanJuan_addresses.csv'))
 
 
 
-
 temp = unique.head(100)
 # temp = temp.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 unique_cities = ali.drop_duplicates('CITY', keep='first')
 city_list = list(unique_cities.CITY)
-
-
-for item in city_list:
-    if 'CANYON' in item:
-        print(item)
 
 
 with open(bad_file, "w", newline='') as bad:
@@ -107,28 +103,26 @@ with open(bad_file, "w", newline='') as bad:
             # print(f'Not in all_cities list:    {item}')
             bad.write(f'Not in all_cities list:    {item}\n')
             
-unknown = []
-with open(not_found, "r+") as notfound:
-    notfound_lines = notfound.readlines()
-    for line in notfound_lines:
-        new = line.strip()
-        unknown.append(new.upper())
 
-found = 0
-lost = 0
-for i in np.arange(len(unknown)):
-    # if unknown[i] in all_cities:
-    if any(unknown[i] in s for s in all_cities):
-        found += 1
-        print(f'This town was found:   {unknown[i]}')
-    else:
-        lost += 1
-        # print(f'This town remains unknown:   {unknown[i]}')
-        
-print(f'Unknowns that were found:  {found}')
-print(f'Unknowns that are lost:  {lost}')
+uni = pd.read_csv(os.path.join(work_dir, 'ali_unique_addresses.csv'))
 
+dirs = ['NORTH', 'SOUTH', 'EAST', 'WEST']
 
+def count_dirs(row):
+    dir_count = 0
+    for d in dirs:
+        if d in row['ADDRESS']:
+            temp_ct = row['ADDRESS'].count(d)
+            dir_count += temp_ct
+            
+    row['DIR_COUNT'] = dir_count
+    
+    return row
+            
+
+uni = uni.progress_apply(count_dirs, axis=1)
+
+uni.to_csv(os.path.join(work_dir, 'unique_address_dirs.csv'))
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
