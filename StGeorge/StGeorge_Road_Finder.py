@@ -21,7 +21,8 @@ print("The script start time is {}".format(readable_start))
 today = time.strftime("%Y%m%d")
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
-current_streets = os.path.join(staging_db, "StG_Streets_update_" + today)
+# current_streets = os.path.join(staging_db, "StG_Streets_update_" + today)
+current_streets = os.path.join(staging_db, "StG_Streets_update_20200821")
 sgid_roads = os.path.join(SGID, "SGID.TRANSPORTATION.Roads")
 env.workspace = staging_db
 env.overwriteOutput = True
@@ -42,8 +43,7 @@ if arcpy.Exists("sgid_roads_lyr"):
     arcpy.Delete_management("sgid_roads_lyr")
 arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr", where_SGID)
 print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_roads_lyr")))
-arcpy.SelectLayerByLocation_management("sgid_roads_lyr", "HAVE_THEIR_CENTER_IN", roads_buff,
-                                                     "", "", "INVERT")
+arcpy.SelectLayerByLocation_management("sgid_roads_lyr", "HAVE_THEIR_CENTER_IN", roads_buff, "", "", "INVERT")
 outname = os.path.join(staging_db, "SGID_roads_to_review_" + today)
 arcpy.CopyFeatures_management("sgid_roads_lyr", outname)
 
