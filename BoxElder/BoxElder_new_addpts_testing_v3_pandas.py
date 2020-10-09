@@ -31,7 +31,7 @@ env.overwriteOutput = True
 boxelder_streets = os.path.join(boxelder_db, "BoxElder_Streets")
 #boxelder_addpts = "AddressPoints_TEST_current"
 #current_addpts = os.path.join(staging_db, boxelder_addpts)
-boxelder_addpts = "BoxElder_AddressPoints_update_20200409"    # Point to current addpts in staging_db
+boxelder_addpts = "BoxElder_AddressPoints_update_20201008"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, boxelder_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -172,7 +172,7 @@ def check_nearby_roads(working, streets, gdb):
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
     print("Generating near table ...")
-    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '100 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 5, 'GEODESIC')
+    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '800 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 10, 'GEODESIC')
     print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(neartable)))
     
     # Convert neartable to pandas dataframe
@@ -237,7 +237,7 @@ def check_nearby_roads(working, streets, gdb):
     filtered_df.to_csv(r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
     final_df = filtered_df.drop_duplicates('IN_FID')
-    path = r'C:\E911\StGeorgeDispatch\Addpts_working_folder\stgeorge_neartable_final.csv'
+    path = r'C:\E911\Box Elder CO\Addpts_working_folder\boxelder_neartable_final.csv'
     final_df.to_csv(path)
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
