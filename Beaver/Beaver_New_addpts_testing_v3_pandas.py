@@ -211,7 +211,7 @@ def check_nearby_roads(working, streets, gdb):
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
     print("Generating near table ...")
-    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '100 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 5, 'GEODESIC')
+    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '800 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 10, 'GEODESIC')
     print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(neartable)))
     
     # Convert neartable to pandas dataframe
