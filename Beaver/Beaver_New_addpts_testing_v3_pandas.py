@@ -24,13 +24,15 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
+tqdm.pandas()
+
 beaver_db = r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb"
 staging_db = r"C:\E911\Beaver Co\Beaver_Staging.gdb"
 env.workspace = beaver_db
 env.overwriteOutput = True
 
 beaver_streets = os.path.join(beaver_db, "Streets")
-beaver_addpts = "AddressPoints_update_20200417"
+beaver_addpts = "AddressPoints_update_20201021"
 current_addpts = os.path.join(staging_db, beaver_addpts)
 
 today = time.strftime("%Y%m%d")
