@@ -22,7 +22,7 @@ today = time.strftime("%Y%m%d")
 staging_db = r"C:\E911\Beaver Co\Beaver_Staging.gdb"
 SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
 # current_streets = os.path.join(staging_db, "StG_Streets_update_" + today)
-current_streets = os.path.join(staging_db, 'Streets_update_20200417')
+current_streets = os.path.join(staging_db, 'Streets_update_20201021')
 sgid_roads = os.path.join(SGID, "SGID.TRANSPORTATION.Roads")
 env.workspace = staging_db
 env.overwriteOutput = True
@@ -38,6 +38,8 @@ print("Buffering {} ...".format(current_streets))
 arcpy.Buffer_analysis(current_streets, roads_buff, "10 Meters", "FULL", "ROUND", "ALL")
 
 # Select and export roads with centroids outside of the current streets buffer
+if arcpy.Exists("sgid_roads_lyr"):
+    arcpy.Delete_management("sgid_roads_lyr")
 where_SGID = "COUNTY_L IN ('49001') OR COUNTY_R IN ('49001')"      # Beaver County
 arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr", where_SGID)
 print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_roads_lyr")))
