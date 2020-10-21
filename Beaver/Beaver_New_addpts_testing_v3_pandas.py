@@ -17,6 +17,7 @@ import pandas as pd
 import numpy as np
 from Levenshtein import StringMatcher as Lv
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 # Start timer and print start time in UTC
 start_time = time.time()
@@ -241,7 +242,7 @@ def check_nearby_roads(working, streets, gdb):
     join2_df.to_csv(path)
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
-    near_df_updated = join2_df.apply(logic_checks, axis=1)
+    near_df_updated = join2_df.progress_apply(logic_checks, axis=1)
     path = r'C:\E911\Beaver Co\Addpts_working_folder\neartable_updated.csv'
     near_df_updated.to_csv(path)
     
