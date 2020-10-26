@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\Beaver Co\Beaver_Staging.gdb"
-addpts = os.path.join(stage_db, "AddressPoints_update_20200417")
+addpts = os.path.join(stage_db, "AddressPoints_update_20201021")
 env.workspace = stage_db
 
 ###############
@@ -29,7 +29,7 @@ env.workspace = stage_db
 def blanks_to_nulls(pts):
     update_count = 0
     # Use update cursor to convert blanks to null (None) for each field
-    flist = ['OBJECTID', 'StreetType', 'UnitType', 'UnitID', 'LABEL', 'SuffixDir', 'CITYCD', 'STREET']
+    flist = ['OBJECTID', 'StreetType', 'UnitType', 'UnitID', 'LABEL', 'SuffixDir', 'CITYCD']
     fields = arcpy.ListFields(pts)
 
     field_list = []
@@ -120,10 +120,10 @@ def strip_fields(pts):
 #  Call Functions Below  #
 ##########################
 
-blanks_to_nulls(addpts)
 # calc_street(addpts)
 calc_label(addpts)
 strip_fields(addpts)
+blanks_to_nulls(addpts)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC

@@ -23,6 +23,7 @@ wgs84_db = r"C:\E911\Beaver Co\Beaver_Spillman_WGS84.gdb"
 #utm_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_UTM.gdb"
 #wgs84_db = r"C:\E911\Beaver Co_TEST\Beaver_Spillman_WGS84.gdb"
 env.workspace = utm_db
+# env.overwriteOutput = True
 fc_layer = "Streets"
 streets_fc_utm = os.path.join(utm_db, fc_layer)
 streets_cad_wgs84 = os.path.join(wgs84_db, "Streets_CAD")
@@ -33,22 +34,26 @@ streets_cad_wgs84 = os.path.join(wgs84_db, "Streets_CAD")
 
 
 def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete_files):
-    # Creates new GDBs by renaming originals with today's date
-    # Then copies new ones (with today's date) with original name
-    # This allows original name to be used/edited, but work is done on a new and fresh copy
-    today = time.strftime("%Y%m%d")
-    # rename original GDBs with today's date appended (YYYYMMDD)
-    new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
-    new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
-    print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
-    arcpy.Rename_management(original_utm, new_name_utm)
-    print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
-    arcpy.Rename_management(original_wgs84, new_name_wgs84)
-    # copy original GDBs to new gdb with original name (no date)
-    print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
-    arcpy.Copy_management(new_name_utm, original_utm)
-    print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
-    arcpy.Copy_management(new_name_wgs84, original_wgs84)
+    # # Creates new GDBs by renaming originals with today's date
+    # # Then copies new ones (with today's date) with original name
+    # # This allows original name to be used/edited, but work is done on a new and fresh copy
+    # today = time.strftime("%Y%m%d")
+    # # rename original GDBs with today's date appended (YYYYMMDD)
+    # new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
+    # new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
+    # print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
+    # arcpy.Rename_management(original_utm, new_name_utm)
+    # print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
+    # arcpy.Rename_management(original_wgs84, new_name_wgs84)
+    # # copy original GDBs to new gdb with original name (no date)
+    # print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
+    # if arcpy.Exists (original_utm):
+    # #     arcpy.Delete_management (original_utm) 
+    # # arcpy.Copy_management(new_name_utm, original_utm)
+    # print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
+    # # if arcpy.Exists (original_wgs84):
+    # #     arcpy.Delete_management (original_wgs84)
+    # arcpy.Copy_management(new_name_wgs84, original_wgs84)
     # delete WGS84 and UTM files that will be recreated and reprojected later on
     env.workspace = original_wgs84
     print("Deleting old files from WGS84 gdb ...")
