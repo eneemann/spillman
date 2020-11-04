@@ -20,7 +20,7 @@ print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 # stage_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
-addpts = os.path.join(stage_db, "StG_AddPts_update_20200821")
+addpts = os.path.join(stage_db, "StG_Addpts_update_20201102")
 # addpts = os.path.join(stage_db, "StGeorge_Dispatch_AddressPoints_CAD")
 #addpts = os.path.join(stage_db, "StG_Streets_update_20191108")
 #addpts = os.path.join(stage_db, "StG_CP_update_20191108")
@@ -324,9 +324,9 @@ def strip_fields(pts):
 # calc_suffixdir_from_street(addpts)
 # calc_streettype_from_street(addpts)
 # calc_streetname_from_street(addpts)
-# calc_street(addpts)
-# calc_label(addpts)
-# blanks_to_nulls(addpts)
+calc_street(addpts)
+calc_label(addpts)
+blanks_to_nulls(addpts)
 strip_fields(addpts)
 
 print("Script shutting down ...")
