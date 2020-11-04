@@ -20,7 +20,7 @@ print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 # stage_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
-commonplaces = os.path.join(stage_db, "StG_CP_update_20200821")
+commonplaces = os.path.join(stage_db, "StG_CP_update_20201102")
 env.workspace = stage_db
 
 
@@ -36,8 +36,8 @@ def calc_all_components_from_street(pts):
     update_count = 0
     five_letter = 0
     # Use update cursor to calculate components from street field
-    #            0           1
-    fields = ['STREET', 'STREETNAME']
+    #            0           1           2           3           4
+    fields = ['STREET', 'STREETNAME', 'PREDIR', 'STREETTYPE', 'SUFDIR']
     # where_clause = "STREET IS NOT NULL AND STREETNAME IS NULL"
     where_clause = "STREET IS NOT NULL"
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
@@ -117,10 +117,27 @@ def calc_all_components_from_street(pts):
                 else:
                     stname = new_temp
             
+            # Calc the new fields
             if stname:
                 row[1] = stname.strip()
             else:
-                row[1] = stname
+                row[1] = None
+                
+            if pre:
+                row[2] = pre.strip()
+            else:
+                row[2] = None
+                
+            if sttype:
+                row[3] = sttype.strip()
+            else:
+                row[3] = None
+            
+            if suf:
+                row[4] = suf.strip()
+            else:
+                row[4] = None
+            
             update_count += 1
             cursor.updateRow(row)
     print("Total count of STREETNAME calculations is: {}".format(update_count))
