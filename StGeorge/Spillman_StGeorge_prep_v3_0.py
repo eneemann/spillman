@@ -31,23 +31,23 @@ streets_cad_wgs84 = os.path.join(wgs84_db, "StGeorge_Dispatch_Streets_CAD")
 
 
 def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete_files):
-    # Creates new GDBs by renaming originals with today's date
-    # Then copies new ones (with today's date) with original name
-    # This allows original name to be used/edited, but work is done on a new and fresh copy
-    today = time.strftime("%Y%m%d")
-    # rename original GDBs with today's date appended (YYYYMMDD)
-    new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
-    new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
-    print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
-    arcpy.Rename_management(original_utm, new_name_utm)
-    print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
-    arcpy.Rename_management(original_wgs84, new_name_wgs84)
-    # copy original GDBs to new gdb with original name (no date)
-    print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
-    arcpy.Copy_management(new_name_utm, original_utm)
-    print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
-    arcpy.Copy_management(new_name_wgs84, original_wgs84)
-    # delete WGS84 and UTM files that will be recreated and reprojected later on
+    # # Creates new GDBs by renaming originals with today's date
+    # # Then copies new ones (with today's date) with original name
+    # # This allows original name to be used/edited, but work is done on a new and fresh copy
+    # today = time.strftime("%Y%m%d")
+    # # rename original GDBs with today's date appended (YYYYMMDD)
+    # new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
+    # new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
+    # print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
+    # arcpy.Rename_management(original_utm, new_name_utm)
+    # print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
+    # arcpy.Rename_management(original_wgs84, new_name_wgs84)
+    # # copy original GDBs to new gdb with original name (no date)
+    # print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
+    # arcpy.Copy_management(new_name_utm, original_utm)
+    # print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
+    # arcpy.Copy_management(new_name_wgs84, original_wgs84)
+    # # delete WGS84 and UTM files that will be recreated and reprojected later on
     env.workspace = original_wgs84
     print("Deleting old files from WGS84 gdb ...")
     for fc in WGS84_delete_files:
@@ -643,8 +643,8 @@ export_shapefiles_select_fields("StGeorge_Dispatch_Common_Place_Points", out_fol
 export_shapefiles_select_fields("StGeorge_Dispatch_Streets_All", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_EMS_Zones", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_Fire_Zones", out_folder_spillman, fzone_fields)
-# export_shapefiles_select_fields("StGeorge_Dispatch_Law_Zones", out_folder_spillman, lzone_fields)
-# export_shapefiles_select_fields("StGeorge_Dispatch_CITYCD", out_folder_spillman, citycd_fields)
+export_shapefiles_select_fields("StGeorge_Dispatch_Law_Zones", out_folder_spillman, lzone_fields)
+export_shapefiles_select_fields("StGeorge_Dispatch_CITYCD", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_Municipalities", out_folder_spillman, muni_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_Mileposts", out_folder_spillman, mp_fields)
 
@@ -652,7 +652,7 @@ export_shapefiles_select_fields("StGeorge_Dispatch_Streets_All", out_folder_spil
 export_shapefiles_select_fields_rename("StGeorge_Dispatch_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
 export_shapefiles_select_fields_rename("StGeorge_Dispatch_Common_Place_Points", out_folder_vela, vela_commplc_fields, vela_commplc_out)
 export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
-# export_shapefiles_select_fields_rename("StGeorge_Dispatch_Law_Zones", out_folder_vela, vela_law_fields, vela_law_out)
+export_shapefiles_select_fields_rename("StGeorge_Dispatch_Law_Zones", out_folder_vela, vela_law_fields, vela_law_out)
 
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
 
