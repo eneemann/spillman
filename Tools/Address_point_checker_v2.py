@@ -32,17 +32,17 @@ today = time.strftime("%Y%m%d")
 ###################
 
 # Provide name for dataset and working directory where output geodatabase will be located
-data_name = 'cache'
-# root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
-root_dir = r'C:\Temp'
+data_name = 'richfield'
+root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
+# root_dir = r'C:\Temp'
 
 # Street and address point layers with full paths:
-# addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20200526'  # Point to current addpts layer
-# streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20200515_UTM'  # Point to current roads layer
+addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20201117'  # Point to current addpts layer
+streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20201117'  # Point to current roads layer
 # addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.LOCATION.AddressPoints'  # Point to current addpts layer
 # streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.TRANSPORTATION.Roads'  # Point to current roads layer
-addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.location.address_points'  # Point to current addpts layer
-streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.transportation.roads'  # Point to current roads layer
+# addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.location.address_points'  # Point to current addpts layer
+# streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.transportation.roads'  # Point to current roads layer
 
 # Input address point fields
 addpt_fields = {"addnum": "AddNum",
@@ -63,14 +63,16 @@ street_fields = {"predir": "PREDIR",
 
 # Set flags
 # Input full address field here in order to use it, otherwise components will be used
-fulladd_field = False
-# fulladd_field = 'fulladd'   # Example of using a full address field
+# fulladd_field = False
+fulladd_field = 'ADDRESS'   # Example of using a full address field
 
 # Set flag if data is coming from SGID
 # Use 'internal' for internal SGID, use 'opensgid' for Open SGID
-# Provide the county fips code
+from_sgid = False
 # from_sgid = 'internal'     # use for internal
-from_sgid = 'opensgid'     # use for Open SGID
+# from_sgid = 'opensgid'     # use for Open SGID
+
+# Provide the county to check (name in Title case), see county_fips dictionary
 county = 'Cache'
 
 
@@ -309,7 +311,7 @@ def calc_street_roads(working, st_flds):
             
 def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
     """
-    Function performs near table analysis to find 8 closest roads w/i 400m of each address point.
+    Function performs near table analysis to find 10 closest roads w/i 800m of each address point.
     It then uses pandas dataframes to join address point and street attributes to near table.
     Calls 'logic_checks' function to compare address point and street attributes.
     This searches for address point street names that match near street segment names.
@@ -328,7 +330,7 @@ def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
     # Perform near table analysis
     print("Generating near table ...")
     near_start_time = time.time()
-    arcpy.GenerateNearTable_analysis (pts, streets, neartable, '400 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 8, 'GEODESIC')
+    arcpy.GenerateNearTable_analysis (pts, streets, neartable, '800 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 10, 'GEODESIC')
     print("Time elapsed generating near table: {:.2f}s".format(time.time() - near_start_time))
     print(f"Number of rows in near table: {arcpy.GetCount_management(neartable)}")
     
