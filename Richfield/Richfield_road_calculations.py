@@ -18,7 +18,7 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
 env.workspace = staging_db
-fc_layer = "streets_update_20200515_UTM"    # Update to working streets fc
+fc_layer = "streets_update_20201117"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
 # Use to create a selection to run functions on

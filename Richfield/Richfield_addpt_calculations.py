@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
-addpts = os.path.join(stage_db, "address_points_update_20200526")
+addpts = os.path.join(stage_db, "address_points_update_20201117")
 env.workspace = stage_db
 
 # Use to create a selection to run functions on
@@ -235,13 +235,13 @@ def strip_fields(pts):
 ##########################
 #  Call Functions Below  #
 ##########################
-#calc_unit_from_fulladd(addpts)
-#calc_prefixdir_from_street(addpts)
-#calc_suffixdir_from_street(addpts)
-#calc_streettype_from_street(addpts)
-#calc_streetname_from_street(addpts)
+calc_unit_from_fulladd(addpts)
+calc_prefixdir_from_street(addpts)
+calc_suffixdir_from_street(addpts)
+calc_streettype_from_street(addpts)
+calc_streetname_from_street(addpts)
 blanks_to_nulls(addpts)
-#calc_street(addpts)
+calc_street(addpts)
 calc_label(addpts)
 strip_fields(addpts)
 
