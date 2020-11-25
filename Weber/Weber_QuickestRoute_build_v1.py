@@ -39,6 +39,7 @@ arcpy.CreateFileGDB_management(weber_staging, 'QuickestRoute_TEST_' + today +  '
 arcpy.CreateFeatureDataset_management(network_db, 'QuickestRoute', weber_streets)
 
 # Create XML Template from current dataset
+print('Creating network template ...')
 original_network = r"C:\E911\WeberArea\Staging103\QuickestRoute.gdb\QuickestRoute\QuickestRoute_ND"
 output_xml_file = r"C:\E911\WeberArea\Staging103\Network Dataset Template\NDTemplate.xml"
 if arcpy.Exists(output_xml_file):
@@ -46,10 +47,12 @@ if arcpy.Exists(output_xml_file):
 arcpy.nax.CreateTemplateFromNetworkDataset(original_network, output_xml_file)
 
 # Import current "Streets_Map" data
+print('Importing street data ...')
 network_streets = os.path.join(network_dataset, 'Streets')
 arcpy.CopyFeatures_management(weber_streets, network_streets)
 
 # Calculated necessary travel time fields
+print('Calculating geometry (distance) ...')
 sr_utm12N = arcpy.SpatialReference("NAD 1983 UTM Zone 12N")
 arcpy.CalculateGeometryAttributes_management(network_streets, [["Distance", "LENGTH_GEODESIC"]], "MILES_US", "", sr_utm12N)
 
