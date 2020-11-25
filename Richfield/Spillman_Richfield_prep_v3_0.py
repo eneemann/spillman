@@ -28,23 +28,23 @@ streets_cad_wgs84 = os.path.join(wgs84_db, "streets_CAD")
 ###############
 
 def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete_files):
-    # Creates new GDBs by renaming originals with today's date
-    # Then copies new ones (with today's date) with original name
-    # This allows original name to be used/edited, but work is done on a new and fresh copy
-    today = time.strftime("%Y%m%d")
-    # rename original GDBs with today's date appended (YYYYMMDD)
-    new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
-    new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
-    print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
-    arcpy.Rename_management(original_utm, new_name_utm)
-    print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
-    arcpy.Rename_management(original_wgs84, new_name_wgs84)
-    # copy original GDBs to new gdb with original name (no date)
-    print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
-    arcpy.Copy_management(new_name_utm, original_utm)
-    print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
-    arcpy.Copy_management(new_name_wgs84, original_wgs84)
-    # delete WGS84 and UTM files that will be recreated and reprojected later on
+    # # Creates new GDBs by renaming originals with today's date
+    # # Then copies new ones (with today's date) with original name
+    # # This allows original name to be used/edited, but work is done on a new and fresh copy
+    # today = time.strftime("%Y%m%d")
+    # # rename original GDBs with today's date appended (YYYYMMDD)
+    # new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
+    # new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
+    # print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
+    # arcpy.Rename_management(original_utm, new_name_utm)
+    # print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
+    # arcpy.Rename_management(original_wgs84, new_name_wgs84)
+    # # copy original GDBs to new gdb with original name (no date)
+    # print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
+    # arcpy.Copy_management(new_name_utm, original_utm)
+    # print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
+    # arcpy.Copy_management(new_name_wgs84, original_wgs84)
+    # # delete WGS84 and UTM files that will be recreated and reprojected later on
     env.workspace = original_wgs84
     print("Deleting old files from WGS84 gdb ...")
     for fc in WGS84_delete_files:
@@ -650,30 +650,30 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #################################################################
 
 # Assign LS_Zones to streets_CAD (wgs84) segments
-# populate_LS_ZONE(streets_cad_wgs84, ls_zones)
+populate_LS_ZONE(streets_cad_wgs84, ls_zones)
 
 # Spillman Shapefiles Export
-export_shapefiles_select_fields("address_points", out_folder_spillman, addpt_fields)
-export_shapefiles_select_fields("citycodes", out_folder_spillman, citycd_fields)
-export_shapefiles_select_fields("common_places", out_folder_spillman, commplc_fields)
-#export_shapefiles_select_fields_rename("common_places_Exits", out_folder_spillman, exit_fields, exits_out)
-export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_spillman, milepost_fields, mileposts_out)
-#export_shapefiles_select_fields("ems_zones", out_folder_spillman, ezone_fields)
-#export_shapefiles_select_fields("fire_zones", out_folder_spillman, fzone_fields)
-export_shapefiles_select_fields("law_zones", out_folder_spillman, lzone_fields)
-export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fields)
-export_shapefiles_select_fields("MZ_Zones", out_folder_spillman, mzone_fields)
-export_shapefiles_select_fields("streets", out_folder_spillman, street_fields)
+# export_shapefiles_select_fields("address_points", out_folder_spillman, addpt_fields)
+# export_shapefiles_select_fields("citycodes", out_folder_spillman, citycd_fields)
+# export_shapefiles_select_fields("common_places", out_folder_spillman, commplc_fields)
+# #export_shapefiles_select_fields_rename("common_places_Exits", out_folder_spillman, exit_fields, exits_out)
+# export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_spillman, milepost_fields, mileposts_out)
+# #export_shapefiles_select_fields("ems_zones", out_folder_spillman, ezone_fields)
+# #export_shapefiles_select_fields("fire_zones", out_folder_spillman, fzone_fields)
+# export_shapefiles_select_fields("law_zones", out_folder_spillman, lzone_fields)
+# export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fields)
+# export_shapefiles_select_fields("MZ_Zones", out_folder_spillman, mzone_fields)
+# export_shapefiles_select_fields("streets", out_folder_spillman, street_fields)
 
 ## Vela Shapefiles Export
-export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-export_shapefiles_select_fields_rename("citycodes", out_folder_vela, vela_citycd_fields, vela_citycd_out)
-export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_vela, vela_milepost_fields, vela_milepost_out)
-export_shapefiles_select_fields_rename("law_zones", out_folder_vela, vela_law_fields, vela_law_out)
-export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
-export_shapefiles_select_fields_rename("MZ_Zones", out_folder_vela, vela_mz_fields, vela_mz_out)
-export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
+# export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+# export_shapefiles_select_fields_rename("citycodes", out_folder_vela, vela_citycd_fields, vela_citycd_out)
+# export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+# export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_vela, vela_milepost_fields, vela_milepost_out)
+# export_shapefiles_select_fields_rename("law_zones", out_folder_vela, vela_law_fields, vela_law_out)
+# export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
+# export_shapefiles_select_fields_rename("MZ_Zones", out_folder_vela, vela_mz_fields, vela_mz_out)
+# export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
 
 
 #export_shapefiles_all_fields(vela_to_export, out_folder_vela)
