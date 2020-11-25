@@ -650,7 +650,7 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #################################################################
 
 # Assign LS_Zones to streets_CAD (wgs84) segments
-populate_LS_ZONE(streets_cad_wgs84, ls_zones)
+# populate_LS_ZONE(streets_cad_wgs84, ls_zones)
 
 # Spillman Shapefiles Export
 # export_shapefiles_select_fields("address_points", out_folder_spillman, addpt_fields)
@@ -659,7 +659,7 @@ populate_LS_ZONE(streets_cad_wgs84, ls_zones)
 # #export_shapefiles_select_fields_rename("common_places_Exits", out_folder_spillman, exit_fields, exits_out)
 # export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_spillman, milepost_fields, mileposts_out)
 # #export_shapefiles_select_fields("ems_zones", out_folder_spillman, ezone_fields)
-# #export_shapefiles_select_fields("fire_zones", out_folder_spillman, fzone_fields)
+export_shapefiles_select_fields("fire_zones", out_folder_spillman, fzone_fields)
 # export_shapefiles_select_fields("law_zones", out_folder_spillman, lzone_fields)
 # export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fields)
 # export_shapefiles_select_fields("MZ_Zones", out_folder_spillman, mzone_fields)
