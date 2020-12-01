@@ -54,7 +54,9 @@ arcpy.CopyFeatures_management(weber_streets, network_streets)
 # Calculated necessary travel time fields
 print('Calculating geometry (distance) ...')
 sr_utm12N = arcpy.SpatialReference("NAD 1983 UTM Zone 12N")
+geom_start_time = time.time()
 arcpy.CalculateGeometryAttributes_management(network_streets, [["Distance", "LENGTH_GEODESIC"]], "MILES_US", "", sr_utm12N)
+print("Time elapsed calculating geometry: {:.2f}s".format(time.time() - geom_start_time))
 
 # Calculate travel time field
 update_count = 0
