@@ -495,10 +495,10 @@ fips = county_fips[county]
 # Set up variables for later in the script 
 if fulladd_field:
     address_parts = False
-    print(f'Using full address field ...')
+    print('Using full address field ...')
 else:
     address_parts = True
-    print(f'Using address field components ...')
+    print('Using address field components ...')
 
 print(f'Using address component fields: {address_parts}')
 
