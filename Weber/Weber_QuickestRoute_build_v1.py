@@ -55,7 +55,7 @@ arcpy.CopyFeatures_management(weber_streets, network_streets)
 print('Calculating geometry (distance) ...')
 sr_utm12N = arcpy.SpatialReference("NAD 1983 UTM Zone 12N")
 geom_start_time = time.time()
-arcpy.CalculateGeometryAttributes_management(network_streets, [["Distance", "LENGTH_GEODESIC"]], "MILES_US", "", sr_utm12N)
+arcpy.management.CalculateGeometryAttributes(network_streets, [["Distance", "LENGTH_GEODESIC"]], "MILES_US", "", sr_utm12N)
 print("Time elapsed calculating geometry: {:.2f}s".format(time.time() - geom_start_time))
 
 # Calculate travel time field
@@ -92,7 +92,24 @@ print("Total count of One_Way updates is {}".format(update_count_oneway))
 
 # Recalculate travel times based on multiplication factors
 # Interstates to not get an additional multiplication factor applied
-# First, multiply state and federal highways by 1.5
+
+# First, multiply all "other" streets by 2
+update_count2 = 0
+#              0
+fields2 = ['TrvlTime', 'Multiplier']
+# where_clause2 = "HWYNAME IS NULL AND (STREETTYPE IS NULL OR STREETTYPE <> 'RAMP')"
+# 12/17/2020 Update: simplified to 'HWYNAME IS NULL' and calculated first to improve QR FIXES
+where_clause2 = "HWYNAME IS NULL AND (STREETTYPE IS NULL OR STREETTYPE <> 'RAMP')"
+with arcpy.da.UpdateCursor(network_streets, fields2, where_clause2) as cursor:
+    print("Looping through rows to multiply TrvlTime on all other roads ...")
+    for row in cursor:
+        row[0] = row[0]*2
+        row[1] = 2
+        update_count2 += 1
+        cursor.updateRow(row)
+print("Total count of TrvlTime updates (x2) is {}".format(update_count2))
+
+# Second, multiply state and federal highways by 1.5
 update_count1 = 0
 #              0
 fields1 = ['TrvlTime', 'Multiplier']
@@ -107,21 +124,8 @@ with arcpy.da.UpdateCursor(network_streets, fields1, where_clause1) as cursor:
         row[1] = 1.5
         update_count1 += 1
         cursor.updateRow(row)
-print("Total count of TrvlTime updates is {}".format(update_count1))
+print("Total count of TrvlTime updates (x1.5) is {}".format(update_count1))
 
-# Second, multiply all other streets by 2
-update_count2 = 0
-#              0
-fields2 = ['TrvlTime', 'Multiplier']
-where_clause2 = "HWYNAME IS NULL AND (STREETTYPE IS NULL OR STREETTYPE <> 'RAMP')"
-with arcpy.da.UpdateCursor(network_streets, fields2, where_clause2) as cursor:
-    print("Looping through rows to multiply TrvlTime on all other roads ...")
-    for row in cursor:
-        row[0] = row[0]*2
-        row[1] = 2
-        update_count2 += 1
-        cursor.updateRow(row)
-print("Total count of TrvlTime updates is {}".format(update_count2))
 
 # Third, populate Multiplier field with 1 for interstates and ramps
 update_count3 = 0
@@ -134,7 +138,7 @@ with arcpy.da.UpdateCursor(network_streets, fields3, where_clause3) as cursor:
         row[0] = 1
         update_count3 += 1
         cursor.updateRow(row)
-print("Total count of ramp and interstate Multiplier updates is {}".format(update_count3))
+print("Total count of ramp and interstate (x1) updates is {}".format(update_count3))
 
 ## Create network dataset   
 # Use previously created XML template
