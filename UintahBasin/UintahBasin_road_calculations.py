@@ -18,7 +18,7 @@ print("The script start time is {}".format(readable_start))
 
 work_db = r"C:\E911\UintahBasin\UB_Staging.gdb"
 env.workspace = work_db
-fc_layer = "UBStreets_updates_20200706"    # Update to working streets fc
+fc_layer = "UBStreets_updates_20201218"    # Update to working streets fc
 streets_fc = os.path.join(work_db, fc_layer)
 
 ###############
@@ -452,13 +452,13 @@ def strip_fields(streets):
 ##########################
 # # Calc STREET from other fields
 calc_street(streets_fc)
-# calc_salias1(streets_fc)
-# calc_salias2(streets_fc)
-# calc_salias4(streets_fc)
-# highway_to_sr_us(streets_fc)
-# calc_salias3(streets_fc)
+calc_salias1(streets_fc)
+calc_salias2(streets_fc)
+calc_salias4(streets_fc)
+highway_to_sr_us(streets_fc)
+calc_salias3(streets_fc)
 street_blank_to_null(streets_fc)
-# calc_location(streets_fc)
+calc_location(streets_fc)
 blanks_to_nulls(streets_fc)
 strip_fields(streets_fc)
 
