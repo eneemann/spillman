@@ -32,17 +32,17 @@ today = time.strftime("%Y%m%d")
 ###################
 
 # Provide name for dataset and working directory where output geodatabase will be located
-data_name = 'richfield'
-root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
-# root_dir = r'C:\Temp'
+data_name = 'dag_test_2'
+# root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
+root_dir = r'C:\Temp'
 
 # Street and address point layers with full paths:
-addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20201117'  # Point to current addpts layer
-streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20201117'  # Point to current roads layer
+# addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20201117'  # Point to current addpts layer
+# streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20201117'  # Point to current roads layer
 # addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.LOCATION.AddressPoints'  # Point to current addpts layer
 # streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.TRANSPORTATION.Roads'  # Point to current roads layer
-# addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.location.address_points'  # Point to current addpts layer
-# streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.transportation.roads'  # Point to current roads layer
+addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.location.address_points'  # Point to current addpts layer
+streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.transportation.roads'  # Point to current roads layer
 
 # Input address point fields
 addpt_fields = {"addnum": "AddNum",
@@ -63,17 +63,17 @@ street_fields = {"predir": "PREDIR",
 
 # Set flags
 # Input full address field here in order to use it, otherwise components will be used
-# fulladd_field = False
-fulladd_field = 'ADDRESS'   # Example of using a full address field
+fulladd_field = False
+# fulladd_field = 'ADDRESS'   # Example of using a full address field
 
 # Set flag if data is coming from SGID
 # Use 'internal' for internal SGID, use 'opensgid' for Open SGID
-from_sgid = False
+# from_sgid = False
 # from_sgid = 'internal'     # use for internal
-# from_sgid = 'opensgid'     # use for Open SGID
+from_sgid = 'opensgid'     # use for Open SGID
 
 # Provide the county to check (name in Title case), see county_fips dictionary
-county = 'Cache'
+county = 'Daggett'
 
 
 #############
@@ -559,7 +559,8 @@ plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
 plt.title('Address/Street Edit Distance Histogram')
 plt.xlabel('Edit Distance')
 plt.ylabel('Count')
-plt.show()
+# plt.show()
+plt.savefig(os.path.join(work_dir, 'addpt_edit_distances.png'))
 
 df['edit_dist'].max()
 
@@ -572,7 +573,8 @@ plt.xticks(rotation='vertical')
 plt.title('Address Point Categories')
 plt.xlabel('Category')
 plt.ylabel('Count')
-plt.show()
+# plt.show()
+plt.savefig(os.path.join(work_dir, 'addpt_categories.png'))
 
 print('Stats by total count:')
 print(df.groupby('Notes').count()['edit_dist'])
