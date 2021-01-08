@@ -17,24 +17,37 @@ import numpy as np
 from Levenshtein import StringMatcher as Lv
 from matplotlib import pyplot as plt
 from tqdm import tqdm
-
-# Initialize the tqdm progress bar tool
-tqdm.pandas()
+import logging
 
 # Start timer and print start time in UTC
 start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-print(f"The script start time is {readable_start}")
 today = time.strftime("%Y%m%d")
+
+# Initialize the tqdm progress bar tool
+tqdm.pandas()
 
 ###################
 # Input variables #
 ###################
 
 # Provide name for dataset and working directory where output geodatabase will be located
-data_name = 'carbon_opensgid_log'
+data_name = 'utah_opensgid'
 # root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
 root_dir = r'C:\Temp'
+
+# Create new directory to store data and set up log
+work_dir = os.path.join(root_dir, f'{data_name}_{today}')
+if os.path.isdir(work_dir) == False:
+    os.mkdir(work_dir)
+
+# Set up logging
+handlers = [logging.FileHandler(os.path.join(work_dir, f"{data_name}_{today}.log")), logging.StreamHandler()]
+logging.basicConfig(level=logging.INFO, format='%(message)s', handlers = handlers)
+logger = logging.getLogger()
+# log = open(os.path.join(work_dir, f"{data_name}_{today}.log"), "a")
+
+logger.info(f"The script start time is {readable_start}")
 
 # Street and address point layers with full paths:
 # addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20201117'  # Point to current addpts layer
@@ -73,7 +86,7 @@ fulladd_field = False
 from_sgid = 'opensgid'     # use for Open SGID
 
 # Provide the county to check (name in Title case), see county_fips dictionary
-county = 'Carbon'
+county = 'Utah'
 
 
 #############
@@ -174,14 +187,14 @@ def filter_sgid_data(pts, rds, gdb, fips):
     elif from_sgid == 'internal':
         pass
     else:
-        print(f"SGID type of '{from_sgid}' is invalid. Exiting program ...")
+        logger.info(f"SGID type of '{from_sgid}' is invalid. Exiting program ...")
         sys.exit()
         
     # Copy current address points into a working FC and add fields
     where_SGID_pts = f"{query['countyid']} = '{fips}'"      # All Relevant counties for Richfield
-    print(where_SGID_pts)
+    logger.info(where_SGID_pts)
     arcpy.management.MakeFeatureLayer(pts, "sgid_addpts_lyr", where_SGID_pts)
-    print("SGID address points layer feature count: {}".format(arcpy.GetCount_management("sgid_addpts_lyr")))
+    logger.info("SGID address points layer feature count: {}".format(arcpy.GetCount_management("sgid_addpts_lyr")))
     working_pts = os.path.join(gdb, "AddPts_working_" + today)
     arcpy.management.CopyFeatures("sgid_addpts_lyr", working_pts)
     arcpy.Delete_management("sgid_addpts_lyr")
@@ -191,9 +204,9 @@ def filter_sgid_data(pts, rds, gdb, fips):
       
     # Copy current roads into a working FC and add 'FULL_STREET' field
     where_SGID_rds = f"{query['county_l']} = '{fips}' OR {query['county_r']} = '{fips}'"      # All Relevant counties for Richfield
-    print(where_SGID_rds)
+    logger.info(where_SGID_rds)
     arcpy.management.MakeFeatureLayer(rds, "sgid_roads_lyr", where_SGID_rds)
-    print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_roads_lyr")))
+    logger.info("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_roads_lyr")))
     working_rds = os.path.join(gdb, "Streets_working_" + today)
     arcpy.management.CopyFeatures("sgid_roads_lyr", working_rds)
     arcpy.Delete_management("sgid_roads_lyr")
@@ -208,14 +221,14 @@ def calc_street_addpts_fulladd(working, full_add):
     
     fields = [full_add, 'full_street']
     with arcpy.da.UpdateCursor(working, fields) as cursor:
-        print("Looping through rows in addpts FC ...")
+        logger.info("Looping through rows in addpts FC ...")
         for row in cursor:
             # break off and discard the house number
             parts = row[0].split(' ')
             if parts[0].isdigit():
                 temp = " ".join(parts[1:])
             else:
-                print(f"    Address '{row[0]}' does not have a valid house number")
+                logger.info(f"    Address '{row[0]}' does not have a valid house number")
             
             final = temp
 
@@ -238,13 +251,13 @@ def calc_street_addpts(working, add_flds):
     
     flist = arcpy.ListFields(working)
     fnames = [f.name for f in flist]
-    # print(fnames)
+    # logger.info(fnames)
 
     if 'STREET' in fnames:
         # Calculate 'full_street' field where applicable
         fields = ['STREET', 'full_street']
         with arcpy.da.UpdateCursor(working, fields) as cursor:
-            print("Looping through rows in addpts FC ...")
+            logger.info("Looping through rows in addpts FC ...")
             for row in cursor:
                 if row[0] is None: row[0] = ''
                 row[1] = row[0].strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
@@ -254,7 +267,7 @@ def calc_street_addpts(working, add_flds):
         # Calculate 'full_street' field where applicable
         fields = [add_flds['predir'], add_flds['name'], add_flds['sufdir'], add_flds['type'], 'full_street']
         with arcpy.da.UpdateCursor(working, fields) as cursor:
-            print("Looping through rows in addpts FC ...")
+            logger.info("Looping through rows in addpts FC ...")
             for row in cursor:
                 if row[0] is None: row[0] = ''
                 if row[1] is None: row[1] = ''
@@ -264,11 +277,11 @@ def calc_street_addpts(working, add_flds):
                 row[4] = " ".join(parts)
                 row[4] = row[4].strip()
                 row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
-    #            print(f"New value for {fields[4]} is: {row[4]}")
+    #            logger.info(f"New value for {fields[4]} is: {row[4]}")
                 update_count += 1
                 cursor.updateRow(row)
             
-    print(f"Total count of updates: {update_count}")
+    logger.info(f"Total count of updates: {update_count}")
     
     
 def calc_street_roads(working, st_flds):
@@ -277,13 +290,13 @@ def calc_street_roads(working, st_flds):
     
     flist = arcpy.ListFields(working)
     fnames = [f.name for f in flist]
-    # print(fnames)
+    # logger.info(fnames)
 
     if 'STREET' in fnames:
         # Calculate 'full_street' field where applicable
         fields = ['STREET', 'FULL_STREET']
         with arcpy.da.UpdateCursor(working, fields) as cursor:
-            print("Looping through rows in roads FC ...")
+            logger.info("Looping through rows in roads FC ...")
             for row in cursor:
                 if row[0] is None: row[0] = ''
                 row[1] = row[0].strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
@@ -293,7 +306,7 @@ def calc_street_roads(working, st_flds):
         # Calculate 'FULL_STREET' field where applicable
         fields = [st_flds['predir'], st_flds['name'], st_flds['sufdir'], st_flds['type'], 'FULL_STREET']
         with arcpy.da.UpdateCursor(working, fields) as cursor:
-            print("Looping through rows in roads FC ...")
+            logger.info("Looping through rows in roads FC ...")
             for row in cursor:
                 if row[0] is None: row[0] = ''
                 if row[1] is None: row[1] = ''
@@ -303,10 +316,10 @@ def calc_street_roads(working, st_flds):
                 row[4] = " ".join(parts)
                 row[4] = row[4].strip()
                 row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
-    #            print(f"New value for {fields[4]} is: {row[4]}")
+    #            logger.info(f"New value for {fields[4]} is: {row[4]}")
                 update_count += 1
                 cursor.updateRow(row)
-    print(f"Total count of updates: {update_count}")
+    logger.info(f"Total count of updates: {update_count}")
             
             
 def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
@@ -328,47 +341,47 @@ def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
     # Create table name (in memory) for neartable
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
-    print("Generating near table ...")
+    logger.info("Generating near table ...")
     near_start_time = time.time()
     arcpy.GenerateNearTable_analysis (pts, streets, neartable, '800 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 10, 'GEODESIC')
-    print("Time elapsed generating near table: {:.2f}s".format(time.time() - near_start_time))
-    print(f"Number of rows in near table: {arcpy.GetCount_management(neartable)}")
+    logger.info("Time elapsed generating near table: {:.2f}s".format(time.time() - near_start_time))
+    logger.info(f"Number of rows in near table: {arcpy.GetCount_management(neartable)}")
     
     # Convert neartable to pandas dataframe
     neartable_arr = arcpy.da.TableToNumPyArray(neartable, '*')
     near_df = pd.DataFrame(data = neartable_arr)
-    print(near_df.head(5).to_string())
+    logger.info(near_df.head(5).to_string())
     
     # Convert address points to pandas dataframe
     keep_addpt_fields = ['OBJECTID', add_flds['addnum'], 'full_street', 'Notes']
     addpts_arr = arcpy.da.FeatureClassToNumPyArray(pts, keep_addpt_fields)
     addpts_df = pd.DataFrame(data = addpts_arr)
-    print(addpts_df.head(5).to_string())
+    logger.info(addpts_df.head(5).to_string())
     
     # Convert roads to pandas dataframe
     keep_street_fields = ['OBJECTID', st_flds['l_f_add'], st_flds['l_t_add'],
                           st_flds['r_f_add'], st_flds['r_t_add'], 'FULL_STREET']
     streets_arr = arcpy.da.FeatureClassToNumPyArray(streets, keep_street_fields)
     streets_df = pd.DataFrame(data = streets_arr)
-    print(streets_df.head(5).to_string())
+    logger.info(streets_df.head(5).to_string())
     
     # Join address points to near table
     join1_df = near_df.join(addpts_df.set_index('OBJECTID'), on='IN_FID')
-    print(join1_df.head(5).to_string())
+    logger.info(join1_df.head(5).to_string())
     join1_path = os.path.join(work_dir, data_name + f'_neartable_{today}_join1.csv')
     # join1_df.to_csv(join1_path)
     
     # Join streets to near table
     join2_df = join1_df.join(streets_df.set_index('OBJECTID'), on='NEAR_FID')
-    print(join2_df.head(5).to_string())
+    logger.info(join2_df.head(5).to_string())
     join2_path = os.path.join(work_dir, data_name + f'_neartable_{today}_join2.csv')
     # join2_df.to_csv(join2_path)
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
-    print("Starting logic checks ...")
+    logger.info("Starting logic checks ...")
     logic_start_time = time.time()
     near_df_updated = join2_df.progress_apply(logic_checks, axis=1, args=(add_flds, st_flds))
-    print("Time elapsed in 'logic checks': {:.2f}s".format(time.time() - logic_start_time))
+    logger.info("Time elapsed in 'logic checks': {:.2f}s".format(time.time() - logic_start_time))
     path = os.path.join(work_dir, data_name + f'_neartable_{today}_updated.csv')
     near_df_updated.to_csv(path)
     
@@ -425,7 +438,7 @@ def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
     # sure the proper fields are pulled and updated
     fields = ['Notes', 'Notes_near']
     with arcpy.da.UpdateCursor(pts + "_final", fields) as cursor:
-        print(f"Looping through rows in {os.path.basename(pts) + '_final'} to update 'Notes' field ...")
+        logger.info(f"Looping through rows in {os.path.basename(pts) + '_final'} to update 'Notes' field ...")
         for row in cursor:
             # Only update 'Notes' field if joined 'Near_notes' not null
             if row[1] is not None:
@@ -438,7 +451,7 @@ def check_nearby_roads(pts, add_flds, streets, st_flds, gdb):
     arcpy.Delete_management('in_memory\\near_table')
     os.remove(join_path)    
     
-    print("Time elapsed in 'check_nearby_roads' function: {:.2f}s".format(time.time() - func_start_time))
+    logger.info("Time elapsed in 'check_nearby_roads' function: {:.2f}s".format(time.time() - func_start_time))
     
     
 def logic_checks(row, a_flds, s_flds):
@@ -491,14 +504,14 @@ def fix_nulls(streets, st_flds):
     update_count = 0
     fields = [st_flds['l_f_add'], st_flds['l_t_add'], st_flds['r_f_add'], st_flds['r_t_add']]
     with arcpy.da.UpdateCursor(streets, fields) as update_cursor:
-        print("Converting NULLs to 0s ...")
+        logger.info("Converting NULLs to 0s ...")
         for row in update_cursor:
             for i in np.arange(len(fields)):
                 if row[i] == None or row[i] in ('', ' '):
                     row[i] = 0
                     update_count += 1
             update_cursor.updateRow(row)
-    print(f"Total count of NULLs to 0: {update_count}")
+    logger.info(f"Total count of NULLs to 0: {update_count}")
 
 #####################
 # Start Main Script #
@@ -509,17 +522,12 @@ fips = county_fips[county]
 # Set up variables for later in the script 
 if fulladd_field:
     address_parts = False
-    print('Using full address field ...')
+    logger.info('Using full address field ...')
 else:
     address_parts = True
-    print('Using address field components ...')
+    logger.info('Using address field components ...')
 
-print(f'Using address component fields: {address_parts}')
-
-# Create new directory within root_dir to store geodatabase and CSVs
-work_dir = os.path.join(root_dir, f'{data_name}_{today}')
-if os.path.isdir(work_dir) == False:
-    os.mkdir(work_dir)
+logger.info(f'Using address component fields: {address_parts}')
 
 # Create new working geodatabase and set environment variables
 gdb_name = f'{data_name}_gdb_{today}.gdb'
@@ -543,8 +551,8 @@ if from_sgid:
     if from_sgid == 'opensgid':
         addpt_fields = {k: v.lower() for k, v in addpt_fields.items()}
         street_fields = {k: v.lower() for k, v in street_fields.items()}
-        print(addpt_fields)
-        print(street_fields)
+        logger.info(addpt_fields)
+        logger.info(street_fields)
 else:
     working_addpts = copy_addpts(addpts, working_db)
     working_roads = copy_streets(streets, working_db)
@@ -563,10 +571,10 @@ check_nearby_roads(working_addpts, addpt_fields, working_roads, street_fields, w
 ############################
 #  Generate Plots & Stats  #
 ############################
-print("Generating a few plots and stats ...")
+logger.info("Generating a few plots and stats ...")
 
 # Plot histogram of Edit Distances
-print("Creating edit distance histogram ...")
+logger.info("Creating edit distance histogram ...")
 df = pd.read_csv(os.path.join(work_dir, data_name + f'_neartable_{today}_final.csv'))
 plt.figure(figsize=(6,4))
 plt.hist(df['edit_dist'], bins = np.arange(0, df['edit_dist'].max(), 1)-0.5, color='red', edgecolor='black')
@@ -579,8 +587,8 @@ plt.savefig(os.path.join(work_dir, 'addpt_edit_distances.png'))
 df['edit_dist'].max()
 
 # Plot bar chart of Notes column
-print("Creating notes bar chart ...")
-plt.figure(figsize=(6,4))
+logger.info("Creating notes bar chart ...")
+plt.figure(figsize=(6,8), constrained_layout=True)
 plt.hist(df['Notes'], color='lightblue', edgecolor='black')
 # plt.xticks(np.arange(0, df['Notes'].max(), 2))
 plt.xticks(rotation='vertical')
@@ -589,17 +597,18 @@ plt.xlabel('Category')
 plt.ylabel('Count')
 plt.savefig(os.path.join(work_dir, 'addpt_categories.png'))
 
-print('Stats by total count:')
-print(df.groupby('Notes').count()['edit_dist'])
-print('\n')
+logger.info('\n')
+logger.info('Stats by total count:')
+logger.info(df.groupby('Notes').count()['edit_dist'])
+logger.info('\n')
 
 # Print out percentages for each result in 'Notes'
 total_pts = df.shape[0]
-print('Stats by percentage:')
-print(df.groupby('Notes').count()['edit_dist'].apply(lambda x: 100 * x / float(total_pts)))
+logger.info('Stats by percentage:')
+logger.info(df.groupby('Notes').count()['edit_dist'].apply(lambda x: 100 * x / float(total_pts)))
 
-print('\n' + "Script shutting down ...")
+logger.info('\n' + "Script shutting down ...")
 # Stop timer and print end time in UTC
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-print(f"The script end time is {readable_end}")
-print("Time elapsed: {:.2f}s".format(time.time() - start_time))
+logger.info(f"The script end time is {readable_end}")
+logger.info("Time elapsed: {:.2f}s".format(time.time() - start_time))
