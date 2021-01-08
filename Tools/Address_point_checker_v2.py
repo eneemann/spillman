@@ -32,7 +32,7 @@ today = time.strftime("%Y%m%d")
 ###################
 
 # Provide name for dataset and working directory where output geodatabase will be located
-data_name = 'dag_test_2'
+data_name = 'carbon_opensgid_log'
 # root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
 root_dir = r'C:\Temp'
 
@@ -64,7 +64,7 @@ street_fields = {"predir": "PREDIR",
 # Set flags
 # Input full address field here in order to use it, otherwise components will be used
 fulladd_field = False
-# fulladd_field = 'ADDRESS'   # Example of using a full address field
+# fulladd_field = 'fulladd'   # Example of using a full address field
 
 # Set flag if data is coming from SGID
 # Use 'internal' for internal SGID, use 'opensgid' for Open SGID
@@ -73,7 +73,7 @@ fulladd_field = False
 from_sgid = 'opensgid'     # use for Open SGID
 
 # Provide the county to check (name in Title case), see county_fips dictionary
-county = 'Daggett'
+county = 'Carbon'
 
 
 #############
@@ -484,7 +484,21 @@ def logic_checks(row, a_flds, s_flds):
             row['goodnum'] = goodnum
     
     return row
-    
+
+# Function to fix nulls in street address range fields
+def fix_nulls(streets, st_flds):
+    # Loop through and convert nulls to 0s
+    update_count = 0
+    fields = [st_flds['l_f_add'], st_flds['l_t_add'], st_flds['r_f_add'], st_flds['r_t_add']]
+    with arcpy.da.UpdateCursor(streets, fields) as update_cursor:
+        print("Converting NULLs to 0s ...")
+        for row in update_cursor:
+            for i in np.arange(len(fields)):
+                if row[i] == None or row[i] in ('', ' '):
+                    row[i] = 0
+                    update_count += 1
+            update_cursor.updateRow(row)
+    print(f"Total count of NULLs to 0: {update_count}")
 
 #####################
 # Start Main Script #
@@ -542,6 +556,7 @@ else:
     calc_street_addpts_fulladd(working_addpts, fulladd_field)
         
 calc_street_roads(working_roads, street_fields)
+fix_nulls(working_roads, street_fields)
 check_nearby_roads(working_addpts, addpt_fields, working_roads, street_fields, working_db)
 
 
@@ -559,7 +574,6 @@ plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
 plt.title('Address/Street Edit Distance Histogram')
 plt.xlabel('Edit Distance')
 plt.ylabel('Count')
-# plt.show()
 plt.savefig(os.path.join(work_dir, 'addpt_edit_distances.png'))
 
 df['edit_dist'].max()
@@ -573,7 +587,6 @@ plt.xticks(rotation='vertical')
 plt.title('Address Point Categories')
 plt.xlabel('Category')
 plt.ylabel('Count')
-# plt.show()
 plt.savefig(os.path.join(work_dir, 'addpt_categories.png'))
 
 print('Stats by total count:')
