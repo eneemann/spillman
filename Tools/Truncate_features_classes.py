@@ -10,6 +10,7 @@ print("The script start time is {}".format(readable_start))
 database = r"C:\E911\TOC\aaa_empty_geovalidation_schema.gdb"
 env.workspace = database
 fclist = arcpy.ListFeatureClasses()
+fclist.sort()
 
 print(f'Truncating all tables in {database} ...')
 
