@@ -22,10 +22,10 @@ today = time.strftime("%Y%m%d")
 staging_db = r"C:\E911\TOC\TOC_Staging.gdb"
 TOC_db = r"C:\E911\TOC\TOC_Data_UTM.gdb"
 SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
-current_streets = os.path.join(staging_db, "TOC_Streets_updates_20200717")
+current_streets = os.path.join(staging_db, "TOC_Streets_updates_20210121")
 citycd = os.path.join(TOC_db, "TOC_CITYCD")
 sgid_roads = os.path.join(SGID, "SGID.TRANSPORTATION.Roads")
-roads_lyr = os.path.join(staging_db, 'SGID_roads_try2_20200717')
+# roads_lyr = os.path.join(staging_db, 'SGID_roads_try2_20200717')
 env.workspace = staging_db
 env.overwriteOutput = True
 
@@ -33,8 +33,8 @@ env.overwriteOutput = True
 # First make layer from relevant counties (Salt Lake, Utah, Tooele, Davis, Juab, Sanpete, Carbon, Wasatch, Summit, Morgan)
 export_roads = os.path.join(staging_db, "Roads_SGID_export_" + today)
 where_SGID = "COUNTY_L IN ('49035', '49049', '49011', '49045', '49023', '49039', '49007', '49051', '49043', '49029') OR COUNTY_R IN ('49035', '49049', '49011', '49045', '49023', '49039', '49007', '49051', '49043', '49029')"      # Washington County
-# arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr", where_SGID)
-arcpy.MakeFeatureLayer_management(roads_lyr, "sgid_roads_lyr")
+arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr", where_SGID)
+# arcpy.MakeFeatureLayer_management(roads_lyr, "sgid_roads_lyr")
 print("Selecting SGID roads to export by intersection with city codes ...")
 arcpy.SelectLayerByLocation_management("sgid_roads_lyr", "INTERSECT", citycd)
 
