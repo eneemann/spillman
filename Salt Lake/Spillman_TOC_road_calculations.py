@@ -18,7 +18,7 @@ print("The script start time is {}".format(readable_start))
 
 work_db = r"C:\E911\TOC\TOC_Staging.gdb"
 env.workspace = work_db
-fc_layer = "TOC_Streets_updates_20200717"    # Update to working streets fc
+fc_layer = "TOC_Streets_update_20210125"    # Update to working streets fc
 streets_fc = os.path.join(work_db, fc_layer)
 
 ###############
@@ -451,6 +451,7 @@ def strip_fields(streets):
 #  Call Functions Below  #
 ##########################
 # # Calc STREET from other fields
+blanks_to_nulls(streets_fc)
 calc_street(streets_fc)
 calc_salias1(streets_fc)
 calc_salias2(streets_fc)
@@ -459,7 +460,6 @@ highway_to_sr_us(streets_fc)
 calc_salias3(streets_fc)
 street_blank_to_null(streets_fc)
 calc_location(streets_fc)
-blanks_to_nulls(streets_fc)
 strip_fields(streets_fc)
 
 # Calc other fields from STREET
