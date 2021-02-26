@@ -20,7 +20,7 @@ print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 # stage_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
-commonplaces = os.path.join(stage_db, "StG_CP_update_20201102")
+commonplaces = os.path.join(stage_db, "StG_CP_update_20210219")
 env.workspace = stage_db
 
 
@@ -38,8 +38,8 @@ def calc_all_components_from_street(pts):
     # Use update cursor to calculate components from street field
     #            0           1           2           3           4
     fields = ['STREET', 'STREETNAME', 'PREDIR', 'STREETTYPE', 'SUFDIR']
-    # where_clause = "STREET IS NOT NULL AND STREETNAME IS NULL"
-    where_clause = "STREET IS NOT NULL"
+    where_clause = "STREET IS NOT NULL AND STREETNAME IS NULL"
+    # where_clause = "STREET IS NOT NULL"
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
