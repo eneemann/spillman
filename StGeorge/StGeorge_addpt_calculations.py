@@ -28,7 +28,7 @@ env.workspace = stage_db
 
 
 # # Optional selection to narrow down rows the calculations are performed on
-# arcpy.management.SelectLayerByAttribute(addpts, 'NEW_SELECTION', "StreetName IS NULL")
+arcpy.management.SelectLayerByAttribute(addpts, 'NEW_SELECTION', "StreetName IS NULL")
 
 
 unit_list = ['#', 'APT', 'BLDG', 'BSMT', 'CONDO', 'DEPT', 'FL', 'FRNT', 'HANGAR',
@@ -165,7 +165,7 @@ def calc_streettype_from_street(pts):
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            print(row[0])
+            # print(row[0])
 #            end = row[0].rsplit(' ', 1)[1]
             temp = row[0].rsplit(' ', 1)
             if len(temp) > 1:
@@ -320,10 +320,10 @@ def strip_fields(pts):
 #  Call Functions Below  #
 ##########################
 # calc_unit_info_from_fulladd(addpts)
-# calc_prefixdir_from_street(addpts)
-# calc_suffixdir_from_street(addpts)
-# calc_streettype_from_street(addpts)
-# calc_streetname_from_street(addpts)
+calc_prefixdir_from_street(addpts)
+calc_suffixdir_from_street(addpts)
+calc_streettype_from_street(addpts)
+calc_streetname_from_street(addpts)
 calc_street(addpts)
 calc_label(addpts)
 blanks_to_nulls(addpts)
@@ -334,4 +334,3 @@ print("Script shutting down ...")
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
-
