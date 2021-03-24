@@ -505,7 +505,7 @@ def populate_LS_ZONE(streets, zones_fc):
     for zone in zone_list:
         update_count = 0
         # Create layer for zone value
-        where_temp = "UHPLS = '{}'".format(zone)
+        where_temp = f"UHPLS = '{zone}'"
         print(where_temp)
         arcpy.MakeFeatureLayer_management(zones_fc, "zone_lyr", where_temp)
         # Select street segments that intersect zone
@@ -513,12 +513,12 @@ def populate_LS_ZONE(streets, zones_fc):
                                                "", "NEW_SELECTION")
         # Update LS_ZONE field to zone value
         with arcpy.da.UpdateCursor("streets_lyr", "LS_ZONE") as uCursor:
-            print("Calculating LS_ZONE to {} ...".format(zone))
+            print(f"Calculating LS_ZONE to {zone} ...")
             for row in uCursor:
                 row[0] = zone
                 update_count += 1
                 uCursor.updateRow(row)
-            print("Number of updates to {0} is: {1}".format(zone, update_count))
+            print(f"Number of updates to {zone} is: {update_count}")
         # Delete temporary zone layer
         arcpy.Delete_management("zone_lyr")
 
