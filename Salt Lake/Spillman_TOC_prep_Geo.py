@@ -597,8 +597,8 @@ milepost_fields = ["RFName", "RFType", "CITYCD", "BEGNUMB", "STREET"]
 # Spillman Shapefiles Export
 export_shapefiles_select_fields("TOC_Streets", out_folder_spillman, street_fields)
 export_shapefiles_select_fields_rename("CityCodes", out_folder_spillman, citycd_fields, 'TOC_CITYCD', '')
-export_shapefiles_select_fields_rename("LawZones", out_folder_spillman, lzone_fields, 'TOC_Law_Zones', '')
-export_shapefiles_select_fields_rename("FireZones", out_folder_spillman, fzone_fields, 'TOC_Fire_Zones', '')
+# export_shapefiles_select_fields_rename("LawZones", out_folder_spillman, lzone_fields, 'TOC_Law_Zones', '')
+# export_shapefiles_select_fields_rename("FireZones", out_folder_spillman, fzone_fields, 'TOC_Fire_Zones', '')
 export_shapefiles_select_fields_rename("MiscZones", out_folder_spillman, mz_fields, 'TOC_MZ', '')
 
 mp_query = """RFType = 'MILEPOST'"""
