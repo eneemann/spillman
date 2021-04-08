@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\Box Elder CO\BoxElder_Staging.gdb"
-addpts = os.path.join(stage_db, "BoxElder_AddressPoints_update_20200409")
+addpts = os.path.join(stage_db, "AddPt_update_20210406")
 env.workspace = stage_db
 
 ###############
@@ -144,7 +144,7 @@ def calc_STREETNAME_from_street(pts):
 def blanks_to_nulls(pts):
     update_count = 0
     # Use update cursor to convert blanks to null (None) for each field
-    flist = ['OBJECTID', 'PREDIR', 'STREETTYPE', 'SUFDIR', 'UNIT_TYPE', 'UNIT_ID', 'LABEL', 'CITYCD', 'STREET']
+    flist = ['OBJECTID', 'PREDIR', 'STREETNAME', 'STREETTYPE', 'SUFDIR', 'UNIT_TYPE', 'UNIT_ID', 'LABEL', 'CITYCD', 'STREET']
     fields = arcpy.ListFields(pts)
 
     field_list = []
