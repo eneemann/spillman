@@ -31,7 +31,7 @@ env.overwriteOutput = True
 boxelder_streets = os.path.join(boxelder_db, "BoxElder_Streets")
 #boxelder_addpts = "AddressPoints_TEST_current"
 #current_addpts = os.path.join(staging_db, boxelder_addpts)
-boxelder_addpts = "BoxElder_AddressPoints_update_20201008"    # Point to current addpts in staging_db
+boxelder_addpts = "AddPt_update_20210406"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, boxelder_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -310,14 +310,14 @@ def logic_checks(row):
     # Check for likely predir/sufdir errors: road nearly matches, range is good
     # Replace needed in logic to catch potential range in address number (e.g., '188-194')
     if row['Notes'] == 'no near st: possible typo predir or sufdir error':
-        if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-                int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        if (int(row['AddNum'].replace('-', ' ').split()[0]) >= int(row['L_F_ADD']) and int(row['AddNum'].replace('-', ' ').split()[0]) <= int(row['L_T_ADD'])) or (
+                int(row['AddNum'].replace('-', ' ').split()[0]) >= int(row['R_F_ADD']) and int(row['AddNum'].replace('-', ' ').split()[0]) <= int(row['R_T_ADD'])):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
             row['goodnum'] = goodnum
     # Check for a good house number regardless of street name match or condition
-    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-            int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= int(row['L_F_ADD']) and int(row['AddNum'].replace('-', ' ').split()[0]) <= int(row['L_T_ADD'])) or (
+            int(row['AddNum'].replace('-', ' ').split()[0]) >= int(row['R_F_ADD']) and int(row['AddNum'].replace('-', ' ').split()[0]) <= int(row['R_T_ADD'])):
         goodnum = True
         row['goodnum'] = goodnum
     return row
