@@ -32,7 +32,7 @@ env.workspace = beaver_db
 env.overwriteOutput = True
 
 beaver_streets = os.path.join(beaver_db, "Streets")
-beaver_addpts = "AddressPoints_update_20201021"
+beaver_addpts = "AddressPoints_update_20210411"
 current_addpts = os.path.join(staging_db, beaver_addpts)
 
 today = time.strftime("%Y%m%d")

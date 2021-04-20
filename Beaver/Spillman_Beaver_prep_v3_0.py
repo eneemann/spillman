@@ -624,7 +624,7 @@ vela_to_export = ["Ems_zone", "Fire_zone", "Law_zone", "Communities"]
 
 # Spillman Shapefiles Export
 export_shapefiles_select_fields("AddressPoints", out_folder_spillman, addpt_fields)
-export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
+# export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
 # export_shapefiles_select_fields("CommonPlaces_Exits", out_folder_spillman, exit_fields)
 # export_shapefiles_select_fields("CommonPlaces_MP", out_folder_spillman, milepost_fields)
 # export_shapefiles_select_fields("CommonPlaces_RRMP", out_folder_spillman, rrmp_fields)
