@@ -18,7 +18,7 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 env.workspace = staging_db
-fc_layer = "StG_Streets_update_20210219"    # Update to working streets fc
+fc_layer = "StG_Streets_update_20210506"    # Update to working streets fc
 # fc_layer = "StG_Streets_schema_temp"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
@@ -30,7 +30,7 @@ streets_fc_utm = os.path.join(staging_db, fc_layer)
 def blanks_to_nulls(streets):
     update_count = 0
     # Use update cursor to convert blanks to null (None) for each field
-    flist = ['OBJECTID', 'PREDIR', 'STREETNAME', 'STREETTYPE', 'SUFDIR', 'ALIAS1', 'ALIAS1TYPE', 'ALIAS2', 'ALIAS2TYPE',
+    flist = ['OBJECTID', 'PREDIR', 'FULLNAME', 'STREETNAME', 'STREETTYPE', 'SUFDIR', 'ALIAS1', 'ALIAS1TYPE', 'ALIAS2', 'ALIAS2TYPE',
               'ACSALIAS', 'ACSNAME', 'ACSSUF', 'SALIAS1', 'SALIAS2', 'SALIAS3', 'SALIAS4', 'HWYNAME', 'DOT_RTNAME',
               'DOT_RTPART']
     fields = arcpy.ListFields(streets)
