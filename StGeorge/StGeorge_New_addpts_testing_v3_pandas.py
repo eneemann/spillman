@@ -28,34 +28,22 @@ env.workspace = stgeorge_db
 env.overwriteOutput = True
 
 stgeorge_streets = os.path.join(stgeorge_db, "StGeorge_Dispatch_Streets")
-stgeorge_addpts = "StG_AddPts_update_20210219"    # Point to current addpts in staging_db
+stgeorge_addpts = "StG_AddPts_update_20210506"    # Point to current addpts in staging_db
 #stgeorge_addpts = "AddressPoints_update_20190904"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, stgeorge_addpts)
 
 today = time.strftime("%Y%m%d")
 new_addpts = "AddressPoints_SGID_export_" + today
-#new_addpts = "Addpts_more_to_test_20190906"
-# new_addpts = "AddressPoints_SGID_export_20200825"    # Use if SGID data was already exported
-possible_addpts = os.path.join(staging_db, new_addpts)
 
-# Copy current address points into a working FC
-working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
-arcpy.CopyFeatures_management(possible_addpts, working_addpts)
-
-# Add field to working FC for notes
-arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
-arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 ###############
 #  Functions  #
 ###############
 
 
-def get_SGID_addpts(out_db):
-    today = time.strftime("%Y%m%d")
+def get_SGID_addpts(out_db, new_pts):
     SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
     sgid_pts = os.path.join(SGID, "SGID.LOCATION.AddressPoints")
-    new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
         arcpy.Delete_management(new_pts)
     where_SGID = "CountyID = '49053'"   # Washington County
@@ -323,7 +311,19 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-# get_SGID_addpts(staging_db)
+get_SGID_addpts(staging_db, new_addpts)
+
+possible_addpts = os.path.join(staging_db, new_addpts)
+
+# Copy current address points into a working FC
+working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
+arcpy.CopyFeatures_management(possible_addpts, working_addpts)
+
+# Add field to working FC for notes
+arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
+arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
+
+
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
