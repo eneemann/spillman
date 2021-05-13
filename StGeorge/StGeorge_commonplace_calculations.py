@@ -20,7 +20,7 @@ print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 # stage_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
-commonplaces = os.path.join(stage_db, "StG_CP_update_20210219")
+commonplaces = os.path.join(stage_db, "StG_CP_update_20210506")
 env.workspace = stage_db
 
 
