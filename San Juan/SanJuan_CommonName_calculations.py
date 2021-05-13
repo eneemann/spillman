@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 212 15:30:29 2020
+Created on Fri Apr 30 15:30:29 2021
 
 @author: eneemann
 
-EMN: Initial script to calculate commonplace fields for Weber, built from St George
+EMN: Initial script to calculate commonplace fields for San Juan, built from Weber
 """
 
 import arcpy
@@ -18,8 +18,8 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-stage_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
-commonplaces = os.path.join(stage_db, "CommonNames_update_20201023")
+stage_db = r"C:\E911\San Juan\SJ_geovalidation_schema_staging.gdb"
+commonplaces = os.path.join(stage_db, "Monticello_CN_table_20210430")
 env.workspace = stage_db
 
 
