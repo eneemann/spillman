@@ -312,7 +312,6 @@ def logic_checks(row):
 ##########################
 
 get_SGID_addpts(staging_db, new_addpts)
-
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
