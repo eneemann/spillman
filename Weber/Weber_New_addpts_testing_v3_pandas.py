@@ -4,7 +4,6 @@ Created on Mon Mar 5 08:39:07 2019
 @author: eneemann
 Script to detect possible address points by comparing new data to current data
 
-Need to call get_SGID_addpts function first, then comment out the call and run the script
 """
 
 import arcpy
@@ -32,17 +31,7 @@ current_addpts = os.path.join(staging_db, weber_addpts)
 
 today = time.strftime("%Y%m%d")
 new_addpts = "AddressPoints_SGID_export_" + today
-#new_addpts = "AddressPoints_SGID_export_20200116"     # Use if SGID data was already exported
-possible_addpts = os.path.join(staging_db, new_addpts)
 
-
-# Copy current address points into a working FC
-working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
-arcpy.CopyFeatures_management(possible_addpts, working_addpts)
-
-# Add field to working FC for notes
-arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
-arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 ###############
 #  Functions  #
@@ -323,9 +312,18 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-#section_time = time.time()
-#get_SGID_addpts(staging_db)
-#print("Time elapsed in 'get_SGID_addpts' function: {:.2f}s".format(time.time() - section_time))
+section_time = time.time()
+get_SGID_addpts(staging_db)
+print("Time elapsed in 'get_SGID_addpts' function: {:.2f}s".format(time.time() - section_time))
+possible_addpts = os.path.join(staging_db, new_addpts)
+
+# Copy current address points into a working FC
+working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
+arcpy.CopyFeatures_management(possible_addpts, working_addpts)
+
+# Add field to working FC for notes
+arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
+arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 
 calc_street(working_addpts)
