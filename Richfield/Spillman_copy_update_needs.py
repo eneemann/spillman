@@ -21,7 +21,7 @@ wgs84_db = r"C:\E911\RichfieldComCtr\richfield_comctr_WGS84.gdb"
 
 # Get list of files to project and copy to staging GDB
 FCs_to_project = ["address_points", "citycodes", "common_places", "fire_zones",
-                  "streets", "MZ_Zones", "municipalities"]
+                  "law_zones", "ems_zones", "streets", "MZ_Zones"]
 
 # FCs_to_project = ["address_points", "citycodes",
 #                   "common_places", "ems_zones",
