@@ -28,25 +28,12 @@ env.overwriteOutput = True
 
 rich_streets = os.path.join(rich_db, "streets")
 #rich_addpts = "AddressPoints_TEST_current"
-#current_addpts = os.path.join(staging_db, rich_addpts)
-rich_addpts = "address_points_update_20191119"    # Point to current addpts in staging_db
+rich_addpts = "address_points_update_20210518"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, rich_addpts)
 
 today = time.strftime("%Y%m%d")
-#new_addpts = "AddressPoints_SGID_export_" + today
-new_addpts = "AddressPoints_SGID_export_20190522"    # Use if SGID data was already exported
-possible_addpts = os.path.join(staging_db, new_addpts)
+new_addpts = "AddressPoints_SGID_export_" + today
 
-# SGID_addpts = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
-# SGID_addpts_wgs84 = os.path.join(staging_db, "SGID_addpts_wgs84")
-
-# Copy current address points into a working FC
-working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
-arcpy.CopyFeatures_management(possible_addpts, working_addpts)
-
-# Add field to working FC for notes
-arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
-arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 ###############
 #  Functions  #
@@ -144,7 +131,7 @@ def mark_near_addpts(current, working):
             
 def check_nearby_roads(working, streets, gdb):
     """
-    Function performs near table analysis to find 5 closest roads w/i 100m of each address point.
+    Function performs near table analysis to find 10 closest roads w/i 800m of each address point.
     It then uses pandas dataframes to join address point and street attributes to near table.
     Calls 'logic_checks' function to compare address point and street attributes.
     This searches for address point street names that match near street segment names.
@@ -169,7 +156,7 @@ def check_nearby_roads(working, streets, gdb):
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
     print("Generating near table ...")
-    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '100 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 5, 'GEODESIC')
+    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '800 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 10, 'GEODESIC')
     print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(neartable)))
     
     # Convert neartable to pandas dataframe
@@ -307,7 +294,18 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-#get_SGID_addpts(staging_db)
+get_SGID_addpts(staging_db)
+possible_addpts = os.path.join(staging_db, new_addpts)
+
+# Copy current address points into a working FC
+working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
+arcpy.CopyFeatures_management(possible_addpts, working_addpts)
+
+# Add field to working FC for notes
+arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
+arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
+
+
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
@@ -336,3 +334,16 @@ plt.ylabel('Count')
 plt.show()
 
 df['edit_dist'].max()
+
+# Plot bar chart of Notes column
+print("Creating notes bar chart ...")
+plt.figure(figsize=(6,4))
+plt.hist(df['Notes'], color='lightblue', edgecolor='black')
+# plt.xticks(np.arange(0, df['Notes'].max(), 2))
+plt.xticks(rotation='vertical')
+plt.title('Address Point Categories')
+plt.xlabel('Category')
+plt.ylabel('Count')
+plt.show()
+
+df.groupby('Notes').count()
