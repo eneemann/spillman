@@ -272,6 +272,7 @@ def logic_checks(row):
         row['Notes'] = 'good address point'
     elif goodstreet and not goodnum:
         row['Notes'] = 'near street found, but address range mismatch'
+    elif not goodstreet:
         row['Notes'] = 'near street not found'
     row['goodstreet'] = goodstreet
     row['goodnum'] = goodnum
@@ -286,7 +287,12 @@ def logic_checks(row):
                 int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
             goodnum = True
             row['Notes'] = 'no near st: likely predir or sufdir error'
-            row['goodnum'] = goodnum      
+            row['goodnum'] = goodnum
+    # Check for a good house number regardless of street name match or condition
+    if (int(row['AddNum'].replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
+            int(row['AddNum'].replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(row['AddNum'].replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        goodnum = True
+        row['goodnum'] = goodnum
     return row
     
 
