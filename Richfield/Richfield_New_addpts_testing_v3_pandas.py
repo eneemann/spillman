@@ -207,7 +207,9 @@ def check_nearby_roads(working, streets, gdb):
     
     # Combine good and bad street dataframes, sort so good streets are at the top, then remove duplicates of address points
     # If a good streets are found, nearest one will be used; otherwise nearest bad street will be used ("near street not found")
-    filtered_df = goodstreets_df.append(badstreets_df).sort_values('goodstreet', ascending=False).drop_duplicates('IN_FID')
+    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'],
+                                       ascending=[True,False, False, True, True])
+    filtered_df.to_csv(r'C:\E911\RichfieldComCtr\Addpts_working_folder\rich_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
     final_df = filtered_df.sort_values('IN_FID')
     path = r'C:\E911\RichfieldComCtr\Addpts_working_folder\rich_neartable_final.csv'
