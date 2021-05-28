@@ -132,7 +132,7 @@ def mark_near_addpts(current, working):
             
 def check_nearby_roads(working, streets, gdb):
     """
-    Function performs near table analysis to find 5 closest roads w/i 100m of each address point.
+    Function performs near table analysis to find 10 closest roads w/i 800m of each address point.
     It then uses pandas dataframes to join address point and street attributes to near table.
     Calls 'logic_checks' function to compare address point and street attributes.
     This searches for address point street names that match near street segment names.
