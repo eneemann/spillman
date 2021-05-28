@@ -36,11 +36,17 @@ if arcpy.Exists(roads_buff):
 print("Buffering {} ...".format(current_streets))
 arcpy.Buffer_analysis(current_streets, roads_buff, "10 Meters", "FULL", "ROUND", "ALL")
 
-# Select and export roads with centroids outside of the current streets buffer
-fips_list = ('49015', '49017', '49023', '49025', '49027', '49031', '49039', '49041', '49055')
-where_SGID = f"COUNTY_L IN {fips_list} OR COUNTY_R IN {fips_list}"      # All Relevant counties for Richfield
-print(where_SGID)
-arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr", where_SGID)
+## Select and export roads with centroids outside of the current streets buffer
+#fips_list = ('49015', '49017', '49023', '49025', '49027', '49031', '49039', '49041', '49055')
+#where_SGID = f"COUNTY_L IN {fips_list} OR COUNTY_R IN {fips_list}"      # All Relevant counties for Richfield
+#print(where_SGID)
+
+# Use these two lines for checking against local data
+sgid_roads = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\Sevier_Rds_Apr2021'
+arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr")
+
+
+#arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr", where_SGID)
 print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_roads_lyr")))
 arcpy.SelectLayerByLocation_management("sgid_roads_lyr", "HAVE_THEIR_CENTER_IN", roads_buff,
                                                      "", "", "INVERT")

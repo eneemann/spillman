@@ -4,7 +4,7 @@ Created on Wed Oct 16 08:27:29 2019
 
 @author: eneemann
 
-EMN: Initial scrip to calculate address point fields for Richfield
+EMN: Initial script to calculate address point fields for Richfield
 """
 
 import arcpy
@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
-addpts = os.path.join(stage_db, "address_points_update_20201117")
+addpts = os.path.join(stage_db, "address_points_update_20210518")
 env.workspace = stage_db
 
 # Use to create a selection to run functions on
@@ -135,7 +135,7 @@ def calc_streetname_from_street(pts):
 def blanks_to_nulls(pts):
     update_count = 0
     # Use update cursor to convert blanks to null (None) for each field
-    flist = ['OBJECTID', 'PrefixDir', 'StreetType', 'SuffixDir', 'UnitType', 'UnitID', 'LABEL', 'CITYCD', 'STREET','COMM']
+    flist = ['OBJECTID', 'PrefixDir', 'StreetType', 'SuffixDir', 'UnitType', 'UnitID', 'City', 'LABEL', 'CITYCD', 'STREET','COMM']
     fields = arcpy.ListFields(pts)
 
     field_list = []
@@ -235,14 +235,14 @@ def strip_fields(pts):
 ##########################
 #  Call Functions Below  #
 ##########################
-calc_unit_from_fulladd(addpts)
-calc_prefixdir_from_street(addpts)
-calc_suffixdir_from_street(addpts)
-calc_streettype_from_street(addpts)
-calc_streetname_from_street(addpts)
+#calc_unit_from_fulladd(addpts)
+#calc_prefixdir_from_street(addpts)
+#calc_suffixdir_from_street(addpts)
+#calc_streettype_from_street(addpts)
+#calc_streetname_from_street(addpts)
 blanks_to_nulls(addpts)
-calc_street(addpts)
-calc_label(addpts)
+#calc_street(addpts)
+#calc_label(addpts)
 strip_fields(addpts)
 
 # Use below to call on a selection
