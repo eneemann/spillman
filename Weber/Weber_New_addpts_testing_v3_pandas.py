@@ -26,7 +26,7 @@ env.workspace = weber_db
 env.overwriteOutput = True
 
 weber_streets = os.path.join(weber_db, "Streets_Map")
-weber_addpts = "AddressPoints_SGB_20200116"    # Point to current addpts in staging_db
+weber_addpts = "AddressPoints_SGB_20210601"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, weber_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -37,11 +37,9 @@ new_addpts = "AddressPoints_SGID_export_" + today
 #  Functions  #
 ###############
 
-def get_SGID_addpts(out_db):
-    today = time.strftime("%Y%m%d")
+def get_SGID_addpts(out_db, new_pts):
     SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
     sgid_pts = os.path.join(SGID, "SGID.LOCATION.AddressPoints")
-    new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
         arcpy.Delete_management(new_pts)
     where_SGID = "CountyID IN ('49057', '49029')"   # Weber, Morgan County
@@ -70,9 +68,9 @@ def calc_street(working):
     print("Total count of updates to {0} field: {1}".format(fields[4], update_count))
 
 
-def remove_duplicates(current, possible, working):
+def remove_duplicates(current, working):
     count = 0
-    # Need to make a layer from possible address points feature class here
+    # Need to make a layer from working address points feature class here
     arcpy.MakeFeatureLayer_management(working, "working_lyr")
 
     # Create list of features in the current Weber address points feature class
@@ -84,7 +82,8 @@ def remove_duplicates(current, possible, working):
             current_dict.setdefault(row[0])
     print("Total current address points: {}".format(str(len(current_dict))))
 
-    # Loop through possible layer and select features that aren't in current Weber add pts list (avoid duplicates)
+    # Loop through working layer and select features that aren't in current Weber add pts list (avoid duplicates)
+    # Export these features out to a non-duplicates FC
     fields = ['FullAdd', 'Notes']
     with arcpy.da.UpdateCursor("working_lyr", fields) as cursor:
         print("Looping through rows in {} ...".format("working_lyr"))
@@ -95,7 +94,7 @@ def remove_duplicates(current, possible, working):
             else:
                 row[1] = 'name duplicate'
             cursor.updateRow(row)
-            if count % 10000 == 0:
+            if count % 1000 == 0:
                 print("'remove_duplicates' function has completed row {}".format(count))
     where_final = "Notes = 'not name duplicate'"
     final_selection = arcpy.SelectLayerByAttribute_management("working_lyr", "NEW_SELECTION", where_final)
@@ -103,15 +102,15 @@ def remove_duplicates(current, possible, working):
           .format(arcpy.GetCount_management(final_selection)))
 
     # Write selected features out to a new FC
-    non_duplicates = os.path.join(staging_db, "zzz_AddPts_NW_TEST_nodup1_" + today)
+    non_duplicates = os.path.join(staging_db, "zzz_AddPts_TEST_nodup_" + today)
     print("Writing out non-duplicates to: {}".format(non_duplicates))
     arcpy.CopyFeatures_management("working_lyr", non_duplicates)
     return non_duplicates
 
 
-def mark_near_addpts(current, possible, working):
+def mark_near_addpts(current, working):
     where_clause = "Notes <> 'name duplicate'"
-    # Need to make a layer from possible address points feature class here
+    # Need to make a layer from working address points feature class here
     arcpy.MakeFeatureLayer_management(working, "working_lyr_2", where_clause)
     print("Working layer feature count: {}".format(arcpy.GetCount_management("working_lyr_2")))
     
@@ -119,7 +118,7 @@ def mark_near_addpts(current, possible, working):
     fields = ['Notes']
     arcpy.SelectLayerByLocation_management("working_lyr_2", "WITHIN_A_DISTANCE_GEODESIC", current,
                                                          "5 meters", "NEW_SELECTION")
-    
+    # Add note that these points are likely duplicates
     with arcpy.da.UpdateCursor("working_lyr_2", fields) as cursor:
         print("Looping through rows in {} ...".format("working_lyr_2"))
         for row in cursor:
@@ -154,7 +153,7 @@ def check_nearby_roads(working, streets, gdb):
     neartable = 'in_memory\\near_table'
     # Perform near table analysis
     print("Generating near table ...")
-    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '100 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 5, 'GEODESIC')
+    arcpy.GenerateNearTable_analysis ("working_nodups", streets, neartable, '800 Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 10, 'GEODESIC')
     print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(neartable)))
     
     # Convert neartable to pandas dataframe
@@ -312,9 +311,7 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-section_time = time.time()
-get_SGID_addpts(staging_db)
-print("Time elapsed in 'get_SGID_addpts' function: {:.2f}s".format(time.time() - section_time))
+get_SGID_addpts(staging_db, new_addpts)
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
@@ -327,9 +324,9 @@ arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 
 calc_street(working_addpts)
-working_nodups = remove_duplicates(current_addpts, possible_addpts, working_addpts)
+working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
-mark_near_addpts(current_addpts, possible_addpts, working_addpts)
+mark_near_addpts(current_addpts, working_addpts)
 
 arcpy.Delete_management("working_nodups")
 arcpy.Delete_management('in_memory\\near_table')
@@ -342,7 +339,7 @@ readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 
-
+# Plot histogram of Edit Distances
 print("Creating edit distance histogram ...")
 df = pd.read_csv(r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_final.csv')
 plt.figure(figsize=(6,4))
@@ -352,3 +349,18 @@ plt.title('Address/Street Edit Distance Histogram')
 plt.xlabel('Edit Distance')
 plt.ylabel('Count')
 plt.show()
+
+df['edit_dist'].max()
+
+# Plot bar chart of Notes column
+print("Creating notes bar chart ...")
+plt.figure(figsize=(6,4))
+plt.hist(df['Notes'], color='lightblue', edgecolor='black')
+# plt.xticks(np.arange(0, df['Notes'].max(), 2))
+plt.xticks(rotation='vertical')
+plt.title('Address Point Categories')
+plt.xlabel('Category')
+plt.ylabel('Count')
+plt.show()
+
+df.groupby('Notes').count()
