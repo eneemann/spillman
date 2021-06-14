@@ -20,7 +20,7 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\JuabCo\Juab_staging.gdb"
 SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
-current_streets = os.path.join(staging_db, "Streets_update_20201016")
+current_streets = os.path.join(staging_db, "Streets_update_20210608")
 env.workspace = staging_db
 sgid_roads = os.path.join(SGID, "SGID.TRANSPORTATION.Roads")
 env.overwriteOutput = True
