@@ -624,12 +624,12 @@ milepost_fields = ["Alias", "CITYCD", "ADDRESS"]
 
 # Spillman Shapefiles Export
 export_shapefiles_select_fields("TOC_Streets", out_folder_spillman, street_fields)
-export_shapefiles_select_fields("TOC_CITYCD", out_folder_spillman, citycd_fields)
-export_shapefiles_select_fields("TOC_Law_Zones", out_folder_spillman, lzone_fields)
-export_shapefiles_select_fields("TOC_Fire_Zones", out_folder_spillman, fzone_fields)
-export_shapefiles_select_fields("TOC_MZ", out_folder_spillman, mz_fields)
-export_shapefiles_select_fields_rename("TOC_CP_MP_FC", out_folder_spillman, milepost_fields, "TOC_Milemarkers")
-export_shapefiles_select_fields("RampSigns", out_folder_spillman, ramp_fields)
+#export_shapefiles_select_fields("TOC_CITYCD", out_folder_spillman, citycd_fields)
+#export_shapefiles_select_fields("TOC_Law_Zones", out_folder_spillman, lzone_fields)
+#export_shapefiles_select_fields("TOC_Fire_Zones", out_folder_spillman, fzone_fields)
+#export_shapefiles_select_fields("TOC_MZ", out_folder_spillman, mz_fields)
+#export_shapefiles_select_fields_rename("TOC_CP_MP_FC", out_folder_spillman, milepost_fields, "TOC_Milemarkers")
+#export_shapefiles_select_fields("RampSigns", out_folder_spillman, ramp_fields)
 
 
 # Shapefiles that aren't needed for TOC PSAP, but are available:
