@@ -32,7 +32,7 @@ tqdm.pandas()
 ###################
 
 # Provide name for dataset and working directory where output geodatabase will be located
-data_name = 'SJ_opensgid'
+data_name = 'Duchesne_opensgid'
 # root_dir = r'C:\E911\RichfieldComCtr\Addpts_working_folder'
 root_dir = r'C:\Temp'
 
@@ -86,7 +86,7 @@ fulladd_field = False
 from_sgid = 'opensgid'     # use for Open SGID
 
 # Provide the county to check (name in Title case), see county_fips dictionary
-county = 'San Juan'
+county = 'Duchesne'
 
 
 #############
