@@ -8,7 +8,6 @@ Script to backup 911 data to G Drive
 import os
 import time
 import shutil
-from zipfile import ZipFile
 from os.path import basename
 
 # Start timer and print start time in UTC
@@ -65,8 +64,6 @@ WGS84 = spillman_dict[f'{project}']['wgs84']
 today_dir = os.path.join(temp, f'{project}_asof_{today}')
 if not os.path.isdir(today_dir):
     os.mkdir(today_dir)
-
-base_dir = os.path.dirname(spillman_dict[f'{project}']['utm'])
 
 print(f'Zipping {UTM} ...')
 zipped_utm = os.path.join(today_dir, basename(UTM))
