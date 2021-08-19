@@ -20,8 +20,8 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\MillardCo\Millard_Staging.gdb"
 local_db = r"C:\E911\MillardCo\Britt_data_20200908\Millard_20200908.gdb"
-current_streets = os.path.join(staging_db, "Streets_20200914_update")
-local_roads = os.path.join(staging_db, "Britt_roads_20200914")
+current_streets = os.path.join(staging_db, "Millard_Streets_update_20210819")
+local_roads = os.path.join(staging_db, "Britt_Millard_Roads_July2021")
 env.workspace = staging_db
 env.overwriteOutput = True
 
