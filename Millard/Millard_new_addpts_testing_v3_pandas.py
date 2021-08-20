@@ -25,12 +25,12 @@ env.workspace = millard_db
 env.overwriteOutput = True
 
 millard_streets = os.path.join(millard_db, "Streets")
-millard_addpts = "AddressPoints_20200915_update"
+millard_addpts = "Millard_AddressPoints_update_20210819"
 current_addpts = os.path.join(staging_db, millard_addpts)
 
 today = time.strftime("%Y%m%d")
 # new_addpts = "AddressPoints_SGID_export_20191028"
-new_addpts = "Britt_addpts_20200915"
+new_addpts = "Britt_Millard_Addresses_CAD_July2021"
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
