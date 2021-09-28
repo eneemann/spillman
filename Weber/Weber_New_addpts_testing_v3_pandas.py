@@ -26,7 +26,7 @@ env.workspace = weber_db
 env.overwriteOutput = True
 
 weber_streets = os.path.join(weber_db, "Streets_Map")
-weber_addpts = "AddressPoints_SGB_20210601"    # Point to current addpts in staging_db
+weber_addpts = "AddressPoints_SGB_20210921"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, weber_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -94,7 +94,7 @@ def remove_duplicates(current, working):
             else:
                 row[1] = 'name duplicate'
             cursor.updateRow(row)
-            if count % 1000 == 0:
+            if count % 20000 == 0:
                 print("'remove_duplicates' function has completed row {}".format(count))
     where_final = "Notes = 'not name duplicate'"
     final_selection = arcpy.SelectLayerByAttribute_management("working_lyr", "NEW_SELECTION", where_final)
