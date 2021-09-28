@@ -21,14 +21,13 @@ live_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
 env.workspace = live_db
 
 
-#input_features = ['AddressPoints',
-#                  'CommonNames',
-#                  'Streets_Map']
-
-input_features = ['CommonNames',
+input_features = ['AddressPoints',
+                  'CommonNames',
                   'Streets_Map']
 
-output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20210830'
+#input_features = ['AddressPoints']
+
+output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20210927'
 
 arcpy.conversion.FeatureClassToShapefile(input_features, output_folder)
 
