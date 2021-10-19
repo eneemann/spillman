@@ -24,16 +24,24 @@ wgs84_db = r"C:\E911\Box Elder CO\BoxElder_Spillman_WGS84.gdb"
 #                   "streets", "MZ_Zones", "municipalities"]
 
 FCs_dict = {"BoxElder_CityCodes": "CityCodes",
-            "BoxElder_Fire_Zones": "Fire_Zones",
-            "BoxElder_Fire_Areas": "Fire_Areas",
             "BoxElder_MISC_Zones": "MISC_Zones",
-            "BoxElder_Law_Areas": "Law_Areas",
-            "BoxElder_Law_Zones": "Law_Zones",
             "BoxElder_EMS_Areas": "EMS_Areas",
             "BoxElder_EMS_Zones": "EMS_Zones",
             "BoxElder_Streets": "Streets",
             "BoxElder_AddressPoints": "AddPt",
             "BoxElder_CommonPlaces": "CP"}
+
+#FCs_dict = {"BoxElder_CityCodes": "CityCodes",
+#            "BoxElder_Fire_Zones": "Fire_Zones",
+#            "BoxElder_Fire_Areas": "Fire_Areas",
+#            "BoxElder_MISC_Zones": "MISC_Zones",
+#            "BoxElder_Law_Areas": "Law_Areas",
+#            "BoxElder_Law_Zones": "Law_Zones",
+#            "BoxElder_EMS_Areas": "EMS_Areas",
+#            "BoxElder_EMS_Zones": "EMS_Zones",
+#            "BoxElder_Streets": "Streets",
+#            "BoxElder_AddressPoints": "AddPt",
+#            "BoxElder_CommonPlaces": "CP"}
 
 # FCs_to_project = ["address_points", "citycodes",
 #                   "common_places", "ems_zones",
