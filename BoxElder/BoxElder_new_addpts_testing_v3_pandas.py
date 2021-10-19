@@ -29,36 +29,20 @@ env.workspace = boxelder_db
 env.overwriteOutput = True
 
 boxelder_streets = os.path.join(boxelder_db, "BoxElder_Streets")
-#boxelder_addpts = "AddressPoints_TEST_current"
-#current_addpts = os.path.join(staging_db, boxelder_addpts)
-boxelder_addpts = "AddPt_update_20210406"    # Point to current addpts in staging_db
+boxelder_addpts = "AddPt_update_20211015"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, boxelder_addpts)
 
 today = time.strftime("%Y%m%d")
 new_addpts = "AddressPoints_SGID_export_" + today
-# new_addpts = "AddressPoints_SGID_export_20190718"    # Use if SGID data was already exported
-possible_addpts = os.path.join(staging_db, new_addpts)
 
-# SGID_addpts = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\sgid.agrc.utah.gov.sde"
-# SGID_addpts_wgs84 = os.path.join(staging_db, "SGID_addpts_wgs84")
-
-# Copy current address points into a working FC
-working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
-arcpy.CopyFeatures_management(possible_addpts, working_addpts)
-
-# Add field to working FC for notes
-arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
-arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 ###############
 #  Functions  #
 ###############
 
-def get_SGID_addpts(out_db):
-    today = time.strftime("%Y%m%d")
+def get_SGID_addpts(out_db, new_pts):
     SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
     sgid_pts = os.path.join(SGID, "SGID.LOCATION.AddressPoints")
-    new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
         arcpy.Delete_management(new_pts)
     where_SGID = "CountyID IN ('49003')"
@@ -327,7 +311,19 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-# get_SGID_addpts(staging_db)
+get_SGID_addpts(staging_db, new_addpts)
+
+possible_addpts = os.path.join(staging_db, new_addpts)
+
+# Copy current address points into a working FC
+working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
+arcpy.CopyFeatures_management(possible_addpts, working_addpts)
+
+# Add field to working FC for notes
+arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
+arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
+
+
 calc_street(working_addpts)
 working_nodups = remove_duplicates(current_addpts, working_addpts)
 print(arcpy.GetCount_management(working_nodups))
