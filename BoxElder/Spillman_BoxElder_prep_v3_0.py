@@ -30,23 +30,23 @@ streets_cad_wgs84 = os.path.join(wgs84_db, "BoxElder_Streets_CAD")
 ###############
 
 def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete_files):
-    # # Creates new GDBs by renaming originals with today's date
-    # # Then copies new ones (with today's date) with original name
-    # # This allows original name to be used/edited, but work is done on a new and fresh copy
-    # today = time.strftime("%Y%m%d")
-    # # rename original GDBs with today's date appended (YYYYMMDD)
-    # new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
-    # new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
-    # print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
-    # arcpy.Rename_management(original_utm, new_name_utm)
-    # print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
-    # arcpy.Rename_management(original_wgs84, new_name_wgs84)
-    # # copy original GDBs to new gdb with original name (no date)
-    # print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
-    # arcpy.Copy_management(new_name_utm, original_utm)
-    # print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
-    # arcpy.Copy_management(new_name_wgs84, original_wgs84)
-    # # delete WGS84 and UTM files that will be recreated and reprojected later on
+    # Creates new GDBs by renaming originals with today's date
+    # Then copies new ones (with today's date) with original name
+    # This allows original name to be used/edited, but work is done on a new and fresh copy
+    today = time.strftime("%Y%m%d")
+    # rename original GDBs with today's date appended (YYYYMMDD)
+    new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
+    new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
+    print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
+    arcpy.Rename_management(original_utm, new_name_utm)
+    print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
+    arcpy.Rename_management(original_wgs84, new_name_wgs84)
+    # copy original GDBs to new gdb with original name (no date)
+    print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
+    arcpy.Copy_management(new_name_utm, original_utm)
+    print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
+    arcpy.Copy_management(new_name_wgs84, original_wgs84)
+    # delete WGS84 and UTM files that will be recreated and reprojected later on
     env.workspace = original_wgs84
     print("Deleting old files from WGS84 gdb ...")
     for fc in WGS84_delete_files:
@@ -638,22 +638,22 @@ vela_to_export = ["BoxElder_EMS_Zones", "BoxElder_Fire_Zones", "BoxElder_Law_Zon
 #  Call Functions Below  #
 ##########################
 
-# create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-# blanks_to_nulls(streets_fc_utm)
-# calc_street(streets_fc_utm)
-# calc_salias1(streets_fc_utm)
-# calc_salias2(streets_fc_utm)
-# calc_salias4(streets_fc_utm)
-# highway_to_sr_us(streets_fc_utm)
-# calc_salias3(streets_fc_utm)
-# street_blank_to_null(streets_fc_utm)
-# calc_location(streets_fc_utm)
-# create_streets_CAD(streets_fc_utm)
-# create_address_pts_CAD(address_pts)
-# copy_tbzones(tbzones)
-# create_streets_all(streets_fc_utm)
-# project_to_wgs84(FCs_to_project)
-# spillman_polygon_prep(streets_cad_wgs84)
+#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+#blanks_to_nulls(streets_fc_utm)
+#calc_street(streets_fc_utm)
+#calc_salias1(streets_fc_utm)
+#calc_salias2(streets_fc_utm)
+#calc_salias4(streets_fc_utm)
+#highway_to_sr_us(streets_fc_utm)
+#calc_salias3(streets_fc_utm)
+#street_blank_to_null(streets_fc_utm)
+#calc_location(streets_fc_utm)
+#create_streets_CAD(streets_fc_utm)
+#create_address_pts_CAD(address_pts)
+#copy_tbzones(tbzones)
+#create_streets_all(streets_fc_utm)
+#project_to_wgs84(FCs_to_project)
+#spillman_polygon_prep(streets_cad_wgs84)
 
 ## FUNCTIONS NOT USED IN BOX ELDER PSAP:
 
@@ -665,23 +665,23 @@ vela_to_export = ["BoxElder_EMS_Zones", "BoxElder_Fire_Zones", "BoxElder_Law_Zon
 #################################################################
 
 # Assign LS_Zones to streets_CAD (wgs84) segments
-# populate_LS_ZONE(streets_cad_wgs84)
+#populate_LS_ZONE(streets_cad_wgs84)
 
 # Spillman Shapefiles Export
-# export_shapefiles_select_fields_rename("BoxElder_AddressPoints", out_folder_spillman, addpt_fields, "AddressPoints")
-# export_shapefiles_select_fields("BoxElder_CommonPlaces", out_folder_spillman, commplc_fields)
+export_shapefiles_select_fields_rename("BoxElder_AddressPoints", out_folder_spillman, addpt_fields, "AddressPoints")
+export_shapefiles_select_fields("BoxElder_CommonPlaces", out_folder_spillman, commplc_fields)
 export_shapefiles_select_fields_rename("BoxElder_Streets_All", out_folder_spillman, street_fields, "BoxElder_Streets_ALL")
 # export_shapefiles_select_fields_rename("BoxElder_CP_MP_FC", out_folder_spillman, milepost_fields, "Mile_Marker")
 # export_shapefiles_select_fields_rename("BoxElder_CP_Exits_FC", out_folder_spillman, exit_fields, "BoxElder_Exits")
-# export_shapefiles_select_fields("BoxElder_CityCodes", out_folder_spillman, citycd_fields)
-# export_shapefiles_select_fields("BoxElder_EMS_Zones", out_folder_spillman, ezone_fields)
-# export_shapefiles_select_fields("BoxElder_EMS_Areas", out_folder_spillman, earea_fields)
+export_shapefiles_select_fields("BoxElder_CityCodes", out_folder_spillman, citycd_fields)
+export_shapefiles_select_fields("BoxElder_EMS_Zones", out_folder_spillman, ezone_fields)
+export_shapefiles_select_fields("BoxElder_EMS_Areas", out_folder_spillman, earea_fields)
 # export_shapefiles_select_fields("BoxElder_Fire_Zones", out_folder_spillman, fzone_fields)
 # export_shapefiles_select_fields("BoxElder_Fire_Areas", out_folder_spillman, fzone_fields)
 # export_shapefiles_select_fields("BoxElder_Law_Zones", out_folder_spillman, lzone_fields)
 # export_shapefiles_select_fields("BoxElder_Law_Areas", out_folder_spillman, lzone_fields)
-# export_shapefiles_select_fields("BoxElder_MISC_Zones", out_folder_spillman, mz_fields)
-# export_shapefiles_select_fields_rename("BoxElder_Municipalities", out_folder_spillman, muni_fields, "Cities")
+export_shapefiles_select_fields("BoxElder_MISC_Zones", out_folder_spillman, mz_fields)
+export_shapefiles_select_fields_rename("BoxElder_Municipalities", out_folder_spillman, muni_fields, "Cities")
 
 # Shapefiles that aren't needed for PSAP, but are available:
 
