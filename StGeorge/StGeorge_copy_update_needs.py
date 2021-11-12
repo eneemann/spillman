@@ -4,6 +4,10 @@ Created on Fri Feb 19 16:42:02 2021
 @author: eneemann
 
 EMN: On 19 Feb 2021, created initial script from Salt Lake TOC to copy files to be updated
+
+Need to copy over the latest 'StGeorge_Dispatch_Streets' into the staging database
+to use for updates (don't have a WGS84 FC to reproject)
+
 """
 
 import arcpy
