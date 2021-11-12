@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\Beaver Co\Beaver_Staging.gdb"
-addpts = os.path.join(stage_db, "AddressPoints_update_20201021")
+addpts = os.path.join(stage_db, "AddressPoints_update_20211021")
 env.workspace = stage_db
 
 ###############
@@ -120,7 +120,7 @@ def strip_fields(pts):
 #  Call Functions Below  #
 ##########################
 
-# calc_street(addpts)
+calc_street(addpts)
 calc_label(addpts)
 strip_fields(addpts)
 blanks_to_nulls(addpts)
