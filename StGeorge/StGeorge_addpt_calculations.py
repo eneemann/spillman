@@ -20,7 +20,7 @@ print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 # stage_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
-addpts = os.path.join(stage_db, "StG_AddPts_update_20210902")
+addpts = os.path.join(stage_db, "StG_AddPts_update_20211108")
 # addpts = os.path.join(stage_db, "StGeorge_Dispatch_AddressPoints_CAD")
 #addpts = os.path.join(stage_db, "StG_Streets_update_20191108")
 #addpts = os.path.join(stage_db, "StG_CP_update_20191108")
@@ -28,7 +28,7 @@ env.workspace = stage_db
 
 
 # # Optional selection to narrow down rows the calculations are performed on
-arcpy.management.SelectLayerByAttribute(addpts, 'NEW_SELECTION', "StreetName IS NULL")
+arcpy.management.SelectLayerByAttribute(addpts, 'NEW_SELECTION', "LABEL IS NULL")
 
 
 unit_list = ['#', 'APT', 'BLDG', 'BSMT', 'CONDO', 'DEPT', 'FL', 'FRNT', 'HANGAR',
