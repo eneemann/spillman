@@ -34,26 +34,22 @@ streets_cad_wgs84 = os.path.join(wgs84_db, "Streets_CAD")
 
 
 def create_new_gdbs(original_utm, original_wgs84, UTM_delete_files, WGS84_delete_files):
-    # # Creates new GDBs by renaming originals with today's date
-    # # Then copies new ones (with today's date) with original name
-    # # This allows original name to be used/edited, but work is done on a new and fresh copy
-    # today = time.strftime("%Y%m%d")
-    # # rename original GDBs with today's date appended (YYYYMMDD)
-    # new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
-    # new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
-    # print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
-    # arcpy.Rename_management(original_utm, new_name_utm)
-    # print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
-    # arcpy.Rename_management(original_wgs84, new_name_wgs84)
-    # # copy original GDBs to new gdb with original name (no date)
-    # print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
-    # if arcpy.Exists (original_utm):
-    # #     arcpy.Delete_management (original_utm) 
-    # # arcpy.Copy_management(new_name_utm, original_utm)
-    # print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
-    # # if arcpy.Exists (original_wgs84):
-    # #     arcpy.Delete_management (original_wgs84)
-    # arcpy.Copy_management(new_name_wgs84, original_wgs84)
+    # Creates new GDBs by renaming originals with today's date
+    # Then copies new ones (with today's date) with original name
+    # This allows original name to be used/edited, but work is done on a new and fresh copy
+    today = time.strftime("%Y%m%d")
+    # rename original GDBs with today's date appended (YYYYMMDD)
+    new_name_utm = os.path.splitext(original_utm)[0] + "_" + today + ".gdb"
+    new_name_wgs84 = os.path.splitext(original_wgs84)[0] + "_" + today + ".gdb"
+    print("Renaming UTM gdb to: {} ...".format(new_name_utm.split("\\")[-1]))
+    arcpy.Rename_management(original_utm, new_name_utm)
+    print("Renaming WGS84 gdb to: {} ...".format(new_name_wgs84.split("\\")[-1]))
+    arcpy.Rename_management(original_wgs84, new_name_wgs84)
+    # copy original GDBs to new gdb with original name (no date)
+    print("Copying UTM gdb to: {} ...".format(original_utm.split("\\")[-1]))
+    arcpy.Copy_management(new_name_utm, original_utm)
+    print("Copying WGS84 gdb to: {} ...".format(original_wgs84.split("\\")[-1]))
+    arcpy.Copy_management(new_name_wgs84, original_wgs84)
     # delete WGS84 and UTM files that will be recreated and reprojected later on
     env.workspace = original_wgs84
     print("Deleting old files from WGS84 gdb ...")
@@ -600,22 +596,22 @@ vela_to_export = ["Ems_zone", "Fire_zone", "Law_zone", "Communities"]
 #  Call Functions Below  #
 ##########################
 
-# create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-# blanks_to_nulls(streets_fc_utm)
-# calc_street(streets_fc_utm)
-# calc_salias1(streets_fc_utm)
-# calc_salias2(streets_fc_utm)
-# calc_salias4(streets_fc_utm)
-# highway_to_sr_us(streets_fc_utm)
-# calc_salias3(streets_fc_utm)
-# street_blank_to_null(streets_fc_utm)
-# calc_location(streets_fc_utm)
-# create_streets_CAD(streets_fc_utm)
-# create_commonplaces_all(commonplaces)
-# create_address_pts_CAD(address_pts)
-# copy_tbzones(tbzones)
-# project_to_wgs84(FCs_to_project)
-# spillman_polygon_prep(streets_cad_wgs84)
+create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+blanks_to_nulls(streets_fc_utm)
+calc_street(streets_fc_utm)
+calc_salias1(streets_fc_utm)
+calc_salias2(streets_fc_utm)
+calc_salias4(streets_fc_utm)
+highway_to_sr_us(streets_fc_utm)
+calc_salias3(streets_fc_utm)
+street_blank_to_null(streets_fc_utm)
+calc_location(streets_fc_utm)
+create_streets_CAD(streets_fc_utm)
+create_commonplaces_all(commonplaces)
+create_address_pts_CAD(address_pts)
+copy_tbzones(tbzones)
+project_to_wgs84(FCs_to_project)
+spillman_polygon_prep(streets_cad_wgs84)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
