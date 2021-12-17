@@ -18,7 +18,7 @@ print("The script start time is {}".format(readable_start))
 today = time.strftime("%Y%m%d")
 
 
-project = 'toc'
+project = 'richfield'
 
 
 
