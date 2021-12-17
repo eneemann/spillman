@@ -28,7 +28,7 @@ env.overwriteOutput = True
 
 rich_streets = os.path.join(rich_db, "streets")
 #rich_addpts = "AddressPoints_TEST_current"
-rich_addpts = "address_points_update_20210518"    # Point to current addpts in staging_db
+rich_addpts = "address_points_update_20211118"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, rich_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -197,13 +197,15 @@ def check_nearby_roads(working, streets, gdb):
     is_goodstreet = near_df_updated['goodstreet'] == True      # Create indexes
     # Grab rows with good streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest good street to the address point
-    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    goodstreets_df = near_df_updated[is_goodstreet].sort_values('NEAR_RANK')
     
     # Separate rows with no good nearby street into a separate dataframe
     not_goodstreet = near_df_updated['goodstreet'] == False    # Create indexes
     # Grab rows with bad streets, sort by near rank from near table, remove address point duplicates
     # This preserves the only the record with the nearest bad street to the address point
-    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+#    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK').drop_duplicates('IN_FID')
+    badstreets_df = near_df_updated[not_goodstreet].sort_values('NEAR_RANK')
     
     # Combine good and bad street dataframes, sort so good streets are at the top, then remove duplicates of address points
     # If a good streets are found, nearest one will be used; otherwise nearest bad street will be used ("near street not found")
@@ -211,7 +213,7 @@ def check_nearby_roads(working, streets, gdb):
                                        ascending=[True,False, False, True, True])
     filtered_df.to_csv(r'C:\E911\RichfieldComCtr\Addpts_working_folder\rich_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
-    final_df = filtered_df.sort_values('IN_FID')
+    final_df = filtered_df.drop_duplicates('IN_FID')
     path = r'C:\E911\RichfieldComCtr\Addpts_working_folder\rich_neartable_final.csv'
     final_df.to_csv(path)
     
