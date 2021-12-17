@@ -20,7 +20,7 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
 SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
-current_streets = os.path.join(staging_db, "streets_update_20210518")
+current_streets = os.path.join(staging_db, "streets_update_20211118")
 sgid_roads = os.path.join(SGID, "SGID.TRANSPORTATION.Roads")
 env.workspace = staging_db
 env.overwriteOutput = True
@@ -36,13 +36,13 @@ if arcpy.Exists(roads_buff):
 print("Buffering {} ...".format(current_streets))
 arcpy.Buffer_analysis(current_streets, roads_buff, "10 Meters", "FULL", "ROUND", "ALL")
 
-## Select and export roads with centroids outside of the current streets buffer
-#fips_list = ('49015', '49017', '49023', '49025', '49027', '49031', '49039', '49041', '49055')
-#where_SGID = f"COUNTY_L IN {fips_list} OR COUNTY_R IN {fips_list}"      # All Relevant counties for Richfield
-#print(where_SGID)
+# Select and export roads with centroids outside of the current streets buffer
+fips_list = ('49015', '49017', '49023', '49025', '49027', '49031', '49039', '49041', '49055')
+where_SGID = f"COUNTY_L IN {fips_list} OR COUNTY_R IN {fips_list}"      # All Relevant counties for Richfield
+print(where_SGID)
 
 # Use these two lines for checking against local data
-sgid_roads = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\Sevier_Rds_Apr2021'
+sgid_roads = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\WayneCoRds_20211109'
 arcpy.MakeFeatureLayer_management(sgid_roads, "sgid_roads_lyr")
 
 

@@ -18,14 +18,16 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
 env.workspace = staging_db
-fc_layer = "streets_update_20210518"    # Update to working streets fc
+fc_layer = "streets_update_20211118"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
 # Use to create a selection to run functions on
 if arcpy.Exists("streets_lyr"):
     print("Deleting {} ...".format("streets_lyr"))
     arcpy.management.Delete("streets_lyr")
-where_clause = "(STREET IS NOT NULL AND STREETNAME IS NULL) OR (STREET IS NOT NULL AND STREETNAME = '' ) OR (STREET IS NOT NULL AND STREETNAME = ' ')"
+#where_clause = "(STREET IS NOT NULL AND STREETNAME IS NULL) OR (STREET IS NOT NULL AND STREETNAME = '' ) OR (STREET IS NOT NULL AND STREETNAME = ' ')"
+where_clause = "OBJECTID >= 89347"
+
 # Need to make layer from feature class
 arcpy.management.MakeFeatureLayer(streets_fc_utm, "streets_lyr", where_clause)
 
@@ -463,17 +465,29 @@ def strip_fields(streets):
 ##########################
 #  Call Functions Below  #
 ##########################
-# Calc STREET from other fields
-calc_street(streets_fc_utm)
-calc_salias1(streets_fc_utm)
-calc_salias2(streets_fc_utm)
-calc_salias4(streets_fc_utm)
-highway_to_sr_us(streets_fc_utm)
-calc_salias3(streets_fc_utm)
-street_blank_to_null(streets_fc_utm)
-calc_location(streets_fc_utm)
-blanks_to_nulls(streets_fc_utm)
-strip_fields(streets_fc_utm)
+## Calc STREET from other fields
+#calc_street(streets_fc_utm)
+#calc_salias1(streets_fc_utm)
+#calc_salias2(streets_fc_utm)
+#calc_salias4(streets_fc_utm)
+#highway_to_sr_us(streets_fc_utm)
+#calc_salias3(streets_fc_utm)
+#street_blank_to_null(streets_fc_utm)
+#calc_location(streets_fc_utm)
+#blanks_to_nulls(streets_fc_utm)
+#strip_fields(streets_fc_utm)
+
+# Calc STREET from other fields on a selection
+calc_street("streets_lyr")
+calc_salias1("streets_lyr")
+calc_salias2("streets_lyr")
+calc_salias4("streets_lyr")
+highway_to_sr_us("streets_lyr")
+calc_salias3("streets_lyr")
+street_blank_to_null("streets_lyr")
+calc_location("streets_lyr")
+blanks_to_nulls("streets_lyr")
+strip_fields("streets_lyr")
 
 # Calc other fields from STREET
 # # calc_street(streets_fc_utm)
