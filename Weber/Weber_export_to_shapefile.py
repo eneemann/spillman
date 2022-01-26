@@ -29,13 +29,24 @@ env.workspace = live_db
 #                  'CityCodes',
 #                  'POI']
 
+input_features = ['CommonNames',
+                  'AddressPoints',
+                  'Streets_Map',
+                  'LawAreas',
+                  'LawZones']
+
 #input_features = ['AddressPoints',
 #                  'CommonNames',
 #                  'Streets_Map']
 
-input_features = ['CommonNames', 'AddressPoints']
+#input_features = ['AddressPoints',
+#                  'CommonNames',
+#                  'Streets_Map',
+#                  'CityCodes']
 
-output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20211108'
+#input_features = ['CommonNames', 'AddressPoints']
+
+output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220125'
 
 arcpy.conversion.FeatureClassToShapefile(input_features, output_folder)
 
