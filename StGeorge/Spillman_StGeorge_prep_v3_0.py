@@ -536,7 +536,7 @@ WGS84_files_to_delete = ["StGeorge_Dispatch_AddressPoints", "StGeorge_Dispatch_A
                          "StGeorge_Dispatch_CITYCD", "StGeorge_Dispatch_Common_Place_Points",
                          "StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones", "StGeorge_Dispatch_Law_Zones",
                          "StGeorge_Dispatch_Streets_All", "StGeorge_Dispatch_Streets_CAD",
-                         "StGeorgeDispatch_Municipalities", "tbzones"]
+                         "StGeorgeDispatch_Municipalities", "StGeorge_Dispatch_POI", "tbzones"]
 UTM_files_to_delete = ["StGeorge_Dispatch_AddressPoints_CAD", "StGeorge_Dispatch_Streets_CAD","StGeorge_Dispatch_Streets_All"]
 
 # Create variables for address points
@@ -549,7 +549,9 @@ tbzones = os.path.join(utm_db, "tbzones")
 FCs_to_project = ["StGeorge_Dispatch_AddressPoints", "StGeorge_Dispatch_CITYCD",
                   "StGeorge_Dispatch_Common_Place_Points", "StGeorge_Dispatch_EMS_Zones",
                   "StGeorge_Dispatch_Fire_Zones", "StGeorge_Dispatch_Law_Zones", "StGeorge_Dispatch_Streets_All",
-                  "StGeorge_Dispatch_Streets_CAD", "StGeorgeDispatch_Municipalities"]
+                  "StGeorge_Dispatch_Streets_CAD", "StGeorgeDispatch_Municipalities", "StGeorge_Dispatch_POI"]
+
+#FCs_to_project = ["StGeorge_Dispatch_Streets_CAD", "StGeorge_Dispatch_Streets_All"]
 
 ######################################################################################################################
 #  There are two options for exporting shapefiles.  Choose desired option and comment out the other before running:  #
@@ -614,23 +616,23 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 #  Call Functions Below  #
 ##########################
 
-#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-#blanks_to_nulls(streets_fc_utm)
-#calc_street(streets_fc_utm)
-#calc_salias1(streets_fc_utm)
-#calc_salias2(streets_fc_utm)
-#calc_salias4(streets_fc_utm)
-#highway_to_sr_us(streets_fc_utm)
-#calc_salias3(streets_fc_utm)
-#street_blank_to_null(streets_fc_utm)
-#calc_location(streets_fc_utm)
-#create_streets_CAD(streets_fc_utm)
-#create_address_pts_CAD(address_pts)
-#copy_tbzones(tbzones)
-#create_streets_all(streets_fc_utm)
-#project_to_wgs84(FCs_to_project)
-#spillman_polygon_prep(streets_cad_wgs84)
-#recalc_location(streets_cad_wgs84)
+create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+blanks_to_nulls(streets_fc_utm)
+calc_street(streets_fc_utm)
+calc_salias1(streets_fc_utm)
+calc_salias2(streets_fc_utm)
+calc_salias4(streets_fc_utm)
+highway_to_sr_us(streets_fc_utm)
+calc_salias3(streets_fc_utm)
+street_blank_to_null(streets_fc_utm)
+calc_location(streets_fc_utm)
+create_streets_CAD(streets_fc_utm)
+create_address_pts_CAD(address_pts)
+copy_tbzones(tbzones)
+create_streets_all(streets_fc_utm)
+project_to_wgs84(FCs_to_project)
+spillman_polygon_prep(streets_cad_wgs84)
+recalc_location(streets_cad_wgs84)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
@@ -638,21 +640,21 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 #################################################################
 
 # Spillman Shapefiles Export
-export_shapefiles_select_fields("StGeorge_Dispatch_AddressPoints", out_folder_spillman, addpt_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Common_Place_Points", out_folder_spillman, commplc_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Streets_All", out_folder_spillman, street_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_AddressPoints", out_folder_spillman, addpt_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_Common_Place_Points", out_folder_spillman, commplc_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_Streets_All", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_EMS_Zones", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_Fire_Zones", out_folder_spillman, fzone_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Law_Zones", out_folder_spillman, lzone_fields)
+#export_shapefiles_select_fields("StGeorge_Dispatch_Law_Zones", out_folder_spillman, lzone_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_CITYCD", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_Municipalities", out_folder_spillman, muni_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_Mileposts", out_folder_spillman, mp_fields)
 
 # Vela Shapefiles Export
-export_shapefiles_select_fields_rename("StGeorge_Dispatch_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-export_shapefiles_select_fields_rename("StGeorge_Dispatch_Common_Place_Points", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
-export_shapefiles_select_fields_rename("StGeorge_Dispatch_Law_Zones", out_folder_vela, vela_law_fields, vela_law_out)
+#export_shapefiles_select_fields_rename("StGeorge_Dispatch_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
+#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Common_Place_Points", out_folder_vela, vela_commplc_fields, vela_commplc_out)
+#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
+#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Law_Zones", out_folder_vela, vela_law_fields, vela_law_out)
 
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
 
