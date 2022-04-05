@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\Box Elder CO\BoxElder_Staging.gdb"
-addpts = os.path.join(stage_db, "AddPt_update_20210406")
+addpts = os.path.join(stage_db, "AddPt_update_20220330")
 env.workspace = stage_db
 
 ###############
@@ -250,10 +250,10 @@ def strip_fields(pts):
 # calc_SUFDIR_from_street(addpts)
 # calc_STREETTYPE_from_street(addpts)
 # calc_STREETNAME_from_street(addpts)
+calc_street(addpts)
+calc_label(addpts)
+strip_fields(addpts)
 blanks_to_nulls(addpts)
-# calc_street(addpts)
-# calc_label(addpts)
-# strip_fields(addpts)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
