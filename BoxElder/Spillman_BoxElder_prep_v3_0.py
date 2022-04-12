@@ -665,21 +665,21 @@ vela_to_export = ["BoxElder_EMS_Zones", "BoxElder_Fire_Zones", "BoxElder_Law_Zon
 #################################################################
 
 # Assign LS_Zones to streets_CAD (wgs84) segments
-#populate_LS_ZONE(streets_cad_wgs84)
+populate_LS_ZONE(streets_cad_wgs84)
 
 # Spillman Shapefiles Export
 export_shapefiles_select_fields_rename("BoxElder_AddressPoints", out_folder_spillman, addpt_fields, "AddressPoints")
 export_shapefiles_select_fields("BoxElder_CommonPlaces", out_folder_spillman, commplc_fields)
 export_shapefiles_select_fields_rename("BoxElder_Streets_All", out_folder_spillman, street_fields, "BoxElder_Streets_ALL")
-# export_shapefiles_select_fields_rename("BoxElder_CP_MP_FC", out_folder_spillman, milepost_fields, "Mile_Marker")
-# export_shapefiles_select_fields_rename("BoxElder_CP_Exits_FC", out_folder_spillman, exit_fields, "BoxElder_Exits")
+#export_shapefiles_select_fields_rename("BoxElder_CP_MP_FC", out_folder_spillman, milepost_fields, "Mile_Marker")
+#export_shapefiles_select_fields_rename("BoxElder_CP_Exits_FC", out_folder_spillman, exit_fields, "BoxElder_Exits")
 export_shapefiles_select_fields("BoxElder_CityCodes", out_folder_spillman, citycd_fields)
 export_shapefiles_select_fields("BoxElder_EMS_Zones", out_folder_spillman, ezone_fields)
 export_shapefiles_select_fields("BoxElder_EMS_Areas", out_folder_spillman, earea_fields)
-# export_shapefiles_select_fields("BoxElder_Fire_Zones", out_folder_spillman, fzone_fields)
-# export_shapefiles_select_fields("BoxElder_Fire_Areas", out_folder_spillman, fzone_fields)
-# export_shapefiles_select_fields("BoxElder_Law_Zones", out_folder_spillman, lzone_fields)
-# export_shapefiles_select_fields("BoxElder_Law_Areas", out_folder_spillman, lzone_fields)
+#export_shapefiles_select_fields("BoxElder_Fire_Zones", out_folder_spillman, fzone_fields)
+#export_shapefiles_select_fields("BoxElder_Fire_Areas", out_folder_spillman, fzone_fields)
+export_shapefiles_select_fields("BoxElder_Law_Zones", out_folder_spillman, lzone_fields)
+export_shapefiles_select_fields("BoxElder_Law_Areas", out_folder_spillman, lzone_fields)
 export_shapefiles_select_fields("BoxElder_MISC_Zones", out_folder_spillman, mz_fields)
 export_shapefiles_select_fields_rename("BoxElder_Municipalities", out_folder_spillman, muni_fields, "Cities")
 
