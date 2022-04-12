@@ -3,7 +3,7 @@
 Created on Mon Aug 23 15:30:56 2021
 @author: eneemann
 
-23 Aug 20201 - extremely simple script to export shapefiles to a folder
+23 Aug 2021 - extremely simple script to export shapefiles to a folder
     - This was created because the ArcMap/ArcCatalog tools kept freezing on me
 """
 
@@ -19,6 +19,7 @@ print("The script start time is {}".format(readable_start))
 # staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
 live_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
 env.workspace = live_db
+output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220411'
 
 #input_features = ['CommonNames',
 #                  'AddressPoints',
@@ -29,11 +30,17 @@ env.workspace = live_db
 #                  'CityCodes',
 #                  'POI']
 
-input_features = ['CommonNames',
-                  'AddressPoints',
-                  'Streets_Map',
-                  'LawAreas',
-                  'LawZones']
+#input_features = ['Streets_Map',
+#                  'FireZones',
+#                  'LawZones',
+#                  'LawAreas',
+#                  'CityCodes']
+
+#input_features = ['CommonNames',
+#                  'AddressPoints',
+#                  'Streets_Map',
+#                  'LawAreas',
+#                  'LawZones']
 
 #input_features = ['AddressPoints',
 #                  'CommonNames',
@@ -44,9 +51,7 @@ input_features = ['CommonNames',
 #                  'Streets_Map',
 #                  'CityCodes']
 
-#input_features = ['CommonNames', 'AddressPoints']
-
-output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220125'
+input_features = ['CommonNames']
 
 arcpy.conversion.FeatureClassToShapefile(input_features, output_folder)
 
