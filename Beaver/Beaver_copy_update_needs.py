@@ -23,14 +23,20 @@ wgs84_db = r"C:\E911\Beaver Co\Beaver_Spillman_WGS84.gdb"
 # FCs_to_project = ["address_points", "citycodes", "common_places", "fire_zones",
 #                   "streets", "MZ_Zones", "municipalities"]
 
+#FCs_dict = {"CityCodes": "CityCodes",
+#            "Streets": "Streets",
+#            "Fire_zone": "Fire_zone",
+#            "Ems_zone": "Ems_zone",
+#            "Law_zone": "Law_zone",
+#            "Law_area": "Law_area",
+#            "CommonPlaces": "CommonPlaces",
+#            "AddressPoints": "AddressPoints"}
+
 FCs_dict = {"CityCodes": "CityCodes",
-            "Streets": "Streets",
             "Fire_zone": "Fire_zone",
             "Ems_zone": "Ems_zone",
             "Law_zone": "Law_zone",
-            "Law_area": "Law_area",
-            "CommonPlaces": "CommonPlaces",
-            "AddressPoints": "AddressPoints"}
+            "Law_area": "Law_area"}
 
 # FCs_to_project = ["address_points", "citycodes",
 #                   "common_places", "ems_zones",
