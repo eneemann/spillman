@@ -20,7 +20,7 @@ print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 # stage_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
-addpts = os.path.join(stage_db, "StG_AddPts_update_20220228")
+addpts = os.path.join(stage_db, "StG_AddPts_update_20220516")
 # addpts = os.path.join(stage_db, "StGeorge_Dispatch_AddressPoints_CAD")
 #addpts = os.path.join(stage_db, "StG_Streets_update_20191108")
 #addpts = os.path.join(stage_db, "StG_CP_update_20191108")
@@ -316,6 +316,19 @@ def strip_fields(pts):
     print("Total count of stripped fields is: {}".format(update_count))
 
 
+def calc_joinid(pts):
+    update_count = 0
+    # Calculate "JoinID" field
+    fields = ['JoinID', 'OID@']
+    with arcpy.da.UpdateCursor(pts, fields) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            row[0] = row[1]
+            update_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of updates to {fields[0]} field: {update_count}")
+
+
 ##########################
 #  Call Functions Below  #
 ##########################
@@ -328,6 +341,7 @@ calc_street(addpts)
 calc_label(addpts)
 blanks_to_nulls(addpts)
 strip_fields(addpts)
+calc_joinid(addpts)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
