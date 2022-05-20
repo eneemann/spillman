@@ -28,7 +28,7 @@ env.workspace = stgeorge_db
 env.overwriteOutput = True
 
 stgeorge_streets = os.path.join(stgeorge_db, "StGeorge_Dispatch_Streets")
-stgeorge_addpts = "StG_AddPts_update_20220228"    # Point to current addpts in staging_db
+stgeorge_addpts = "StG_AddPts_update_20220516"    # Point to current addpts in staging_db
 #stgeorge_addpts = "AddressPoints_update_20190904"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, stgeorge_addpts)
 

@@ -32,7 +32,8 @@ FCs_dict = {"StGeorge_Dispatch_CITYCD": "StG_CITYCD",
             "StGeorge_Dispatch_EMS_Zones": "StG_EMS_Zones",
             "StGeorge_Dispatch_Law_Zones": "StG_Law_Zones",
             "StGeorge_Dispatch_Common_Place_Points": "StG_CP",
-            "StGeorge_Dispatch_AddressPoints": "StG_AddPts"}
+            "StGeorge_Dispatch_AddressPoints": "StG_AddPts",
+            "StGeorge_Dispatch_POI": "StG_POI"}
 
 # FCs_to_project = ["address_points", "citycodes",
 #                   "common_places", "ems_zones",
