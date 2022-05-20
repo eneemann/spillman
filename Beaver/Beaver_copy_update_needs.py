@@ -32,11 +32,15 @@ wgs84_db = r"C:\E911\Beaver Co\Beaver_Spillman_WGS84.gdb"
 #            "CommonPlaces": "CommonPlaces",
 #            "AddressPoints": "AddressPoints"}
 
-FCs_dict = {"CityCodes": "CityCodes",
-            "Fire_zone": "Fire_zone",
-            "Ems_zone": "Ems_zone",
-            "Law_zone": "Law_zone",
-            "Law_area": "Law_area"}
+FCs_dict = {"Streets": "Streets",
+            "CommonPlaces": "CommonPlaces",
+            "AddressPoints": "AddressPoints"}
+
+#FCs_dict = {"CityCodes": "CityCodes",
+#            "Fire_zone": "Fire_zone",
+#            "Ems_zone": "Ems_zone",
+#            "Law_zone": "Law_zone",
+#            "Law_area": "Law_area"}
 
 # FCs_to_project = ["address_points", "citycodes",
 #                   "common_places", "ems_zones",
