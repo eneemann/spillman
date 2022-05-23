@@ -41,8 +41,6 @@ def project_to_UTM(input_features):
         full_out = os.path.join(staging_db, outname)
         arcpy.management.Project(layer, full_out, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
 
-        # arcpy.management.BatchProject(input_features, staging_db, sr, "", "WGS_1984_(ITRF00)_To_NAD_1983")
-
 
 project_to_UTM(FCs_to_project)
 
