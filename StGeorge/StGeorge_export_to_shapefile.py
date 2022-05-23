@@ -19,7 +19,7 @@ print("The script start time is {}".format(readable_start))
 # staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 live_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
 env.workspace = live_db
-output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20220317"
+output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20220523"
 
 #input_features = ['StGeorge_Dispatch_Common_Place_Points',
 #                  'StGeorge_Dispatch_AddressPoints',
@@ -44,7 +44,7 @@ output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20220317"
 #                  'StGeorge_Dispatch_Streets_All',
 #                  'StGeorge_Dispatch_CITYCD']
 
-input_features = ['StGeorge_Dispatch_Law_Zones']
+input_features = ['StGeorge_Dispatch_POI']
 
 arcpy.conversion.FeatureClassToShapefile(input_features, output_folder)
 
