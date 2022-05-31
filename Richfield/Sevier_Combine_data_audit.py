@@ -29,7 +29,8 @@ today = time.strftime("%Y%m%d")
 ## Prep and variables for combining data
 
 # Set up variables, create geodatabase, if necessary
-data_dir = r"C:\E911\RichfieldComCtr\00 Working_data_area\Spillman_update_20210524"
+#data_dir = r"C:\E911\RichfieldComCtr\00 Working_data_area\Spillman_update_20210524"
+data_dir = r"C:\E911\RichfieldComCtr\2 Data From County\20220525\deletes"
 env.workspace = data_dir
 new_db_name = "Sevier_data_" + today
 #new_db_name = 'Sevier_data_20190415'
@@ -197,7 +198,7 @@ def combine_roads(lines):
 #-----------------------Call Functions-----------------------#
 
 
-unzip_files(data_dir)
+#unzip_files(data_dir)
 point_list, line_list = create_lists()
 combine_addpts(point_list)
 combine_roads(line_list)
