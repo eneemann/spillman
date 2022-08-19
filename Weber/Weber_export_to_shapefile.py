@@ -19,7 +19,7 @@ print("The script start time is {}".format(readable_start))
 # staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
 live_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
 env.workspace = live_db
-output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220411'
+output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220815'
 
 #input_features = ['CommonNames',
 #                  'AddressPoints',
@@ -42,7 +42,7 @@ output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220411'
 #                  'LawAreas',
 #                  'LawZones']
 
-#input_features = ['AddressPoints',
+#input_features = ['POI',
 #                  'CommonNames',
 #                  'Streets_Map']
 
@@ -51,7 +51,7 @@ output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220411'
 #                  'Streets_Map',
 #                  'CityCodes']
 
-input_features = ['CommonNames']
+input_features = ['CommonNames', 'AddressPoints']
 
 arcpy.conversion.FeatureClassToShapefile(input_features, output_folder)
 

@@ -26,7 +26,7 @@ env.workspace = weber_db
 env.overwriteOutput = True
 
 weber_streets = os.path.join(weber_db, "Streets_Map")
-weber_addpts = "AddressPoints_SGB_20210921"    # Point to current addpts in staging_db
+weber_addpts = "AddressPoints_SGB_20220819"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, weber_addpts)
 
 today = time.strftime("%Y%m%d")
