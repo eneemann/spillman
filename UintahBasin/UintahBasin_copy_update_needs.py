@@ -23,12 +23,15 @@ wgs84_db = r"C:\E911\UintahBasin\UintahBasin_WGS84.gdb"
 # FCs_to_project = ["address_points", "citycodes", "common_places", "fire_zones",
 #                   "streets", "MZ_Zones", "municipalities"]
 
-FCs_dict = {"UintahBasinCityCodes": "UB_CityCodes",
-#            "UintahBasinFire": "UB_Fire",
-#            "UintahBasinEMS": "UB_EMS",
-#            "UintahBasinLaw": "UB_Law",
-#            "UintahBasinMZ": "UB_MZ",
-            "UintahBasin_CommonPlaces": "UB_CP",
+#FCs_dict = {"UintahBasinCityCodes": "UB_CityCodes",
+##            "UintahBasinFire": "UB_Fire",
+##            "UintahBasinEMS": "UB_EMS",
+##            "UintahBasinLaw": "UB_Law",
+##            "UintahBasinMZ": "UB_MZ",
+#            "UintahBasin_CommonPlaces": "UB_CP",
+#            "UintahBasinStreets": "UB_Streets"}
+
+FCs_dict = {"UintahBasin_CommonPlaces": "UB_CP",
             "UintahBasinStreets": "UB_Streets"}
 
 #FCs_dict = {"UintahBasinCityCodes": "UB_CityCodes",
