@@ -20,9 +20,9 @@ print("The script start time is {}".format(readable_start))
 
 today = time.strftime("%Y%m%d")
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
-county_db = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\Washington\Washington20220215.gdb"
-# current_streets = os.path.join(staging_db, "StG_Streets_update_" + today)
-current_streets = os.path.join(staging_db, "StGeorge_Dispatch_Streets")
+county_db = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\Washington\Washington20220721.gdb"
+current_streets = os.path.join(staging_db, "StG_Streets_update_" + today)
+#current_streets = os.path.join(staging_db, "StGeorge_Dispatch_Streets")
 county_roads = os.path.join(county_db, "WashCo_RoadCenterlines")
 env.workspace = staging_db
 env.overwriteOutput = True

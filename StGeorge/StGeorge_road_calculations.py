@@ -18,7 +18,7 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 env.workspace = staging_db
-fc_layer = "StG_Streets_update_20220516"    # Update to working streets fc
+fc_layer = "StG_Streets_update_20220728"    # Update to working streets fc
 # fc_layer = "StG_Streets_schema_temp"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
