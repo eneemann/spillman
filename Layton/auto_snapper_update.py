@@ -246,9 +246,9 @@ for item in new_list:
                         print(f'Case 1: thisend_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
                         row[0] = new_geom
-                        # row[6] = 'snapped end'
-                        snap_df.at[this_oid, 'end'] = 'done - snapped'
-                        snap_df.at[first_oid, 'end'] = 'done - static'
+                        row[6] = 'snapped - done'
+                        snap_df.at[this_oid, 'end'] = 'snapped - done'
+                        snap_df.at[first_oid, 'end'] = 'static - done'
                         cnt += 1
                     # if thisstart_firstend == benchmark_dist and benchmark_dist == row[4]:
                     if thisstart_firstend == benchmark_dist and abs(benchmark_dist - row[4]) < 0.05 and 'done' not in snap_df.at[this_oid, 'start']:
@@ -256,9 +256,9 @@ for item in new_list:
                         print(f'Case 2: thisstart_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
                         row[0] = new_geom
-                        # row[5] = 'snapped start'
-                        snap_df.at[this_oid, 'start'] = 'done - snapped'
-                        snap_df.at[first_oid, 'end'] = 'done - static'
+                        row[5] = 'snapped - done'
+                        snap_df.at[this_oid, 'start'] = 'snapped - done'
+                        snap_df.at[first_oid, 'end'] = 'static - done'
                         cnt += 1
                     # if thisend_firststart == benchmark_dist and benchmark_dist == row[4]:
                     if thisend_firststart == benchmark_dist and abs(benchmark_dist - row[4]) < 0.05 and 'done' not in snap_df.at[this_oid, 'end']:
@@ -266,9 +266,9 @@ for item in new_list:
                         print(f'Case 3: thisend_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
                         row[0] = new_geom
-                        # row[6] = 'snapped end'
-                        snap_df.at[this_oid, 'end'] = 'done - snapped'
-                        snap_df.at[first_oid, 'start'] = 'done - static'
+                        row[6] = 'snapped - done'
+                        snap_df.at[this_oid, 'end'] = 'snapped - done'
+                        snap_df.at[first_oid, 'start'] = 'static - done'
                         cnt += 1
                     # if thisstart_firststart == benchmark_dist and benchmark_dist == row[4]:
                     if thisstart_firststart == benchmark_dist and abs(benchmark_dist - row[4]) < 0.05 and 'done' not in snap_df.at[this_oid, 'start']:
@@ -276,9 +276,9 @@ for item in new_list:
                         print(f'Case 4: thisstart_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
                         row[0] = new_geom
-                        # row[5] = 'snapped start'
-                        snap_df.at[this_oid, 'start'] = 'done - snapped'
-                        snap_df.at[first_oid, 'start'] = 'done - static'
+                        row[5] = 'snapped - done'
+                        snap_df.at[this_oid, 'start'] = 'snapped - done'
+                        snap_df.at[first_oid, 'start'] = 'static - done'
                         cnt += 1
 
             ucursor.updateRow(row)
