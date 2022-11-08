@@ -193,7 +193,8 @@ item_number = 0
 multi = 0
 for item in new_list:
     # print(f"Working on snapping for group {item_number} ...")
-    query = f"""(start_h3_9 = '{item[0]}' AND NEAR_DIST = {item[2]}) OR (end_h3_9 = '{item[1]}' AND NEAR_DIST = {item[2]})"""
+    # query = f"""(start_h3_9 = '{item[0]}' AND NEAR_DIST = {item[2]}) OR (end_h3_9 = '{item[1]}' AND NEAR_DIST = {item[2]})"""
+    query = f"""(start_h3_9 IN ('{item[0]}', '{item[1]}') OR end_h3_9 IN ('{item[0]}', '{item[1]}')) AND (NEAR_DIST = {item[2]})"""
     sql_clause = [None, "ORDER BY snap_start DESC, snap_end DESC"]
     # print(query)
     #             0          1               2             3           4             5           6          7        8
@@ -246,7 +247,7 @@ for item in new_list:
                         print(f'Case 1: thisend_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
                         row[0] = new_geom
-                        row[6] = 'snapped - done'
+                        # row[6] = 'snapped - done'
                         snap_df.at[this_oid, 'end'] = 'snapped - done'
                         snap_df.at[first_oid, 'end'] = 'static - done'
                         cnt += 1
@@ -256,7 +257,7 @@ for item in new_list:
                         print(f'Case 2: thisstart_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
                         row[0] = new_geom
-                        row[5] = 'snapped - done'
+                        # row[5] = 'snapped - done'
                         snap_df.at[this_oid, 'start'] = 'snapped - done'
                         snap_df.at[first_oid, 'end'] = 'static - done'
                         cnt += 1
@@ -266,7 +267,7 @@ for item in new_list:
                         print(f'Case 3: thisend_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
                         row[0] = new_geom
-                        row[6] = 'snapped - done'
+                        # row[6] = 'snapped - done'
                         snap_df.at[this_oid, 'end'] = 'snapped - done'
                         snap_df.at[first_oid, 'start'] = 'static - done'
                         cnt += 1
@@ -276,7 +277,7 @@ for item in new_list:
                         print(f'Case 4: thisstart_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
                         row[0] = new_geom
-                        row[5] = 'snapped - done'
+                        # row[5] = 'snapped - done'
                         snap_df.at[this_oid, 'start'] = 'snapped - done'
                         snap_df.at[first_oid, 'start'] = 'static - done'
                         cnt += 1
@@ -284,6 +285,24 @@ for item in new_list:
             ucursor.updateRow(row)
 
     item_number += 1
+    
+    # # Go back through data and update the comment fields (snap_start, snap_end) based on snap_df in between new_list iterations
+    # # snap_count = 0
+    # oid_list = snap_df.index.to_list()
+    # #                 0          1            2
+    # fewer_fields = ['OID@', 'snap_start', 'snap_end']
+    # oid_query = f'OBJECTID IN ({",".join([str(oid) for oid in oid_list])})'
+    # # with arcpy.da.UpdateCursor(snapped, fields, oid_query) as ucursor:
+    # with arcpy.da.UpdateCursor(snapped, fewer_fields, query, '','', sql_clause) as ucursor:
+    #     # print("Calculating snap comments for start and end points ...")
+    #     for row in ucursor:
+    #         row[1] = snap_df.at[row[0], 'start']
+    #         row[2] = snap_df.at[row[0], 'end']
+    #         # snap_count += 1
+    #         ucursor.updateRow(row)
+    # # print(f'Total count of snap field comment updates: {snap_count}')
+
+
 
 print(f'Total count of snapping updates: {item_number}')
 print(f'Total count of multipart features: {multi}')
@@ -312,6 +331,9 @@ print(f'Total count of snap field comment updates: {snap_count}')
 # - Delete the temporary files
 # - Have naming scheme for multiple output files
 # Possibly track start/end points that must remain static in separate data frame or dictionary (OID, snap_start, snap_end)
+# Add static oid comment updates in between new_list iterations
+# Change queries to unique h3 and near_dist combo, then use new format:
+# (start_h3_9 = '89269698cb3ffff' OR end_h3_9 = '89269698cb3ffff') AND (NEAR_DIST = 0.010000500693571748)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
