@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Sep 1 7:05:56 2020
+Created on Fri Jun 4 11:37:56 2021
 @author: eneemann
 
-1 Sep 2020 - script to calculate street fields (originally built from St George)
+4 Jun 2021 - script to calculate street fields for Layton_combined (built from Weber)
 """
 
 import arcpy
@@ -16,23 +16,76 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-# staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
-staging_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
+staging_db = r"C:\E911\Layton\LaytonGeoValidation_updates.gdb"
 env.workspace = staging_db
-fc_layer = "Streets"    # Update to working streets fc
-# fc_layer = "StG_Streets_schema_temp"    # Update to working streets fc
-streets_fc_utm = os.path.join(staging_db, fc_layer)
+fc_layer = "LaytonStreets_combined_from_SGID_20210604"    # Update to working streets fc
+streets_fc = os.path.join(staging_db, fc_layer)
+
 
 ###############
 #  Functions  #
 ###############
 
 
+def calc_distances(streets):
+    # Calculated necessary distance fields
+    print('Calculating geometry (distance) ...')
+    sr_utm12N = arcpy.SpatialReference("NAD 1983 UTM Zone 12N")
+    geom_start_time = time.time()
+    arcpy.management.CalculateGeometryAttributes(streets, [["LengthMiles", "LENGTH_GEODESIC"]], "MILES_US", "", sr_utm12N)
+    arcpy.management.CalculateGeometryAttributes(streets, [["LengthFt", "LENGTH_GEODESIC"]], "FEET_US", "", sr_utm12N)
+    
+    print("Time elapsed calculating geometry: {:.2f}s".format(time.time() - geom_start_time))
+
+
+def calc_minutes(streets):
+    # Calculate travel time field
+    update_count = 0
+    #             0            1         2    
+    fields = ['Minutes', 'LengthMiles', 'Speed']
+    with arcpy.da.UpdateCursor(streets, fields) as cursor:
+        print("Looping through rows to calculate TrvlTime ...")
+        for row in cursor:
+            if row[2] == 0:
+                speed = 25
+            else:
+                speed = row[2]
+            row[0] = (row[1]/speed)*60
+            row[2] = speed
+            update_count += 1
+            cursor.updateRow(row)
+    print("Total count of Minutes updates is {}".format(update_count))
+
+
+def calc_oneway(streets):
+    # Calculate "Oneway" field
+    update_count_oneway = 0
+    #                    0         1  
+    fields_oneway = ['OneWay_code', 'Oneway']
+    with arcpy.da.UpdateCursor(streets, fields_oneway) as cursor:
+        print("Looping through rows to calculate Oneway field ...")
+        for row in cursor:
+            if row[0] == '0' or row[0] == None:
+    #        if row[0] == '0':      
+                row[1] = 'B'
+                update_count_oneway += 1
+            elif row[0] == '1':
+                row[1] = 'FT'
+                update_count_oneway += 1
+            elif row[0] == '2':
+                row[1] = 'TF'
+                update_count_oneway += 1
+            cursor.updateRow(row)
+    print("Total count of Oneway updates is {}".format(update_count_oneway))
+
+
 def blanks_to_nulls(streets):
     update_count = 0
     # Use update cursor to convert blanks to null (None) for each field
-    flist = ['OBJECTID', 'PREDIR', 'STREETNAME', 'STREETTYPE', 'SUFDIR', 'ALIAS1', 'ALIAS1TYPE', 'ALIAS2', 'ALIAS2TYPE',
-              'ACSALIAS', 'ACSNAME', 'ACSSUF', 'HWYNAME']
+    flist = ['OBJECTID', 'PreDir', 'StreetName', 'StreetType', 'SufDir', 'LocationText', 'Notes', 'AltName',
+             'CommonNameShortStName', 'CommonNameStAbbr', 'CommonName4', 'CommonName5', 'CommonName6', 'CommonName7',
+             'CommonName8', 'CommonName9', 'OneWay_code', 'OneWay', 'VERT_LEVEL', 'Speed', 'LengthFt', 'LengthMiles',
+             'Minutes', 'StreetClassification']
     fields = arcpy.ListFields(streets)
 
     field_list = []
@@ -60,8 +113,8 @@ def blanks_to_nulls(streets):
 def calc_street(streets):
     update_count = 0
     # Calculate "STREET" field where applicable
-    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
-    fields = ['PREDIR', 'STREETNAME', 'SUFDIR', 'STREETTYPE', 'STREET']
+    where_clause = "StreetName IS NOT NULL AND STREET IS NULL"
+    fields = ['PreDir', 'StreetName', 'SufDir', 'StreetType', 'STREET']
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
@@ -75,104 +128,6 @@ def calc_street(streets):
             update_count += 1
             cursor.updateRow(row)
     print("Total count of updates to {0}: {1}".format(fields[4], update_count))
-
-
-def calc_prefixdir_from_street(streets):
-    update_count = 0
-    # Use update cursor to calculate PREDIR from street field
-    fields = ['STREET', 'PREDIR']
-    where_clause = "STREET IS NOT NULL AND (PREDIR IS NULL OR PREDIR = '')"
-    with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            pre = row[0].split(' ', 1)[0]
-            if len(pre) == 1:
-                row[1] = pre
-                update_count += 1
-            cursor.updateRow(row)
-    print("Total count of PREDIR calculations is: {}".format(update_count))
-    
-    
-def calc_suffixdir_from_street(streets):
-    update_count = 0
-    # Use update cursor to calculate SUFDIR from street field
-    fields = ['STREET', 'SUFDIR']
-    where_clause = "STREET IS NOT NULL AND (SUFDIR IS NULL OR SUFDIR = '')"
-    with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-#            print(row[0])
-#            end = row[0].rsplit(' ', 1)[1]
-            temp = row[0].rsplit(' ', 1)
-            if len(temp) > 1:
-                end = temp[1]
-            else:
-                end = ''
-            
-            if len(end) == 1 and end in ['N', 'S', 'E', 'W']:
-                row[1] = end
-                update_count += 1
-                cursor.updateRow(row)
-    print("Total count of SUFDIR calculations is: {}".format(update_count))
-    
-    
-def calc_streettype_from_street(streets):
-    update_count = 0
-    # Use update cursor to calculate StreetType from street field
-    fields = ['STREET', 'STREETTYPE']
-    where_clause = "STREET IS NOT NULL AND (STREETTYPE IS NULL OR STREETTYPE = '')"
-    with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            print(row[0])
-#            end = row[0].rsplit(' ', 1)[1]
-            temp = row[0].rsplit(' ', 1)
-            if len(temp) > 1:
-                end = temp[1]
-            else:
-                end = ''
-            if 1 < len(end) <= 4 and end.isalpha():
-                if end not in ('MAIN', 'TOP', 'UNIT'):
-                    row[1] = end
-                    update_count += 1
-            cursor.updateRow(row)
-    print("Total count of STREETTYPE calculations is: {}".format(update_count))
-
-
-def calc_streetname_from_street(streets):
-    update_count = 0
-    # Use update cursor to calculate StreetName from street field
-    #            0           1            2            3             4
-    fields = ['STREET', 'PREDIR', 'SUFDIR', 'STREETTYPE', 'STREETNAME']
-    where_clause = "STREET IS NOT NULL AND (STREETNAME IS NULL OR STREETNAME = '')"
-    with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            street = row[0]
-            pre = row[1]
-            suf = row[2]
-            sttype = row[3]
-            if pre is not None:
-                temp = street.split(pre, 1)[1]
-                if suf is not None:
-                    temp2 = temp.rsplit(suf, 1)[0]
-                elif sttype is not None:
-                    temp2 = temp.rsplit(sttype, 1)[0]
-                else:
-                    temp2 = temp
-            else:
-                temp = street
-                if suf is not None:
-                    temp2 = street.rsplit(suf, 1)[0]
-                elif sttype is not None:
-                    temp2 = street.rsplit(sttype, 1)[0]
-                else:
-                    temp2 = temp
-                
-            row[4] = temp2.strip()
-            update_count += 1
-            cursor.updateRow(row)
-    print("Total count of STREETNAME calculations is: {}".format(update_count))
 
 
 def highway_to_sr_us(streets):
@@ -235,7 +190,7 @@ def highway_to_sr_us(streets):
 
 def street_blank_to_null(streets):
     update_count = 0
-    # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "SALIAS2" field
+    # Calculate updates on STREET to remove blanks
     where_clause = "STREET LIKE ''"
     fields = ['STREET']
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
@@ -251,19 +206,15 @@ def street_blank_to_null(streets):
 def calc_location(streets):
     # Calculate the "LOCATION" field with ACSALIAS
     update_count = 0
-    where_clause = "ACSNAME IS NOT NULL AND ACSSUF IS NOT NULL AND (LOCATION IS NULL OR ACSALIAS IS NULL)"
-    fields = ['ACSNAME', 'ACSSUF', 'ACSALIAS', 'LOCATION', 'PREDIR']
+    where_clause = "LocationText IS NULL AND ALIAS IS NOT NULL"
+    fields = ['ALIAS', 'LocationText',]
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            loc = row[4] + ' ' + row[0] + ' ' + row[1]
-            loc = loc.strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
-            row[2] = loc
-            row[3] = loc
-            print(f"New value for {fields[2]} and {fields[3]} is: {loc.strip()}")
+            row[1] = row[0]
             update_count += 1
             cursor.updateRow(row)
-    print(f"Total count of LOCATION field updates in {streets} is: {update_count}")
+    print(f"Total count of LocationText field updates in {streets} is: {update_count}")
 
 
 def strip_fields(streets):
@@ -294,28 +245,18 @@ def strip_fields(streets):
 #  Call Functions Below  #
 ##########################
 # # Calc STREET from other fields
-blanks_to_nulls(streets_fc_utm)
-calc_street(streets_fc_utm)
-# highway_to_sr_us(streets_fc_utm)
-street_blank_to_null(streets_fc_utm)
-calc_location(streets_fc_utm)
-strip_fields(streets_fc_utm)
+#calc_distances(streets_fc)
+calc_minutes(streets_fc)
+calc_oneway(streets_fc)
+blanks_to_nulls(streets_fc)
+calc_street(streets_fc)
+street_blank_to_null(streets_fc)
+calc_location(streets_fc)
+strip_fields(streets_fc)
 
-# Calc other fields from STREET
-# calc_street(streets_fc_utm)
-# calc_prefixdir_from_street(streets_fc_utm)
-# calc_suffixdir_from_street(streets_fc_utm)
-# calc_streettype_from_street(streets_fc_utm)
-# calc_streetname_from_street(streets_fc_utm)
-# calc_salias1(streets_fc_utm)
-# calc_salias2(streets_fc_utm)
-# calc_salias4(streets_fc_utm)
-# highway_to_sr_us(streets_fc_utm)
-# calc_salias3(streets_fc_utm)
-# street_blank_to_null(streets_fc_utm)
-# # calc_location(streets_fc_utm)
-# blanks_to_nulls(streets_fc_utm)
-# strip_fields(streets_fc_utm)
+
+# highway_to_sr_us(streets_fc)
+
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
