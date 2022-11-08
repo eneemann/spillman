@@ -69,7 +69,6 @@ arcpy.management.Project(temp_streets, working_streets, sr, "WGS_1984_(ITRF00)_T
 oid_fieldname = arcpy.Describe(working_streets).OIDFieldName
 print(f"OID field name:  {oid_fieldname}")
 
-
 arcpy.management.FeatureVerticesToPoints(working_streets, st_endpoints, "BOTH_ENDS")
 
 # Create table name (in memory) for neartable
@@ -153,6 +152,8 @@ def update_geom(shape, case, x, y):
 
 
 snapped = os.path.join(staging_db, f"St_working_{today}_snapped")
+if arcpy.Exists(snapped):
+    arcpy.Delete_management(snapped)
 arcpy.CopyFeatures_management(final_name, snapped)
 
 # Get the spatial reference for later use
@@ -184,7 +185,9 @@ new_list = set(unique_tuple)
 # print(new_list)
 
 # Create dataframe from relevant oids to track start/endpoint snapping staus
-snap_df = not_zero[['OBJECTID']].rename(columns={'OBJECTID': 'oid'})
+snap_df = not_zero[['OBJECTID']].rename(columns={'OBJECTID': 'oid'}).set_index('oid')
+snap_df['start'] = ''
+snap_df['end'] = ''
 
 item_number = 0
 multi = 0
@@ -219,8 +222,9 @@ for item in new_list:
                     first_start_y = start_y
                     first_end_x = end_x
                     first_end_y = end_y
-                    row[5] = 'static start'
-                    row[6] = 'static end'
+                    # row[5] = 'static start'
+                    # row[6] = 'static end'
+                    this_oid = row[7]
                     cnt += 1
                 else:
                     # Calculate distances from each endpoint to endpoint of first feature
@@ -229,48 +233,50 @@ for item in new_list:
                     thisend_firststart = math.sqrt((end_x - first_start_x)**2 + (end_y - first_start_y)**2)
                     thisstart_firststart = math.sqrt((start_x - first_start_x)**2 + (start_y - first_start_y)**2)
                     this_oid = row[7]
-
-                    benchmark_dist = min(thisend_firstend, thisstart_firstend, thisend_firststart, thisstart_firststart)
+                    
+                    distances = [thisend_firstend, thisstart_firstend, thisend_firststart, thisstart_firststart]
+                    # benchmark_dist = min(thisend_firstend, thisstart_firstend, thisend_firststart, thisstart_firststart)
+                    benchmark_dist = min(d for d in distances if d > 0)
                     # print(f'benchmark_dist for {query} \n \t is: {benchmark_dist}')
                     print(f'benchmark_dist: {benchmark_dist}    near_dist: {row[4]}')
 
                     # if thisend_firstend == benchmark_dist and benchmark_dist == row[4]:
-                    if thisend_firstend == benchmark_dist and abs(benchmark_dist - row[4]) < 0.01:
+                    if thisend_firstend == benchmark_dist and abs(benchmark_dist - row[4]) < 0.05 and 'done' not in snap_df.at[this_oid, 'end']:
                         scenario = 1
                         print(f'Case 1: thisend_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
                         row[0] = new_geom
-                        row[6] = 'snapped end'
+                        # row[6] = 'snapped end'
                         snap_df.at[this_oid, 'end'] = 'done - snapped'
                         snap_df.at[first_oid, 'end'] = 'done - static'
                         cnt += 1
                     # if thisstart_firstend == benchmark_dist and benchmark_dist == row[4]:
-                    if thisstart_firstend == benchmark_dist and abs(benchmark_dist - row[4]) < 0.01:
+                    if thisstart_firstend == benchmark_dist and abs(benchmark_dist - row[4]) < 0.05 and 'done' not in snap_df.at[this_oid, 'start']:
                         scenario = 2
                         print(f'Case 2: thisstart_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
                         row[0] = new_geom
-                        row[5] = 'snapped start'
+                        # row[5] = 'snapped start'
                         snap_df.at[this_oid, 'start'] = 'done - snapped'
                         snap_df.at[first_oid, 'end'] = 'done - static'
                         cnt += 1
                     # if thisend_firststart == benchmark_dist and benchmark_dist == row[4]:
-                    if thisend_firststart == benchmark_dist and abs(benchmark_dist - row[4]) < 0.01:
+                    if thisend_firststart == benchmark_dist and abs(benchmark_dist - row[4]) < 0.05 and 'done' not in snap_df.at[this_oid, 'end']:
                         scenario = 3
                         print(f'Case 3: thisend_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
                         row[0] = new_geom
-                        row[6] = 'snapped end'
+                        # row[6] = 'snapped end'
                         snap_df.at[this_oid, 'end'] = 'done - snapped'
                         snap_df.at[first_oid, 'start'] = 'done - static'
                         cnt += 1
                     # if thisstart_firststart == benchmark_dist and benchmark_dist == row[4]:
-                    if thisstart_firststart == benchmark_dist and abs(benchmark_dist - row[4]) < 0.01:
+                    if thisstart_firststart == benchmark_dist and abs(benchmark_dist - row[4]) < 0.05 and 'done' not in snap_df.at[this_oid, 'start']:
                         scenario = 4
                         print(f'Case 4: thisstart_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
                         row[0] = new_geom
-                        row[5] = 'snapped start'
+                        # row[5] = 'snapped start'
                         snap_df.at[this_oid, 'start'] = 'done - snapped'
                         snap_df.at[first_oid, 'start'] = 'done - static'
                         cnt += 1
@@ -281,6 +287,24 @@ for item in new_list:
 
 print(f'Total count of snapping updates: {item_number}')
 print(f'Total count of multipart features: {multi}')
+
+
+# Go back through data and update the comment fields (snap_start, snap_end) based on snap_df
+snap_count = 0
+oid_list = snap_df.index.to_list()
+#             0          1            2
+fields = ['OID@', 'snap_start', 'snap_end']
+with arcpy.da.UpdateCursor(snapped, fields) as ucursor:
+    print("Calculating snap comments for start and end points ...")
+    for row in ucursor:
+        if row[0] in oid_list:
+            row[1] = snap_df.at[row[0], 'start']
+            row[2] = snap_df.at[row[0], 'end']
+            snap_count += 1
+        ucursor.updateRow(row)
+print(f'Total count of snap field comment updates: {snap_count}')
+
+
 
 # OTHER IDEAS #
 # If iterating to run snapper multiple times:
