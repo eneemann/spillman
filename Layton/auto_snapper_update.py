@@ -194,7 +194,8 @@ multi = 0
 for item in new_list:
     # print(f"Working on snapping for group {item_number} ...")
     # query = f"""(start_h3_9 = '{item[0]}' AND NEAR_DIST = {item[2]}) OR (end_h3_9 = '{item[1]}' AND NEAR_DIST = {item[2]})"""
-    query = f"""(start_h3_9 IN ('{item[0]}', '{item[1]}') OR end_h3_9 IN ('{item[0]}', '{item[1]}')) AND (NEAR_DIST = {item[2]})"""
+    # query = f"""(start_h3_9 IN ('{item[0]}', '{item[1]}') OR end_h3_9 IN ('{item[0]}', '{item[1]}')) AND (NEAR_DIST = {item[2]})"""
+    query = f"""(start_h3_9 IN ('{item[0]}', '{item[1]}') OR end_h3_9 IN ('{item[0]}', '{item[1]}')) AND (NEAR_DIST IS NOT NULL)"""
     sql_clause = [None, "ORDER BY snap_start DESC, snap_end DESC"]
     # print(query)
     #             0          1               2             3           4             5           6          7        8
