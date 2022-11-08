@@ -1,0 +1,317 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Oct 20 16:27:21 2022
+@author: eneemann
+Script to export SGID roads for Davis county
+
+20 Oct 2022: Created initial version of code (EMN).
+"""
+
+import os
+import time
+import arcpy
+from arcpy import env
+
+# Start timer and print start time in UTC
+start_time = time.time()
+readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+print("The script start time is {}".format(readable_start))
+
+today = time.strftime("%Y%m%d")
+
+# Set up paths and variables
+staging_db = r"C:\E911\Layton\Layton_staging.gdb"
+schema_db = r"C:\E911\Layton\Davis_new_road_schema.gdb"
+SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
+county = os.path.join(staging_db, "aaa_DavisCo_boundary")
+sgid_roads = os.path.join(SGID, "SGID.TRANSPORTATION.Roads")
+export_roads = os.path.join(staging_db, "Roads_SGID_export_" + today)
+wgs84_export_roads = os.path.join(staging_db, f"Roads_SGID_export_{today}_WGS84")
+streets_schema = os.path.join(schema_db, "Streets_TOC_schema_edited_for_davis")
+working_roads = os.path.join(staging_db, f"Davis_streets_build_{today}")
+env.workspace = staging_db
+env.overwriteOutput = True
+
+name_change_dict = {
+    'I-15 NB': 'NB 15',
+    'I-15 SB': 'SB 15',
+    'I-84 WB': 'WB 84',
+    'I-84 EB': 'EB 84',
+    'I-80 WB': 'WB 80',
+    'I-80 EB': 'EB 80',
+    'I-215 NB': 'NB 215',
+    'I-215 SB': 'SB 215',
+    'I-215 WB': 'WB 215',
+    'I-215 EB': 'EB 215',
+    'HWY 89 NB': 'NB 89',
+    'HWY 89 SB': 'SB 89',
+    'US 89 NB': 'NB 89',
+    'US 89 SB': 'SB 89',
+    'US 89 X': 'HWY 89 X',
+    'US 89 RAMP': 'HWY 89 RAMP',
+    'LEGACY NB PKWY': 'NB LEGACY',
+    'LEGACY SB PKWY': 'SB LEGACY',
+    'LEGACY NB X': 'NB LEGACY X',
+    'LEGACY SB X': 'SB LEGACY X',
+    'LEGACY NB RAMP': 'NB LEGACY RAMP',
+    'LEGACY SB RAMP': 'SB LEGACY RAMP',
+}
+
+def export_from_sgid():
+    # Export roads from SGID into new FC based on intersection with county boundary
+    # First make layer from relevant counties (Davis, Weber, SL, Morgan, Tooele)
+    where_SGID = "COUNTY_L IN ('49011', '49057', '49035', '49029', '49045') OR COUNTY_R IN ('49011', '49057', '49035', '49029', '49045')"
+    if arcpy.Exists("sgid_roads_lyr"):
+        arcpy.management.Delete("sgid_roads_lyr")
+    arcpy.management.MakeFeatureLayer(sgid_roads, "sgid_roads_lyr", where_SGID)
+    print("Selecting SGID roads to export by intersection with city codes ...")
+    arcpy.management.SelectLayerByLocation("sgid_roads_lyr", "HAVE_THEIR_CENTER_IN", county, "5 Miles")
+    arcpy.management.CopyFeatures("sgid_roads_lyr", export_roads)
+
+
+def project_to_wgs84():
+    # Project to WGS84
+    print(f"Projecting {export_roads} to WGS84...")
+    sr = arcpy.SpatialReference("WGS 1984")
+    arcpy.management.Project(export_roads, wgs84_export_roads, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
+
+
+def prep_fields(streets):
+    # Calculate intermediate fields on wgs84 exported data
+    arcpy.management.AddField(streets, "STREET", "TEXT", "", "", 50)
+
+    count = 0
+    #             0         1          2        3         4             5
+    fields = ['PREDIR', 'FULLNAME', 'STREET']
+    with arcpy.da.UpdateCursor(streets, fields) as ucursor:
+        print("Calculating STREET field ...")
+        for row in ucursor:
+            if row[0] is None: row[0] = ''
+            if row[1] is None: row[1] = ''
+            parts = [row[0], row[1]]
+            row[2] = " ".join(parts)
+            row[2] = row[2].strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
+            row[2] = row[2][:60]
+                  
+            count += 1
+            ucursor.updateRow(row)
+    print(f'Total count of STREET field updates: {count}')
+
+
+def load_into_schema():
+    arcpy.management.CopyFeatures(streets_schema, working_roads)
+
+    # Create field map for SGID to Davis schema
+    print('Creating field map ...')
+    fms_rds = arcpy.FieldMappings()
+    
+    fm_dict_rds = {'CARTOCODE': 'CARTOCODE',
+               'PREDIR': 'PREDIR',
+               'NAME': 'STREETNAME',
+               'POSTTYPE': 'STREETTYPE',
+               'POSTDIR': 'SUFDIR',
+               'A1_NAME': 'ALIAS1',
+               'A1_POSTTYPE': 'ALIAS1TYPE',
+               'A2_NAME': 'ALIAS2',
+               'A2_POSTTYPE': 'ALIAS2TYPE',
+               'AN_NAME': 'ACSNAME',
+               'AN_POSTDIR': 'ACSSUF',
+               'ZIPCODE_L': 'ZIPLEFT',
+               'ZIPCODE_R': 'ZIPRIGHT',
+               'ONEWAY': 'ONEWAY',
+               'SPEED_LMT': 'SPEED',
+               'DOT_HWYNAM': 'HWYNAME',
+               'STREET': 'STREET',
+               'FROMADDR_L': 'L_F_ADD',
+               'TOADDR_L': 'L_T_ADD',
+               'FROMADDR_R': 'R_F_ADD',
+               'TOADDR_R': 'R_T_ADD',
+               'VERT_LEVEL': 'VERT_LEVEL',
+               'STATUS': 'STATUS',
+               'UPDATED': 'UPDATED',
+               'ADDRSYS_L': 'ADDRSYS_L',
+               'ADDRSYS_R': 'ADDRSYS_R'
+               }
+
+    for key in fm_dict_rds:
+        fm_rds = arcpy.FieldMap()
+        fm_rds.addInputField(wgs84_export_roads, key)
+        output_rds = fm_rds.outputField
+        output_rds.name = fm_dict_rds[key]
+        fm_rds.outputField = output_rds
+        fms_rds.addFieldMap(fm_rds)
+
+    # Append SGID_WGS84 export data into Davis schema
+    print('Appending SGID roads into Davis schema ...')
+    query = """STATUS <> 'Planned' AND CARTOCODE NOT IN ('99', '15')"""
+    arcpy.management.Append(wgs84_export_roads, working_roads, "NO_TEST", field_mapping=fms_rds, expression=query)
+
+
+def calc_fields(streets):
+    # Calculate remaining fields
+    update_count = 0
+    # Calculate "JOINID" field
+    fields = ['JOINID', 'OID@']
+    with arcpy.da.UpdateCursor(streets, fields) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            row[0] = row[1]
+            update_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of updates to {fields[0]} field: {update_count}")
+
+    # Calculate the "LOCATION" and "ACSALIAS" fields
+    update_count = 0
+    # where_clause = "ACSNAME IS NOT NULL AND ACSSUF IS NOT NULL AND (LOCATION IS NULL AND ACSALIAS IS NULL)"
+    #             0          1         2           3          4   
+    fields = ['ACSNAME', 'ACSSUF', 'ACSALIAS', 'LOCATION', 'PREDIR']
+    with arcpy.da.UpdateCursor(streets, fields) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            if row[0] not in ('', ' ', None) and row[1] not in ('', ' ', None) and (row[3] in ('', ' ', None) or row[2]  in ('', ' ', None)):
+                loc = f"{row[4]} {row[0]} {row[1]}"
+                loc = loc.strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
+                row[2] = loc
+                row[3] = loc
+                # print(f"New value for {fields[2]} and {fields[3]} is: {loc}")
+                update_count += 1
+                cursor.updateRow(row)
+    print(f"Total count of LOCATION field updates in {streets} is: {update_count}")
+
+    # Calculated necessary travel time fields
+    print('Calculating geometry (distance) ...')
+    sr_utm12N = arcpy.SpatialReference("NAD 1983 UTM Zone 12N")
+    geom_start_time = time.time()
+    arcpy.management.CalculateGeometryAttributes(streets, [["Distance", "LENGTH_GEODESIC"]], "MILES_US", "", sr_utm12N)
+    print("Time elapsed calculating geometry: {:.2f}s".format(time.time() - geom_start_time))
+
+    # Calculate travel time field
+    update_count = 0
+    #             0            1         2    
+    fields = ['TrvlTime', 'Distance', 'SPEED']
+    with arcpy.da.UpdateCursor(streets, fields) as cursor:
+        print("Looping through rows to calculate TrvlTime ...")
+        for row in cursor:
+            if row[2] == 0:
+                row[2] = 25
+            row[0] = (row[1]/row[2])*60
+            update_count += 1
+            cursor.updateRow(row)
+    print("Total count of TrvlTime updates is {}".format(update_count))
+
+    # Calculate "One_Way" field
+    update_count_oneway = 0
+    #                    0         1  
+    fields_oneway = ['ONEWAY', 'One_Way']
+    with arcpy.da.UpdateCursor(streets, fields_oneway) as cursor:
+        print("Looping through rows to calculate One_Way field ...")
+        for row in cursor:
+            if row[0] == '0' or row[0] == None:
+    #        if row[0] == '0':      
+                row[1] = 'B'
+                update_count_oneway += 1
+            elif row[0] == '1':
+                row[1] = 'FT'
+                update_count_oneway += 1
+            elif row[0] == '2':
+                row[1] = 'TF'
+                update_count_oneway += 1
+            cursor.updateRow(row)
+    print("Total count of One_Way updates is {}".format(update_count_oneway))
+
+
+def strip_fields(streets):
+    update_count = 0
+    # Use update cursor to convert blanks to null (None) for each field
+
+    fields = arcpy.ListFields(streets)
+
+    field_list = []
+    for field in fields:
+        print(field.type)
+        if field.type == 'String':
+            field_list.append(field.name)
+            
+    print(field_list)
+
+    with arcpy.da.UpdateCursor(streets, field_list) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            for i in range(len(field_list)):
+                if isinstance(row[i], str):
+                    row[i] = row[i].strip()
+                    update_count += 1
+            cursor.updateRow(row)
+    print("Total count of stripped fields is: {}".format(update_count))
+
+
+def blanks_to_nulls(streets):
+    update_count = 0
+    # Use update cursor to convert blanks to null (None) for each field
+    fields = arcpy.ListFields(streets)
+
+    field_list = []
+    for field in fields:
+        if field.name != 'OBJECTID':
+            field_list.append(field.name)
+
+    with arcpy.da.UpdateCursor(streets, field_list) as cursor:
+        print("Converting blanks to NULLs ...")
+        for row in cursor:
+            for i in range(len(field_list)):
+                if row[i] in ('', ' '):
+                    update_count += 1
+                    row[i] = None
+            cursor.updateRow(row)
+    print("Total count of blanks converted to NULLs is: {}".format(update_count))
+
+
+def apply_nomenclature(streets):
+    # First remove 'FWY' from STREET field, convert 'HIGHWAY' to 'HWY'
+    fwy_count = 0
+    hwy_count = 0
+    fields = ['STREET']
+    with arcpy.da.UpdateCursor(streets, fields, "STREET is not NULL") as cursor:
+        print("Looping through rows make FWY/HWY updates ...")
+        for row in cursor:
+            if 'FWY' in row[0]:
+                row[0] = row[0].replace('FWY', '').replace('  ', ' ').replace('  ', ' ').strip()
+                fwy_count += 1
+            if 'HIGHWAY' in row[0]:
+                row[0] = row[0].replace('HIGHWAY', 'HWY').replace('  ', ' ').replace('  ', ' ').strip()
+                hwy_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of 'FWY' removals is: {fwy_count}")
+    print(f"Total count of 'HIGHWAY' to 'HWY' changes: {hwy_count}")
+    
+    # Then replace strings based on name_change_dict
+    name_query = """STREET LIKE '%FWY%' OR STREET LIKE '%LEGACY%PKWY%' OR STREET LIKE '% NB%' OR STREET LIKE '% SB%' OR STREET LIKE '%I-8%' OR STREET LIKE '%I-%15%' OR STREET LIKE '%89%'"""
+    name_count = 0
+    fields = ['STREET']
+    with arcpy.da.UpdateCursor(streets, fields, name_query) as cursor:
+        print("Looping through rows to make nomenclature changes ...")
+        for row in cursor:
+            for key in name_change_dict:
+                if key in row[0]:
+                    row[0] = row[0].replace(key, name_change_dict[key]).replace('  ', ' ').replace('  ', ' ').strip()
+                    name_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of nomenclature changes: {name_count}")
+
+
+
+# export_from_sgid()
+# project_to_wgs84()
+# prep_fields(wgs84_export_roads)
+# load_into_schema()
+# calc_fields(working_roads)
+# strip_fields(working_roads)
+# blanks_to_nulls(working_roads)
+working_roads = os.path.join(staging_db, "Davis_streets_build_20221021")
+apply_nomenclature(working_roads)
+
+print("Script shutting down ...")
+# Stop timer and print end time in UTC
+readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+print("The script end time is {}".format(readable_end))
+print("Time elapsed: {:.2f}s".format(time.time() - start_time))
