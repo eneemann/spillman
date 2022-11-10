@@ -18,6 +18,9 @@ from tqdm import tqdm
 import math
 from arcgis.features import GeoAccessor, GeoSeriesAccessor
 
+# Initialize the tqdm progress bar tool
+tqdm.pandas()
+
 # Start timer and print start time in UTC
 start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -41,7 +44,7 @@ st_endpoints = os.path.join(staging_db, f"St_snap_endpoints_{today}")
 # Set snapping radius in meters
 snap_radius = 4
 
-print("Copying feeatures to working layer ...")
+print("Copying features to working layer ...")
 arcpy.CopyFeatures_management(real_streets, temp_streets)
 
 # Add h3 index level 9 for start and end points
@@ -77,6 +80,19 @@ if arcpy.Exists(st_endpoints):
     arcpy.Delete_management(st_endpoints)
 arcpy.management.FeatureVerticesToPoints(working_streets, st_endpoints, "BOTH_ENDS")
 
+calc_time = time.time()
+#: Add fields for lon/lat values
+arcpy.management.AddField(st_endpoints, 'lon', 'FLOAT', field_scale="6", field_alias="Longitude")
+arcpy.management.AddField(st_endpoints, 'lat', 'FLOAT', field_scale="6", field_alias="Latitude")
+
+#: Calculate lon/lat values for all points (in WGS84 coords)
+lat_calc = f'arcpy.PointGeometry(!Shape!.centroid, !Shape!.spatialReference).projectAs(arcpy.SpatialReference(4326)).centroid.Y'
+lon_calc = f'arcpy.PointGeometry(!Shape!.centroid, !Shape!.spatialReference).projectAs(arcpy.SpatialReference(4326)).centroid.X'
+
+arcpy.CalculateField_management(st_endpoints, 'lat', lat_calc, "PYTHON3")
+arcpy.CalculateField_management(st_endpoints, 'lon', lon_calc, "PYTHON3")
+print("Time elapsed calculating fields: {:.2f}s".format(time.time() - calc_time))
+
 # Create table name (in memory) for neartable
 neartable = 'in_memory\\near_table'
 # Perform near table analysis
@@ -100,11 +116,24 @@ print(endpt_near_df.head(5))
 endpt_near_df.sort_values('NEAR_DIST', inplace=True)
 
 non_zero_fc = endpt_near_df[endpt_near_df.NEAR_DIST != 0]
-# non_zero_fc_path = os.path.join(work_dir, 'snapping_test_nonzero.csv')
-# non_zero_fc.to_csv(non_zero_fc_path)
+non_zero_fc_path = os.path.join(work_dir, 'snapping_test_nonzero.csv')
+non_zero_fc.to_csv(non_zero_fc_path)
 
+#: Calculate h3 on points in a lamdba function
+print("Calculating h3 index as a lambda function ...")
+h3_lambda = time.time()
+non_zero_fc['point_h3'] = non_zero_fc.progress_apply(lambda p: h3.geo_to_h3(p['lat'], p['lon'], 12), axis = 1)
+print("\n    Time elapsed in h3 as a lambda function: {:.2f}s".format(time.time() - h3_lambda))
+
+# Drop duplicates to narrow down the end points 
 # no_dups_fc = non_zero_fc.drop_duplicates('NEAR_DIST')
-no_dups_fc = non_zero_fc.drop_duplicates('ORIG_FID')
+# no_dups_fc = non_zero_fc.drop_duplicates('ORIG_FID')
+# Trying again to get unique combos of NEAR_DIST and h3 hashes (keep getting NULL object)
+# no_dups_fc = non_zero_fc.drop_duplicates(subset=['NEAR_DIST', 'start_h3_9'])
+# print(no_dups_fc.head(5))
+# no_dups_fc = no_dups_fc.drop_duplicates(subset=['NEAR_DIST', 'end_h3_9'], inplace=True)
+# print(no_dups_fc.head(5))
+no_dups_fc = non_zero_fc.drop_duplicates(subset=['NEAR_DIST', 'point_h3'])
 no_dups_fc_path = os.path.join(work_dir, 'snapping_test_nodups_fc.csv')
 no_dups_fc.to_csv(no_dups_fc_path)
 
@@ -367,27 +396,6 @@ for snap_oid in snap_area_oids:
             # print(snap_df.to_string())
 
     item_number += 1
-    
-    # # Go back through data and update the comment fields (snap_start, snap_end) based on snap_df in between new_list iterations
-    # # snap_count = 0
-    # oid_list = snap_df.index.to_list()
-    # #                 0          1            2            3
-    # fewer_fields = ['OID@', 'snap_start', 'snap_end', 'snap_status']
-    # oid_query = f'OBJECTID IN ({",".join([str(oid) for oid in oid_list])})'
-    # # with arcpy.da.UpdateCursor(snapped, fields, oid_query) as ucursor:
-    # with arcpy.da.UpdateCursor(snapped, fewer_fields, query, '','', sql_clause) as ucursor:
-    #     # print("Calculating snap comments for start and end points ...")
-    #     for row in ucursor:
-    #         row[1] = snap_df.at[row[0], 'start']
-    #         row[2] = snap_df.at[row[0], 'end']
-    #         if 'done' in row[1] and 'done' in row[2]:
-    #             row[3] = 'finished'
-
-    #         # snap_count += 1
-    #         ucursor.updateRow(row)
-    # # print(f'Total count of snap field comment updates: {snap_count}')
-
-
 
 print(f'Total count of snapping updates: {item_number}')
 print(f'Total count of multipart features: {multi}')
