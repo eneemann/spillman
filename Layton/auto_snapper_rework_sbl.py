@@ -103,7 +103,8 @@ non_zero_fc = endpt_near_df[endpt_near_df.NEAR_DIST != 0]
 # non_zero_fc_path = os.path.join(work_dir, 'snapping_test_nonzero.csv')
 # non_zero_fc.to_csv(non_zero_fc_path)
 
-no_dups_fc = non_zero_fc.drop_duplicates('NEAR_DIST')
+# no_dups_fc = non_zero_fc.drop_duplicates('NEAR_DIST')
+no_dups_fc = non_zero_fc.drop_duplicates('ORIG_FID')
 no_dups_fc_path = os.path.join(work_dir, 'snapping_test_nodups_fc.csv')
 no_dups_fc.to_csv(no_dups_fc_path)
 
