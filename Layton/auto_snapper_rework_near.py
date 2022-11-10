@@ -258,6 +258,7 @@ for snap_oid in snap_area_oids:
     with arcpy.da.UpdateCursor(snapped, fields, snap_query, '', '', sql_clause) as ucursor:
         cnt = 0
         for row in ucursor:
+            skipped = False
             shape_obj = row[0]
             if shape_obj.partCount > 1: 
                 print("Warning: multiple parts! extra parts are automatically trimmed!")
@@ -266,7 +267,7 @@ for snap_oid in snap_area_oids:
             # Only operate on lines whose length is more than the snap_radius
             if row[1] < snap_radius:
                 skipped = True
-                print(f'OID: {row[7]} was skipped,      Length: {row[1]}')
+                print(f'OID: {row[7]} was deleted,      Length: {row[1]}')
             else:
                 # Get start/end coordinates of each feature
                 start_x = shape_obj.firstPoint.X
@@ -332,8 +333,10 @@ for snap_oid in snap_area_oids:
                         snap_df.at[this_oid, 'start'] = 'snapped - done'
                         snap_df.at[first_oid, 'start'] = 'static - done'
                         cnt += 1
-            
-            ucursor.updateRow(row)
+            if skipped:
+                ucursor.deleteRow()
+            else:
+                ucursor.updateRow(row)
             # print(snap_df.to_string())
 
     item_number += 1
@@ -363,6 +366,10 @@ print(f'Total count of snap field comment updates: {snap_count}')
 # OTHER IDEAS #
 # SPEED UP
 # Calculate lat/lons and h3s in dataframe/lambdas (might need to project to WGS84)
+# SORTING
+# Current sorting occasionally has a NEAR_DIST null at the top (due to ASC)
+#   This results in no snapping because other points aren't within 4m
+#   Maybe sort NEAR_DIST DESC
 
 
 print("Script shutting down ...")
