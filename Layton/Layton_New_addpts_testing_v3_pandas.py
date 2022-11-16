@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Mar 5 08:39:07 2019
+Created on Thu Nov 10 15:15:07 2022
 @author: eneemann
 Script to detect possible address points by comparing new data to current data
 
@@ -21,41 +21,31 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-weber_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
-staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
-env.workspace = weber_db
+layton_db = r"C:\E911\Layton\LaytonGeoValidation_updates_20220826.gdb"
+staging_db = r"C:\E911\Layton\Layton_staging.gdb"
+env.workspace = layton_db
 env.overwriteOutput = True
 
-weber_streets = os.path.join(weber_db, "Streets_Map")
-weber_addpts = "AddressPoints_SGB_20200116"    # Point to current addpts in staging_db
-current_addpts = os.path.join(staging_db, weber_addpts)
+layton_streets = os.path.join(layton_db, "LaytonStreets")
+layton_addpts = "LaytonAddressPoints_20221110"    # Point to current addpts in staging_db
+current_addpts = os.path.join(staging_db, layton_addpts)
 
 today = time.strftime("%Y%m%d")
 new_addpts = "AddressPoints_SGID_export_" + today
 #new_addpts = "AddressPoints_SGID_export_20200116"     # Use if SGID data was already exported
-possible_addpts = os.path.join(staging_db, new_addpts)
 
-
-# Copy current address points into a working FC
-working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
-arcpy.CopyFeatures_management(possible_addpts, working_addpts)
-
-# Add field to working FC for notes
-arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
-arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 ###############
 #  Functions  #
 ###############
 
-def get_SGID_addpts(out_db):
-    today = time.strftime("%Y%m%d")
+
+def get_SGID_addpts(out_db, new_pts):
     SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
     sgid_pts = os.path.join(SGID, "SGID.LOCATION.AddressPoints")
-    new_pts = "AddressPoints_SGID_export_" + today
     if arcpy.Exists(new_pts):
         arcpy.Delete_management(new_pts)
-    where_SGID = "CountyID IN ('49057', '49029')"   # Weber, Morgan County
+    where_SGID = "CountyID IN ('49011')"   # Davis County
     print("Exporting SGID address points to: {}".format(new_pts))
     arcpy.FeatureClassToFeatureClass_conversion (sgid_pts, out_db, new_pts, where_SGID)
 
@@ -86,16 +76,18 @@ def remove_duplicates(current, possible, working):
     # Need to make a layer from possible address points feature class here
     arcpy.MakeFeatureLayer_management(working, "working_lyr")
 
-    # Create list of features in the current Weber address points feature class
+    # Create list of features in the current Davis address points feature class
     current_dict = {}
-    fields = ['FullAdd']
-    with arcpy.da.SearchCursor(current, fields) as cursor:
+    fields = ['Address']
+    with arcpy.da.UpdateCursor(current, fields) as cursor:
         print("Looping through rows in {} ...".format(current))
         for row in cursor:
-            current_dict.setdefault(row[0])
+            if row[0] is None:
+                row[0] = ''
+            current_dict.setdefault(row[0].upper())
     print("Total current address points: {}".format(str(len(current_dict))))
 
-    # Loop through possible layer and select features that aren't in current Weber add pts list (avoid duplicates)
+    # Loop through possible layer and select features that aren't in current Davis add pts list (avoid duplicates)
     fields = ['FullAdd', 'Notes']
     with arcpy.da.UpdateCursor("working_lyr", fields) as cursor:
         print("Looping through rows in {} ...".format("working_lyr"))
@@ -126,7 +118,7 @@ def mark_near_addpts(current, possible, working):
     arcpy.MakeFeatureLayer_management(working, "working_lyr_2", where_clause)
     print("Working layer feature count: {}".format(arcpy.GetCount_management("working_lyr_2")))
     
-    # Select all features within 5m of current Weber FC
+    # Select all features within 5m of current Davis FC
     fields = ['Notes']
     arcpy.SelectLayerByLocation_management("working_lyr_2", "WITHIN_A_DISTANCE_GEODESIC", current,
                                                          "5 meters", "NEW_SELECTION")
@@ -188,18 +180,18 @@ def check_nearby_roads(working, streets, gdb):
     # Join address points to near table
     join1_df = near_df.join(addpts_df.set_index('OID@'), on='IN_FID')
     print(join1_df.head(5).to_string())
-    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_join1.csv'
+    path = r'C:\E911\Layton\Addpts_working_folder\neartable_join1.csv'
     join1_df.to_csv(path)
     
     # Join streets to near table
     join2_df = join1_df.join(streets_df.set_index('OID@'), on='NEAR_FID')
     print(join2_df.head(5).to_string())
-    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_join2.csv'
+    path = r'C:\E911\Layton\Addpts_working_folder\neartable_join2.csv'
     join2_df.to_csv(path)
     
     # Apply logic_checks function to rows (axis=1) and output new df as CSV
     near_df_updated = join2_df.apply(logic_checks, axis=1)
-    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\neartable_updated.csv'
+    path = r'C:\E911\Layton\Addpts_working_folder\neartable_updated.csv'
     near_df_updated.to_csv(path)
     
     # Separate rows with a good nearby street into a separate dataframe
@@ -223,21 +215,21 @@ def check_nearby_roads(working, streets, gdb):
 #    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['goodstreet', 'goodnum'], ascending=False).drop_duplicates('IN_FID')
     filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'],
                                        ascending=[True,False, False, True, True])
-    filtered_df.to_csv(r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_all.csv')
+    filtered_df.to_csv(r'C:\E911\Layton\Addpts_working_folder\layton_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
     final_df = filtered_df.drop_duplicates('IN_FID')
-    path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_final.csv'
+    path = r'C:\E911\Layton\Addpts_working_folder\layton_neartable_final.csv'
     final_df.to_csv(path)
     
 #    # Testing best method to sort data to resturn best candidate for non-matches
 #    test_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'], ascending=[True,False, False, True, True])
-#    test_df.to_csv(r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_test_edit.csv')
+#    test_df.to_csv(r'C:\E911\Layton\Addpts_working_folder\layton_neartable_test_edit.csv')
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
     join_df.columns = ['IN_FID', 'Notes_near', 'edit_dist']
-    join_path = r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_join.csv'
+    join_path = r'C:\E911\Layton\Addpts_working_folder\layton_neartable_join.csv'
     join_df.to_csv(join_path)
         
     # Convert CSV output into table and join to working address points FC
@@ -286,8 +278,8 @@ def logic_checks(row):
     if add_num.isdigit():
         if row['Street'] == row['STREET']:
             goodstreet = True
-            if (int(add_num.split()[0]) >= row['L_F_ADD'] and int(add_num.split()[0]) <= row['L_T_ADD']) or (
-                    int(add_num.split()[0]) >= row['R_F_ADD'] and int(add_num.split()[0]) <= row['R_T_ADD']):
+            if (int(add_num.split()[0]) >= int(row['L_F_ADD']) and int(add_num.split()[0]) <= int(row['L_T_ADD'])) or (
+                    int(add_num.split()[0]) >= int(row['R_F_ADD']) and int(add_num.split()[0]) <= int(row['R_T_ADD'])):
                 goodnum = True
         # Update Notes field based on if street and number are good from near analysis
         if goodstreet and goodnum:
@@ -305,14 +297,14 @@ def logic_checks(row):
         # Check for likely predir/sufdir errors: road nearly matches, range is good
         # Replace needed in logic to catch potential range in address number (e.g., '188-194')
         if row['Notes'] == 'no near st: possible typo predir or sufdir error':
-            if (int(add_num.replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-                    int(add_num.replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+            if (int(add_num.replace('-', ' ').split()[0]) >= int(row['L_F_ADD']) and int(add_num.replace('-', ' ').split()[0]) <= int(row['L_T_ADD'])) or (
+                    int(add_num.replace('-', ' ').split()[0]) >= int(row['R_F_ADD']) and int(add_num.replace('-', ' ').split()[0]) <= int(row['R_T_ADD'])):
                 goodnum = True
                 row['Notes'] = 'no near st: likely predir or sufdir error'
                 row['goodnum'] = goodnum
         # Check for a good house number regardless of street name match or condition
-        if (int(add_num.replace('-', ' ').split()[0]) >= row['L_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['L_T_ADD']) or (
-                int(add_num.replace('-', ' ').split()[0]) >= row['R_F_ADD'] and int(add_num.replace('-', ' ').split()[0]) <= row['R_T_ADD']):
+        if (int(add_num.replace('-', ' ').split()[0]) >= int(row['L_F_ADD']) and int(add_num.replace('-', ' ').split()[0]) <= int(row['L_T_ADD'])) or (
+                int(add_num.replace('-', ' ').split()[0]) >= int(row['R_F_ADD']) and int(add_num.replace('-', ' ').split()[0]) <= int(row['R_T_ADD'])):
             goodnum = True
             row['goodnum'] = goodnum
     
@@ -323,19 +315,30 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-#section_time = time.time()
-#get_SGID_addpts(staging_db)
-#print("Time elapsed in 'get_SGID_addpts' function: {:.2f}s".format(time.time() - section_time))
+# section_time = time.time()
+# get_SGID_addpts(staging_db)
+# print("Time elapsed in 'get_SGID_addpts' function: {:.2f}s".format(time.time() - section_time))
+
+# get_SGID_addpts(staging_db, new_addpts)
+possible_addpts = os.path.join(staging_db, new_addpts)
+
+# # Copy current address points into a working FC
+working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
+# arcpy.CopyFeatures_management(possible_addpts, working_addpts)
+
+# # Add field to working FC for notes
+# arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
+# arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 
-calc_street(working_addpts)
-working_nodups = remove_duplicates(current_addpts, possible_addpts, working_addpts)
-print(arcpy.GetCount_management(working_nodups))
-mark_near_addpts(current_addpts, possible_addpts, working_addpts)
+# calc_street(working_addpts)
+# working_nodups = remove_duplicates(current_addpts, possible_addpts, working_addpts)
+# print(arcpy.GetCount_management(working_nodups))
+# mark_near_addpts(current_addpts, possible_addpts, working_addpts)
 
-arcpy.Delete_management("working_nodups")
-arcpy.Delete_management('in_memory\\near_table')
-check_nearby_roads(working_addpts, weber_streets, staging_db)
+# arcpy.Delete_management("working_nodups")
+# arcpy.Delete_management('in_memory\\near_table')
+check_nearby_roads(working_addpts, layton_streets, staging_db)
 
 
 print("Script shutting down ...")
@@ -345,8 +348,9 @@ print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 
 
+# Plot histogram of Edit Distances
 print("Creating edit distance histogram ...")
-df = pd.read_csv(r'C:\E911\WeberArea\Staging103\Addpts_working_folder\weber_neartable_final.csv')
+df = pd.read_csv(r'C:\E911\Layton\Addpts_working_folder\layton_neartable_final.csv')
 plt.figure(figsize=(6,4))
 plt.hist(df['edit_dist'], bins = np.arange(0, df['edit_dist'].max(), 1)-0.5, color='red', edgecolor='black')
 plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
@@ -354,3 +358,18 @@ plt.title('Address/Street Edit Distance Histogram')
 plt.xlabel('Edit Distance')
 plt.ylabel('Count')
 plt.show()
+
+df['edit_dist'].max()
+
+# Plot bar chart of Notes column
+print("Creating notes bar chart ...")
+plt.figure(figsize=(6,4))
+plt.hist(df['Notes'], color='lightblue', edgecolor='black')
+# plt.xticks(np.arange(0, df['Notes'].max(), 2))
+plt.xticks(rotation='vertical')
+plt.title('Address Point Categories')
+plt.xlabel('Category')
+plt.ylabel('Count')
+plt.show()
+
+df.groupby('Notes').count()
