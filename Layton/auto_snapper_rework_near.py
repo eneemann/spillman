@@ -249,7 +249,7 @@ for snap_oid in snap_area_oids:
         for row in scursor:
             near_oids.append(row[0])
 
-    snap_query = f"""OBJECTID IN ({','.join([str(o) for o in near_oids])})"""
+    snap_query = f"""OBJECTID IN ({','.join([str(o) for o in near_oids])}) AND (NEAR_DIST IS NOT NULL OR NEAR_DIST NOT IN ('', ' ')"""
     print(snap_query)
 
     sql_clause = [None, "ORDER BY NEAR_DIST ASC, OBJECTID ASC"]
