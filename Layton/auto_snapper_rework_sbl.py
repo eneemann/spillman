@@ -434,6 +434,11 @@ print(f'Total count of snap field comment updates: {snap_count}')
 # (start_h3_9 = '89269698cb3ffff' OR end_h3_9 = '89269698cb3ffff') AND (NEAR_DIST = 0.010000500693571748)
 # find the start/endpoints and put them in a list, then do a select by location for each list to get nearby segments to snap
 
+# SPEED UP
+# Calculate lat/lons and h3s in dataframe/lambdas (might need to project to WGS84)
+# Use near table on final snap points to get list of road OIDs within 4m ({snap_oid: [oid, oid, oid, oid]})
+#   Then iterate over dictionary to create selection query for snapping operation (instead of select by location on layer)
+
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
