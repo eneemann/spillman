@@ -18,12 +18,12 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\MillardCo\Millard_Staging.gdb"
-addpts = os.path.join(stage_db, "AddressPoints_20190408_update_TESTING")
+addpts = os.path.join(stage_db, "Millard_AddressPoints_update_20220919")
 env.workspace = stage_db
 
 # Add field to working FC for CITYCD and STREET (if necessary)
 #arcpy.AddField_management(addpts, "CITYCD", "TEXT", "", "", 3)
-arcpy.AddField_management(addpts, "STREET", "TEXT", "", "", 40)
+# arcpy.AddField_management(addpts, "STREET", "TEXT", "", "", 40)
 
 ###############
 #  Functions  #
@@ -180,10 +180,10 @@ def calc_label(pts):
 ##########################
 
 calc_street(addpts)
-calc_predir(addpts)
-calc_sufdir(addpts)
-calc_streettype(addpts)
-calc_streetname(addpts)
+# calc_predir(addpts)
+# calc_sufdir(addpts)
+# calc_streettype(addpts)
+# calc_streetname(addpts)
 calc_label(addpts)
 blanks_to_nulls(addpts)
 

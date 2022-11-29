@@ -597,16 +597,16 @@ spillman_polygon_prep(streets_cad_wgs84)
 ################################################################
 #env.workspace = wgs84_db
 export_shapefiles_select_fields("AddressPoints", out_folder_spillman, addpt_fields)
-export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
+# export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
 #export_shapefiles_select_fields("Mileposts", out_folder_spillman, milepost_fields)
 export_shapefiles_select_fields("Streets", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields("EMSAreas", out_folder_spillman, earea_fields)
 #export_shapefiles_select_fields("EMSZones", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("FireAreas", out_folder_spillman, farea_fields)
 #export_shapefiles_select_fields("FireZones", out_folder_spillman, fzone_fields)
-#export_shapefiles_select_fields("LawAreas", out_folder_spillman, larea_fields)
+export_shapefiles_select_fields("LawAreas", out_folder_spillman, larea_fields)
 #export_shapefiles_select_fields("LawZones", out_folder_spillman, lzone_fields)
-#export_shapefiles_select_fields("CityCodes", out_folder_spillman, citycd_fields)
+export_shapefiles_select_fields("CityCodes", out_folder_spillman, citycd_fields)
 # export_shapefiles_select_fields("_other_", out_folder_spillman, other_fields)
 
 

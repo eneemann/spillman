@@ -19,9 +19,9 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\MillardCo\Millard_Staging.gdb"
-local_db = r"C:\E911\MillardCo\Britt_data_20200908\Millard_20200908.gdb"
-current_streets = os.path.join(staging_db, "Millard_Streets_update_20210819")
-local_roads = os.path.join(staging_db, "Britt_Millard_Roads_July2021")
+# local_db = r"C:\E911\MillardCo\Britt_data_20200908\Millard_20200908.gdb"
+current_streets = os.path.join(staging_db, "Millard_Streets_update_20220919")
+local_roads = os.path.join(staging_db, "Britt_Millard_Roads_Sep2022")
 env.workspace = staging_db
 env.overwriteOutput = True
 
