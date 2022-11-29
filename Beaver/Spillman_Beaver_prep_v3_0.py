@@ -85,8 +85,6 @@ def blanks_to_nulls(streets):
         for row in cursor:
             # print row
             for i in range(len(field_list)):
-                # if (field_list[i].type == "String" and row[i] == '') or\
-                #         (field_list[i].type == "String" and row[i] == ' '):
                 if row[i] == '' or row[i] == ' ':
                     print("Updating field: {0} on ObjectID: {1}".format(field_list[i].name, row[0]))
                     update_count += 1
@@ -547,8 +545,6 @@ out_folder_vela = os.path.join(vela_dir, vela_folder)
 # Comment out this line if the folder already exists (like if code was already run once today)
 if os.path.isdir(out_folder_spillman) == False:
     os.mkdir(out_folder_spillman)
-#if os.path.isdir(out_folder_vela) == False:
-#    os.mkdir(out_folder_vela)
 
 # Option 1: Exports ALL FCs to shapefiles in bulk and includes all fields in the output
 # export_shapefiles_all_fields(FCs_to_export, out_folder)
@@ -596,22 +592,22 @@ vela_to_export = ["Ems_zone", "Fire_zone", "Law_zone", "Communities"]
 #  Call Functions Below  #
 ##########################
 
-create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-blanks_to_nulls(streets_fc_utm)
-calc_street(streets_fc_utm)
-calc_salias1(streets_fc_utm)
-calc_salias2(streets_fc_utm)
-calc_salias4(streets_fc_utm)
-highway_to_sr_us(streets_fc_utm)
-calc_salias3(streets_fc_utm)
-street_blank_to_null(streets_fc_utm)
-calc_location(streets_fc_utm)
-create_streets_CAD(streets_fc_utm)
-create_commonplaces_all(commonplaces)
-create_address_pts_CAD(address_pts)
-copy_tbzones(tbzones)
-project_to_wgs84(FCs_to_project)
-spillman_polygon_prep(streets_cad_wgs84)
+# create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+# blanks_to_nulls(streets_fc_utm)
+# calc_street(streets_fc_utm)
+# calc_salias1(streets_fc_utm)
+# calc_salias2(streets_fc_utm)
+# calc_salias4(streets_fc_utm)
+# highway_to_sr_us(streets_fc_utm)
+# calc_salias3(streets_fc_utm)
+# street_blank_to_null(streets_fc_utm)
+# calc_location(streets_fc_utm)
+# create_streets_CAD(streets_fc_utm)
+# create_commonplaces_all(commonplaces)
+# create_address_pts_CAD(address_pts)
+# copy_tbzones(tbzones)
+# project_to_wgs84(FCs_to_project)
+# spillman_polygon_prep(streets_cad_wgs84)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
@@ -622,15 +618,15 @@ spillman_polygon_prep(streets_cad_wgs84)
 export_shapefiles_select_fields("AddressPoints", out_folder_spillman, addpt_fields)
 export_shapefiles_select_fields("CommonPlaces", out_folder_spillman, commplc_fields)
 # export_shapefiles_select_fields("CommonPlaces_Exits", out_folder_spillman, exit_fields)
-export_shapefiles_select_fields("CommonPlaces_MP", out_folder_spillman, milepost_fields)
+# export_shapefiles_select_fields("CommonPlaces_MP", out_folder_spillman, milepost_fields)
 # export_shapefiles_select_fields("CommonPlaces_RRMP", out_folder_spillman, rrmp_fields)
 # export_shapefiles_select_fields("CommonPlaces_RRX", out_folder_spillman, rrx_fields)
 export_shapefiles_select_fields("Streets", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields("Ems_zone", out_folder_spillman, ezone_fields)
 #export_shapefiles_select_fields("Fire_zone", out_folder_spillman, fzone_fields)
-#export_shapefiles_select_fields("Law_zone", out_folder_spillman, lzone_fields)
-#export_shapefiles_select_fields("Law_area", out_folder_spillman, larea_fields)
-#export_shapefiles_select_fields("CityCodes", out_folder_spillman, citycd_fields)
+export_shapefiles_select_fields("Law_zone", out_folder_spillman, lzone_fields)
+export_shapefiles_select_fields("Law_area", out_folder_spillman, larea_fields)
+export_shapefiles_select_fields("CityCodes", out_folder_spillman, citycd_fields)
 # export_shapefiles_select_fields("Municipalities", out_folder_spillman, muni_fields)
 # export_shapefiles_select_fields("railroads", out_folder_spillman, railroad_fields)
 # export_shapefiles_select_fields("Rivers", out_folder_spillman, river_fields)
