@@ -19,7 +19,7 @@ print("The script start time is {}".format(readable_start))
 # staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 live_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
 env.workspace = live_db
-output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20220815"
+output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20220822"
 
 input_features = ['StGeorge_Dispatch_Common_Place_Points',
                   'StGeorge_Dispatch_AddressPoints',

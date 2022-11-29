@@ -18,7 +18,7 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 env.workspace = staging_db
-fc_layer = "StG_Streets_update_20220728"    # Update to working streets fc
+fc_layer = "StG_Streets_update_20221116"    # Update to working streets fc
 # fc_layer = "StG_Streets_schema_temp"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
@@ -475,9 +475,9 @@ highway_to_sr_us(streets_fc_utm)
 calc_salias3(streets_fc_utm)
 street_blank_to_null(streets_fc_utm)
 calc_location(streets_fc_utm)
-blanks_to_nulls(streets_fc_utm)
 strip_fields(streets_fc_utm)
 calc_joinid(streets_fc_utm)
+blanks_to_nulls(streets_fc_utm)
 
 # Calc other fields from STREET
 # calc_street(streets_fc_utm)
