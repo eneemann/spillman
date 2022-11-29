@@ -29,7 +29,7 @@ env.workspace = boxelder_db
 env.overwriteOutput = True
 
 boxelder_streets = os.path.join(boxelder_db, "BoxElder_Streets")
-boxelder_addpts = "AddPt_update_20220330"    # Point to current addpts in staging_db
+boxelder_addpts = "AddPt_update_20220930"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, boxelder_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -311,7 +311,7 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-#get_SGID_addpts(staging_db, new_addpts)
+get_SGID_addpts(staging_db, new_addpts)
 
 possible_addpts = os.path.join(staging_db, new_addpts)
 

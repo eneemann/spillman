@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\Box Elder CO\BoxElder_Staging.gdb"
-addpts = os.path.join(stage_db, "AddPt_update_20220330")
+addpts = os.path.join(stage_db, "AddPt_update_20220930")
 env.workspace = stage_db
 
 ###############

@@ -21,10 +21,10 @@ print("The script start time is {}".format(readable_start))
 today = time.strftime("%Y%m%d")
 staging_db = r"C:\E911\Box Elder CO\BoxElder_Staging.gdb"
 # SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
-county = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\BoxElder\BoxElder_20220315.gdb"
+county = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\BoxElder\BoxElder_20220922.gdb"
 # current_streets = os.path.join(staging_db, "BoxElder_Streets_update_" + today)
-current_streets = os.path.join(staging_db, "Streets_update_20220330")
-county_roads = os.path.join(county, "BECO_Roads")
+current_streets = os.path.join(staging_db, "Streets_update_20220930")
+county_roads = os.path.join(county, "ROADS")
 env.workspace = staging_db
 env.overwriteOutput = True
 
