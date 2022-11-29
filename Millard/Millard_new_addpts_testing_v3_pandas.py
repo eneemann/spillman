@@ -25,12 +25,12 @@ env.workspace = millard_db
 env.overwriteOutput = True
 
 millard_streets = os.path.join(millard_db, "Streets")
-millard_addpts = "Millard_AddressPoints_update_20210819"
+millard_addpts = "Millard_AddressPoints_update_20220919"
 current_addpts = os.path.join(staging_db, millard_addpts)
 
 today = time.strftime("%Y%m%d")
 # new_addpts = "AddressPoints_SGID_export_20191028"
-new_addpts = "Britt_Millard_Addresses_CAD_July2021"
+new_addpts = "Britt_Millard_Addresses_Sep2022"
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
@@ -42,7 +42,8 @@ arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 
 # Add field to working FC for notes
 arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
-# arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
+arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
+arcpy.AddField_management(working_addpts, "SUFDIR", "TEXT", "", "", 1)
 
 ###############
 #  Functions  #
@@ -105,14 +106,14 @@ def get_SGID_addpts(out_db):
     
 # Calculate abbreviated SUFDIR field to align with spillman notation
 def clean_addpts(working):
-    arcpy.management.AlterField(working, 'STREET', 'Street')
+    # arcpy.management.AlterField(working, 'STREET', 'Street')
     arcpy.AddField_management(working, "FullAdd", "TEXT", "", "", 50)
     sufdir_count = 0
     type_count = 0
     # Calculate "Street" field where applicable
 #    where_clause = "STREETNAME IS NOT NULL AND STREET IS NULL"
     #             0          1            2          3           4         5        6
-    fields = ['PREDIR', 'STREETNAME', 'SUFDIR', 'STREETTYPE', 'Street', 'NUMB', 'FullAdd']
+    fields = ['PREDIR', 'STREETNAME', 'SUFDIR', 'STREETTYPE', 'Street', 'HOUSENUM1', 'FullAdd']
     with arcpy.da.UpdateCursor(working, fields) as cursor:
         print("Looping through rows to update component fields ...")
         for row in cursor:
@@ -301,7 +302,7 @@ def check_nearby_roads(working, streets, gdb):
     
     # Convert address points to pandas dataframe
 #    addpt_fields = ['OBJECTID', 'AddNum', 'Street', 'Notes']
-    addpt_fields = ['OBJECTID', 'NUMB', 'Street', 'Notes']
+    addpt_fields = ['OBJECTID', 'HOUSENUM1', 'Street', 'Notes']
     addpts_arr = arcpy.da.FeatureClassToNumPyArray(working, addpt_fields)
     addpts_df =pd.DataFrame(data = addpts_arr)
     print(addpts_df.head(5).to_string())
@@ -451,7 +452,7 @@ def logic_checks(row):
     """
     goodstreet = False
     goodnum = False
-    add_num = ''.join(i for i in row['NUMB'] if i.isdigit())
+    add_num = ''.join(i for i in row['HOUSENUM1'] if i.isdigit())
     
     if add_num.isdigit():
         if row['Street'] == row['STREET']:
