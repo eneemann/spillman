@@ -43,6 +43,8 @@ else:
 # Functions #    
 #############
 
+# today = '20220915'
+
 # Overwrite web layer with new service area data
 def define_service(project_path, map_name, layer_name, fc_path_str, item_name, temp_dir_path):
 

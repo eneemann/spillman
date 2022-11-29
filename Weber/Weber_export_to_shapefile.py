@@ -19,7 +19,7 @@ print("The script start time is {}".format(readable_start))
 # staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
 live_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
 env.workspace = live_db
-output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220815'
+output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20221128'
 
 #input_features = ['CommonNames',
 #                  'AddressPoints',
@@ -30,11 +30,8 @@ output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220815'
 #                  'CityCodes',
 #                  'POI']
 
-#input_features = ['Streets_Map',
-#                  'FireZones',
-#                  'LawZones',
-#                  'LawAreas',
-#                  'CityCodes']
+# input_features = ['LawZones',
+#                  'LawAreas',]
 
 #input_features = ['CommonNames',
 #                  'AddressPoints',
@@ -42,16 +39,16 @@ output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20220815'
 #                  'LawAreas',
 #                  'LawZones']
 
-#input_features = ['POI',
-#                  'CommonNames',
-#                  'Streets_Map']
+# input_features = ['FireZones',
+#                   'AddressPoints',
+#                   'Streets_Map']
 
-#input_features = ['AddressPoints',
-#                  'CommonNames',
-#                  'Streets_Map',
-#                  'CityCodes']
+# input_features = ['CommonNames',
+#                   'CityCodes',
+#                   'LawZones',
+#                   'LawAreas']
 
-input_features = ['CommonNames', 'AddressPoints']
+input_features = ['CommonNames']
 
 arcpy.conversion.FeatureClassToShapefile(input_features, output_folder)
 

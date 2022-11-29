@@ -18,8 +18,10 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-stage_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
-addpts = os.path.join(stage_db, "AddressPoints")
+# stage_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
+# addpts = os.path.join(stage_db, "AddressPoints")
+stage_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
+addpts = os.path.join(stage_db, "AddressPoints_update_20220819")
 
 env.workspace = stage_db
 
@@ -248,6 +250,38 @@ def blanks_to_nulls(pts):
     print("Total count of blanks converted to NULLs is: {}".format(update_count))
 
 
+def calc_fulladd(pts):
+    update_count = 0
+    # Calculate "FullAdd" field where applicable
+    where_clause = "StreetName IS NOT NULL AND AddNum IS NOT NULL AND FullAdd IS NULL"
+    # where_clause = "OBJECTID >= 116122"
+    #            0           1            2             3            4            5          6          7
+    fields = ['AddNum', 'PrefixDir', 'StreetName', 'SuffixDir', 'StreetType', 'UnitType', 'UnitID', 'FullAdd']
+    with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
+#    with arcpy.da.UpdateCursor(pts, fields) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            if row[1] is None: row[1] = ''
+            if row[3] is None: row[3] = ''
+            if row[4] is None: row[4] = ''
+            if row[5] is None: row[5] = ''
+            if row[6] is None:
+                row[6] = ''
+                full = f'{row[0]} {row[1]} {row[2]} {row[3]} {row[4]}'
+            else:
+                full = f'{row[0]} {row[1]} {row[2]} {row[3]} {row[4]} {row[5]} # {row[6]}'   
+            
+            # parts = [row[0], row[1], row[2], row[3], row[4], row[5], row[6]]
+            # row[7] = " ".join(parts)
+            full = full.strip()
+            full = full.replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("# #", "#")
+            row[7] = full
+            # print(f"New value for {fields[7]} is: {row[7]}")
+            update_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of updates to {fields[7]} field: {update_count}")
+
+
 def calc_street(pts):
     update_count = 0
     # Calculate "Street" field where applicable
@@ -274,10 +308,13 @@ def calc_label(pts):
     update_count = 0
     # Calculate "Street" field where applicable
     where_clause = "Label IS NULL"
+    # where_clause = "OBJECTID >= 116122"
     fields = ['Label', 'AddNum', 'UnitType', 'UnitID']
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
+            if row[3] is not None and row[2] is None:
+                row[2] = '#'
             if row[1] is None: row[0] = ''
             if row[2] is None: row[2] = ''
             if row[3] is None: row[3] = ''
@@ -320,15 +357,20 @@ def calc_common_name(pts):
     update_count = 0
     # Calculate "Street" field where applicable
     where_clause = "CommonName IS NULL AND LandmarkName IS NOT NULL"
+    # where_clause = "OBJECTID >= 116122"
     fields = ['CommonName', 'LandmarkName', 'UnitID']
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            if row[1] is None: row[1] = ''
-            if row[2] is None: row[2] = ''
-            row[0] = row[1] + ' #' + row[2]
-            row[0] = row[0].strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
-#            print("New value for {0} is: {1}".format(fields[0], row[0]))
+            if row[1] is None:
+                row[0] = None
+            else:
+                # if row[1] is None: row[1] = ''
+                if row[2] is None: row[2] = ''
+                row[0] = row[1] + ' #' + row[2]
+                row[0] = row[0].strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
+
+#            print("New value for {0} is: {1}".format(fields[0], row[0]))         
             update_count += 1
             cursor.updateRow(row)
     print(f"Total count of updates to {fields[0]} field: {update_count}")
@@ -350,15 +392,16 @@ def calc_join_id(pts):
 def calc_base(pts):
     update_count = 0
     # Calculate "Street" field where applicable
-    where_clause = "Base IS NULL"
-    fields = ['Base', 'UnitType', 'FullAdd']
+    # where_clause = "Base IS NULL"
+    # where_clause = "OBJECTID >= 116122"
+    # fields = ['Base', 'UnitType', 'FullAdd']
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            if row[1]:
-                row[0] = row[2].split(row[1], 1)[0].strip()
-            else:
+            if row[1] is None or row[1] in ('', ' '):
                 row[0] = row[2]
+            else:
+                row[0] = row[2].split(row[1], 1)[0].strip()
             update_count += 1
             cursor.updateRow(row)
     print(f"Total count of updates to {fields[0]} field: {update_count}")
@@ -375,7 +418,8 @@ def calc_base(pts):
 # calc_suffixdir_from_street(addpts)
 # calc_streettype_from_street(addpts)
 # calc_streetname_from_street(addpts)
-#calc_street(addpts)
+# calc_street(addpts)
+calc_fulladd(addpts)
 calc_label(addpts)
 strip_fields(addpts)
 calc_common_name(addpts)
