@@ -32,7 +32,8 @@ env.workspace = staging_db
 env.overwriteOutput = True
 env.qualifiedFieldNames = False
 
-real_streets = os.path.join(layton_db, "Davis_streets_build_20221021")
+# real_streets = os.path.join(layton_db, "Davis_streets_build_20221021") zzz_Layton_snap_TEST
+real_streets = os.path.join(layton_db, "zzz_Layton_snap_TEST")
 temp_streets = os.path.join(staging_db, f"St_snap_working_{today}")
 working_streets = os.path.join(staging_db, f"St_snap_working_UTM_{today}")
 st_endpoints = os.path.join(staging_db, f"St_snap_endpoints_{today}")
@@ -57,18 +58,21 @@ with arcpy.da.UpdateCursor(temp_streets, fields) as ucursor:
         end_lon = row[0].lastPoint.X
         end_lat = row[0].lastPoint.Y
 
-        row[1] = h3.geo_to_h3(start_lat, start_lon, 9)
-        row[2] = h3.geo_to_h3(end_lat, end_lon, 9)
+        row[1] = h3.geo_to_h3(start_lat, start_lon, 8)
+        row[2] = h3.geo_to_h3(end_lat, end_lon, 8)
                
         count += 1
         ucursor.updateRow(row)
 print(f'Total count of h3 field updates: {count}')
 
 sr = arcpy.SpatialReference(26912)
-arcpy.management.Project(temp_streets, working_streets, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
+# arcpy.management.Project(temp_streets, working_streets, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
 oid_fieldname = arcpy.Describe(working_streets).OIDFieldName
 print(f"OID field name:  {oid_fieldname}")
+working_streets = temp_streets
 
+if arcpy.Exists(st_endpoints):
+    arcpy.Delete_management(st_endpoints)
 arcpy.management.FeatureVerticesToPoints(working_streets, st_endpoints, "BOTH_ENDS")
 
 # Create table name (in memory) for neartable
@@ -150,15 +154,15 @@ def update_geom(shape, case, x, y):
     return updated_shape
 
 
-
 snapped = os.path.join(staging_db, f"St_working_{today}_snapped")
+snapped = os.path.join(staging_db, f"zzz_Layton_TEST_{today}_snapped")
 if arcpy.Exists(snapped):
     arcpy.Delete_management(snapped)
 arcpy.CopyFeatures_management(final_name, snapped)
 
 # Get the spatial reference for later use
 sr = arcpy.Describe(snapped).spatialReference
-print(sr)
+# print(sr)
 
 # Add field to use for auto-snapping
 # arcpy.management.AddField(snapped, 'snap_status', 'TEXT', '', '', 30)
@@ -183,7 +187,8 @@ for index, row in query_df.iterrows():
     unique_list.append((row[0], row[1], row[2]))
 unique_tuple = tuple(unique_list)
 new_list = set(unique_tuple)
-# print(new_list)
+for i in new_list:
+    print(i)
 
 # Create dataframe from relevant oids to track start/endpoint snapping staus
 snap_df = not_zero[['OBJECTID']].rename(columns={'OBJECTID': 'oid'}).set_index('oid')
@@ -192,6 +197,7 @@ snap_df['end'] = ''
 
 item_number = 0
 multi = 0
+skipped = False
 for item in new_list:
     low = float(f'{item[2]}') - .01
     high = float(f'{item[2]}') + .01
@@ -203,21 +209,26 @@ for item in new_list:
     # query = f"""(start_h3_9 IN ('{item[0]}', '{item[1]}') OR end_h3_9 IN ('{item[0]}', '{item[1]}')) AND (NEAR_DIST < {high})""" # high
     # query = f"""(start_h3_9 IN ('{item[0]}', '{item[1]}') OR end_h3_9 IN ('{item[0]}', '{item[1]}')) AND (NEAR_DIST < 4)""" # _q4
     sql_clause = [None, "ORDER BY snap_start DESC, snap_end DESC"]
-    # print(query)
+    # sql_clause = [None, "ORDER BY snap_start DESC, snap_end DESC"]
+    print(query)
     #             0          1               2             3           4             5           6          7         8
     fields = ['SHAPE@', 'Shape_Length', 'start_h3_9', 'end_h3_9', 'NEAR_DIST', 'snap_start', 'snap_end', 'OID@', 'snap_status']
     # with arcpy.da.UpdateCursor(snapped, fields, query, sort_fields='snap_start D; snap_end D') as ucursor:
-    with arcpy.da.UpdateCursor(snapped, fields, query, '','', sql_clause) as ucursor:
+    with arcpy.da.UpdateCursor(snapped, fields, query) as ucursor:
+    # with arcpy.da.UpdateCursor(snapped, fields, query, '','', sql_clause) as ucursor:
         cnt = 0
         for row in ucursor:
             shape_obj = row[0]
             if shape_obj.partCount > 1: 
                 print("Warning: multiple parts! extra parts are automatically trimmed!")
-                print("Line has {} parts".format(shape_obj.partCount))
+                print(f"Line has {shape_obj.partCount} parts")
                 multi += 1
             # Operate on lines whose length is more than 4m and snap_satus is None
             # if row[1] > snap_radius and row[5] is None:
-            if row[1] > snap_radius:
+            if row[1] < snap_radius:
+                skipped = True
+                print(f'OID: {row[7]} was skipped,      Length: {row[1]}')
+            else:
                 # Get start/end coordinates of each feature
                 start_x = shape_obj.firstPoint.X
                 start_y = shape_obj.firstPoint.Y
@@ -225,6 +236,7 @@ for item in new_list:
                 end_y = shape_obj.lastPoint.Y
                 
                 if cnt == 0:
+                    # if not skipped:
                     # Hold first features start/end coordinates in a variable
                     first_start_x = start_x
                     first_start_y = start_y
@@ -232,9 +244,19 @@ for item in new_list:
                     first_end_y = end_y
                     # row[5] = 'static start'
                     # row[6] = 'static end'
+
+                    # first_start_x = shape_obj.firstPoint.X
+                    # first_start_y = shape_obj.firstPoint.Y
+                    # first_end_x = shape_obj.lastPoint.X
+                    # first_end_y = shape_obj.lastPoint.Y
                     first_oid = row[7]
                     cnt += 1
                 else:
+                    start_x = shape_obj.firstPoint.X
+                    start_y = shape_obj.firstPoint.Y
+                    end_x = shape_obj.lastPoint.X
+                    end_y = shape_obj.lastPoint.Y
+                    
                     # Calculate distances from each endpoint to endpoint of first feature
                     thisend_firstend = math.sqrt((end_x - first_end_x)**2 + (end_y - first_end_y)**2)
                     thisstart_firstend = math.sqrt((start_x - first_end_x)**2 + (start_y - first_end_y)**2)
@@ -243,14 +265,16 @@ for item in new_list:
                     this_oid = row[7]
                     
                     distances = [thisend_firstend, thisstart_firstend, thisend_firststart, thisstart_firststart]
+                    print(distances)
                     # benchmark_dist = min(thisend_firstend, thisstart_firstend, thisend_firststart, thisstart_firststart)
                     benchmark_dist = min(d for d in distances if d > 0)
                     # print(f'benchmark_dist for {query} \n \t is: {benchmark_dist}')
-                    print(f'benchmark_dist: {benchmark_dist}    near_dist: {row[4]}')
+                    print(f'Count is:  {cnt}    Comparing First OID: {first_oid}     to This OID: {this_oid}')
+                    print(f'benchmark_dist: {benchmark_dist}    NEAR_DIST: {row[4]}')
 
                     # if thisend_firstend == benchmark_dist and benchmark_dist == row[4]:
                     # if thisend_firstend == benchmark_dist and abs(benchmark_dist - row[4]) < 0.005 and ('done' not in snap_df.at[this_oid, 'end']):
-                    if thisend_firstend < 4  and 'done' not in snap_df.at[this_oid, 'end']:
+                    if 0 < thisend_firstend < 4  and 'done' not in snap_df.at[this_oid, 'end']:
                         scenario = 1
                         print(f'Case 1: thisend_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
@@ -261,7 +285,7 @@ for item in new_list:
                         cnt += 1
                     # if thisstart_firstend == benchmark_dist and benchmark_dist == row[4]:
                     # if thisstart_firstend == benchmark_dist and abs(benchmark_dist - row[4]) < 0.005 and ('done' not in snap_df.at[this_oid, 'start']):
-                    if thisstart_firstend < 4 and 'done' not in snap_df.at[this_oid, 'start']:
+                    elif 0 < thisstart_firstend < 4 and 'done' not in snap_df.at[this_oid, 'start']:
                         scenario = 2
                         print(f'Case 2: thisstart_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
@@ -272,7 +296,7 @@ for item in new_list:
                         cnt += 1
                     # if thisend_firststart == benchmark_dist and benchmark_dist == row[4]:
                     # if thisend_firststart == benchmark_dist and abs(benchmark_dist - row[4]) < 0.005 and ('done' not in snap_df.at[this_oid, 'end']):
-                    if thisend_firststart < 4 and 'done' not in snap_df.at[this_oid, 'end']:
+                    elif 0 < thisend_firststart < 4 and 'done' not in snap_df.at[this_oid, 'end']:
                         scenario = 3
                         print(f'Case 3: thisend_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
@@ -283,7 +307,7 @@ for item in new_list:
                         cnt += 1
                     # if thisstart_firststart == benchmark_dist and benchmark_dist == row[4]:
                     # if thisstart_firststart == benchmark_dist and abs(benchmark_dist - row[4]) < 0.005 and ('done' not in snap_df.at[this_oid, 'start']):
-                    if thisstart_firststart < 4 and 'done' not in snap_df.at[this_oid, 'start']:
+                    elif 0 < thisstart_firststart < 4 and 'done' not in snap_df.at[this_oid, 'start']:
                         scenario = 4
                         print(f'Case 4: thisstart_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
@@ -292,8 +316,6 @@ for item in new_list:
                         snap_df.at[this_oid, 'start'] = 'snapped - done'
                         snap_df.at[first_oid, 'start'] = 'static - done'
                         cnt += 1
-            else:
-                cnt += 1
             
             ucursor.updateRow(row)
 
@@ -329,7 +351,8 @@ snap_count = 0
 oid_list = snap_df.index.to_list()
 #                 0          1            2            3
 fewer_fields = ['OID@', 'snap_start', 'snap_end', 'snap_status']
-with arcpy.da.UpdateCursor(snapped, fields) as ucursor:
+oid_query = f'OBJECTID IN ({",".join([str(oid) for oid in oid_list])})'
+with arcpy.da.UpdateCursor(snapped, fewer_fields, oid_query) as ucursor:
     print("Calculating snap comments for start and end points ...")
     for row in ucursor:
         if row[0] in oid_list:
@@ -360,3 +383,5 @@ print("Script shutting down ...")
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
+
+print(snap_df.to_string())
