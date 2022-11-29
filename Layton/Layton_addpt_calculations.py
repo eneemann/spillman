@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 # stage_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
-stage_db = r"C:\E911\Layton\LaytonGeoValidation_updates.gdb"
+stage_db = r"C:\E911\Layton\LaytonGeoValidation_updates_20220826.gdb"
 # addpts = os.path.join(stage_db, "address_points_update_20201117")
 addpts = os.path.join(stage_db, "LaytonAddressPoints")
 env.workspace = stage_db
