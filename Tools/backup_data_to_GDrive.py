@@ -17,10 +17,7 @@ print("The script start time is {}".format(readable_start))
 
 today = time.strftime("%Y%m%d")
 
-
-project = 'boxelder'
-
-
+project = 'weber'
 
 # Create dictionary to hold project info with utm, wgs84 geodatbases and G Drive destination folder
 spillman_dict = {"beaver": {"utm": r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb",
