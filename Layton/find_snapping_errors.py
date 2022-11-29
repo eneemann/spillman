@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Mar 5 08:39:07 2019
+Created on Mon Oct 24 16:22:07 2022
 @author: eneemann
-Script to detect possible address points by comparing new data to current data
+Script to detect possible snapping errrors in Layton road data (built from SGID)
 
-Need to call get_SGID_addpts function first, then comment out the call and run the script
 """
 
 import arcpy
@@ -22,13 +21,14 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 today = time.strftime("%Y%m%d")
 print("The script start time is {}".format(readable_start))
 
-weber_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
-staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
+layton_db = r"C:\E911\Layton\Layton_staging.gdb"
+staging_db = r"C:\E911\Layton\Layton_staging.gdb"
+work_dir = r'C:\E911\Layton\working_data'
 env.workspace = staging_db
 env.overwriteOutput = True
 env.qualifiedFieldNames = False
 
-real_streets = os.path.join(weber_db, "Streets_Map")
+real_streets = os.path.join(layton_db, "zzz_Layton_TEST_20221110_near_snapped")
 # real_streets = os.path.join(staging_db, "zzz_new_subdiv_st_20200810")
 temp_streets = os.path.join(staging_db, f"St_Map_working_{today}")
 working_streets = os.path.join(staging_db, f"St_Map_working_UTM_{today}")
@@ -37,15 +37,10 @@ st_endpoints = os.path.join(staging_db, f"St_Map_endpoints_{today}")
 arcpy.CopyFeatures_management(real_streets, temp_streets)
 
 sr = arcpy.SpatialReference(26912)
-arcpy.Project_management(temp_streets, working_streets, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
+# arcpy.Project_management(temp_streets, working_streets, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
+arcpy.CopyFeatures_management(temp_streets, working_streets)
 oid_fieldname = arcpy.Describe(working_streets).OIDFieldName
 print(f"OID field name:  {oid_fieldname}")
-
-
-
-# # Add field to working FC for notes
-# arcpy.AddField_management(working_addpts, "Notes", "TEXT", "", "", 50)
-# arcpy.AddField_management(working_addpts, "Street", "TEXT", "", "", 50)
 
 
 arcpy.management.FeatureVerticesToPoints(working_streets, st_endpoints, "BOTH_ENDS")
@@ -77,15 +72,15 @@ print(join1_df.head(5).to_string())
 
 
 sorted_df = join1_df.sort_values('NEAR_DIST')
-sorted_path = r'C:\E911\WeberArea\Staging103\snapping_test_sorted.csv'
+sorted_path = os.path.join(work_dir, 'snapping_test_sorted.csv')
 sorted_df.to_csv(sorted_path)
 
 non_zero = sorted_df[sorted_df.NEAR_DIST != 0]
-non_zero_path = r'C:\E911\WeberArea\Staging103\snapping_test_nonzero.csv'
+non_zero_path = os.path.join(work_dir, 'snapping_test_nonzero.csv')
 non_zero.to_csv(non_zero_path)
 
 no_dups = non_zero.drop_duplicates('ORIG_FID')
-no_dups_path = r'C:\E911\WeberArea\Staging103\snapping_test_nodups.csv'
+no_dups_path = os.path.join(work_dir, 'snapping_test_nodups.csv')
 no_dups.to_csv(no_dups_path)
 
 # Convert CSV output into table and join to working address points FC
@@ -93,7 +88,7 @@ if arcpy.Exists("neartable_join"):
     arcpy.Delete_management("neartable_join")
 arcpy.TableToTable_conversion(no_dups_path, staging_db, "neartable_join")
 # joined_table = arcpy.AddJoin_management(working_streets, oid_fieldname, "neartable_join", "IN_FID")
-joined_table = arcpy.AddJoin_management(temp_streets, oid_fieldname, "neartable_join", "ORIG_FID")
+joined_table = arcpy.AddJoin_management(working_streets, oid_fieldname, "neartable_join", "ORIG_FID")
 if arcpy.Exists(f'{temp_streets}_final'):
     arcpy.Delete_management(f'{temp_streets}_final')
 # Copy joined table to "_final" feature class
