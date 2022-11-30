@@ -81,7 +81,7 @@ if arcpy.Exists(st_endpoints):
     arcpy.Delete_management(st_endpoints)
 arcpy.management.FeatureVerticesToPoints(working_streets, st_endpoints, "BOTH_ENDS")
 
-# TIMING TEST #  Convert endpoints to spatial dataframe, project back to WGS84, calc lon/lat, then join back to feature class to speed up
+# Project endpoints back to WGS84, convert  to spatial dataframe, calc lon/lat, convert to table, then join back to feature class (much faster this way)
 calc_time = time.time()
 st_endpoints_wgs84 = os.path.join(staging_db, f'endpts_wgs84_{today}')
 sr_wgs84 = arcpy.SpatialReference(4326)
@@ -91,12 +91,6 @@ arcpy.management.Project(st_endpoints, st_endpoints_wgs84, sr_wgs84, "WGS_1984_(
 endpts_wgs84_sdf = pd.DataFrame.spatial.from_featureclass(st_endpoints_wgs84)
 endpts_wgs84_sdf['lon'] = endpts_wgs84_sdf.SHAPE.progress_apply(lambda p: p.x)
 endpts_wgs84_sdf['lat'] = endpts_wgs84_sdf.SHAPE.progress_apply(lambda p: p.y)
-
-# # Convert SDF to table and join back to FC with JoinField
-# endpts_wgs84_fc = 'in_memory\\endpts_wgs84_fc'
-# endpts_wgs84_sdf.spatial.to_featureclass(location=endpts_wgs84_fc)
-# arcpy.management.JoinField(st_endpoints, "OBJECTID", endpts_wgs84_fc, "OBJECTID", ["lon", "lat"])
-# print("Time elapsed calculating lat/lon fields: {:.2f}s".format(time.time() - calc_time))
 
 # Convert SDF to table and join back to FC with JoinField
 endpts_wgs84_fc = 'in_memory\\endpts_wgs84_fc'
@@ -119,21 +113,6 @@ if arcpy.Exists(endpts_wgs84_fc):
     arcpy.Delete_management(endpts_wgs84_fc)
 if arcpy.Exists(endpt_table):
     arcpy.Delete_management(endpt_table)
-
-# calc_time = time.time()
-# #: Add fields for lon/lat values
-# arcpy.management.AddField(st_endpoints, 'lon', 'FLOAT', field_scale="6", field_alias="Longitude")
-# arcpy.management.AddField(st_endpoints, 'lat', 'FLOAT', field_scale="6", field_alias="Latitude")
-
-# #: Calculate lon/lat values for all points (in WGS84 coords)
-# lat_calc = f'arcpy.PointGeometry(!Shape!.centroid, !Shape!.spatialReference).projectAs(arcpy.SpatialReference(4326)).centroid.Y'
-# lon_calc = f'arcpy.PointGeometry(!Shape!.centroid, !Shape!.spatialReference).projectAs(arcpy.SpatialReference(4326)).centroid.X'
-
-# arcpy.CalculateField_management(st_endpoints, 'lat', lat_calc, "PYTHON3")
-# arcpy.CalculateField_management(st_endpoints, 'lon', lon_calc, "PYTHON3")
-# print("Time elapsed calculating lat/lon fields: {:.2f}s".format(time.time() - calc_time))
-
-
 
 # Create table name (in memory) for neartable
 neartable = 'in_memory\\near_table'
@@ -206,7 +185,6 @@ if arcpy.Exists(final_name):
 arcpy.CopyFeatures_management(features_with_join, final_name)
 arcpy.Delete_management('in_memory\\near_table')
 
-# Apply snapping logic to selections 
 #########################
 # WORK ON AUTO-SNAPPING #
 #########################
@@ -278,6 +256,7 @@ print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(n_tabl
 
 item_number = 0
 multi = 0
+deletes = 0
 skipped = False
 # Iterate over list of OIDs and perform selction by location within 4m of each point
 for snap_oid in snap_area_oids:
@@ -289,7 +268,7 @@ for snap_oid in snap_area_oids:
             near_oids.append(row[0])
 
     snap_query = f"""OBJECTID IN ({','.join([str(o) for o in near_oids])}) AND NEAR_DIST IS NOT NULL"""
-    print(snap_query)
+    # print(snap_query)
 
     sql_clause = [None, "ORDER BY NEAR_DIST ASC, OBJECTID ASC"]
     #             0          1               2             3           4             5           6          7         8
@@ -306,6 +285,7 @@ for snap_oid in snap_area_oids:
             # Only operate on lines whose length is more than the snap_radius
             if row[1] < snap_radius:
                 skipped = True
+                deletes += 1
                 print(f'OID: {row[7]} was deleted,      Length: {row[1]}')
             else:
                 # Get start/end coordinates of each feature
@@ -380,8 +360,9 @@ for snap_oid in snap_area_oids:
 
     item_number += 1
 
-print(f'Total count of snapping updates: {item_number}')
+print(f'Total count of snapping areas: {item_number}')
 print(f'Total count of multipart features: {multi}')
+print(f'Total count of deleted features: {deletes}')
 
 # Go back through data and update the comment fields (snap_start, snap_end) based on snap_df
 snap_count = 0
@@ -400,15 +381,6 @@ with arcpy.da.UpdateCursor(snapped, fewer_fields, oid_query) as ucursor:
             snap_count += 1
         ucursor.updateRow(row)
 print(f'Total count of snap field comment updates: {snap_count}')
-
-
-# OTHER IDEAS #
-# SPEED UP
-# Calculate lat/lons and h3s in dataframe/lambdas (might need to project to WGS84)
-# SORTING
-# Current sorting occasionally has a NEAR_DIST null at the top (due to ASC)
-#   This results in no snapping because other points aren't within 4m
-#   Maybe sort NEAR_DIST DESC
 
 
 print("Script shutting down ...")
