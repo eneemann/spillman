@@ -28,12 +28,15 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 today = time.strftime("%Y%m%d")
 print("The script start time is {}".format(readable_start))
 
-# Create variables
-main_db = r"C:\E911\TOC\TOC_Geovalidation_WGS84.gdb"
+#########################
+# Set up user variables #
+#########################
+snap_radius = 4  # in meters
+current_streets = r"C:\E911\TOC\TOC_Geovalidation_WGS84.gdb\Streets_Combined"
 output_db = r"C:\E911\TOC\TOC_Staging.gdb"
 work_dir = r'C:\E911\TOC\working_data'
-current_streets = os.path.join(main_db, "Streets_Combined")
 
+######################################
 # Set up the environment and workspace
 env.workspace = output_db
 env.overwriteOutput = True
@@ -51,12 +54,6 @@ intermediate_files = [temp_streets, working_streets, st_endpoints, join_name, n_
 
 sr_wgs84 = arcpy.SpatialReference(4326)
 sr_utm = arcpy.SpatialReference(26912)
-
-#################################
-# Set snapping radius in meters #
-#################################
-snap_radius = 4
-
 
 def confirm_wgs84(current):
     # Check sr, project to WGS84 (if needed) or copy to temp_streets
