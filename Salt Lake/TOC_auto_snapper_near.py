@@ -30,22 +30,24 @@ print("The script start time is {}".format(readable_start))
 
 # Create variables
 main_db = r"C:\E911\TOC\TOC_Geovalidation_WGS84.gdb"
-staging_db = r"C:\E911\TOC\TOC_Staging.gdb"
+output_db = r"C:\E911\TOC\TOC_Staging.gdb"
 work_dir = r'C:\E911\TOC\working_data'
-env.workspace = staging_db
+current_streets = os.path.join(main_db, "Streets_Combined")
+
+# Set up the environment and workspace
+env.workspace = output_db
 env.overwriteOutput = True
 env.qualifiedFieldNames = False
 
-current_streets = os.path.join(main_db, "Streets_Combined")
-temp_streets = os.path.join(staging_db, f"St_snap_working_{today}")
-working_streets = os.path.join(staging_db, f"St_snap_working_UTM_{today}")
-st_endpoints = os.path.join(staging_db, f"St_snap_endpoints_{today}")
-join_name = os.path.join(staging_db, f"neartable_join_{today}")
-endpts_fc = os.path.join(staging_db, f"zzz_endpts_to_snap_{today}")
+temp_streets = os.path.join(output_db, f"St_snap_working_{today}")
+working_streets = os.path.join(output_db, f"St_snap_working_UTM_{today}")
+st_endpoints = os.path.join(output_db, f"St_snap_endpoints_{today}")
+join_name = os.path.join(output_db, f"neartable_join_{today}")
+endpts_fc = os.path.join(output_db, f"zzz_endpts_to_snap_{today}")
 snapped = f"{current_streets}_{today}_snapped"
-n_table = os.path.join(staging_db, f"Snap_near_table_{today}")
+n_table = os.path.join(output_db, f"Snap_near_table_{today}")
 
-intermediate_files = [temp_streets, working_streets, st_endpoints, join_name, endpts_fc, n_table]
+intermediate_files = [temp_streets, working_streets, st_endpoints, join_name, n_table]
 
 sr_wgs84 = arcpy.SpatialReference(4326)
 sr_utm = arcpy.SpatialReference(26912)
@@ -108,7 +110,7 @@ def create_endpoints(working_st):
 def calc_endpoint_lon_lat(st_endpts):
     # Project endpoints to WGS84, convert to spatial dataframe, calc lon/lat, convert to table, then join back to feature class (much faster this way)
     calc_time = time.time()
-    st_endpts_wgs84 = os.path.join(staging_db, f'endpts_wgs84_{today}')
+    st_endpts_wgs84 = os.path.join(output_db, f'endpts_wgs84_{today}')
     arcpy.management.Project(st_endpts, st_endpts_wgs84, sr_wgs84, "WGS_1984_(ITRF00)_To_NAD_1983")
 
     # Convert to spatial dataframe and calc lat/lon fields
@@ -122,8 +124,8 @@ def calc_endpoint_lon_lat(st_endpts):
     endpts_wgs84_df = endpts_wgs84_sdf[keep_cols]
     endpt_path = os.path.join(work_dir, 'temp_endpts.csv')
     endpts_wgs84_df.to_csv(endpt_path)
-    endpt_table = os.path.join(staging_db, f'endpts_table_{today}')
-    arcpy.conversion.TableToTable(endpt_path, staging_db, f'endpts_table_{today}')
+    endpt_table = os.path.join(output_db, f'endpts_table_{today}')
+    arcpy.conversion.TableToTable(endpt_path, output_db, f'endpts_table_{today}')
     arcpy.management.JoinField(st_endpts, "OBJECTID", endpt_table, "OBJECTID", ["lon", "lat"])
     print("Time elapsed calculating lat/lon fields: {:.2f}s".format(time.time() - calc_time))
 
@@ -194,7 +196,7 @@ def generate_neartable_and_join_to_streets(st_endpts):
     # Convert CSV output into table and join to working streets FC
     if arcpy.Exists(join_name):
         arcpy.Delete_management(join_name)
-    arcpy.TableToTable_conversion(no_dups_path, staging_db, f"neartable_join_{today}")
+    arcpy.TableToTable_conversion(no_dups_path, output_db, f"neartable_join_{today}")
     # Use JoinField instead of AddJoin for a cleaner schema
     arcpy.management.JoinField(working_streets, oid_fieldname, join_name, "ORIG_FID", ["IN_FID", "NEAR_FID", "NEAR_DIST", "NEAR_RANK"])
     arcpy.Delete_management('in_memory\\near_table')
@@ -396,6 +398,7 @@ def update_comments():
 def delete_intermediate_files(file_list):
     for item in file_list:
         if arcpy.Exists(item):
+            print(f'Deleting {item} ...')
             arcpy.Delete_management(item)
 
 
