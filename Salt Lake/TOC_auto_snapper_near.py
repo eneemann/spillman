@@ -35,44 +35,65 @@ env.workspace = staging_db
 env.overwriteOutput = True
 env.qualifiedFieldNames = False
 
-real_streets = os.path.join(main_db, "Streets_Combined")
+current_streets = os.path.join(main_db, "Streets_Combined")
 temp_streets = os.path.join(staging_db, f"St_snap_working_{today}")
 working_streets = os.path.join(staging_db, f"St_snap_working_UTM_{today}")
 st_endpoints = os.path.join(staging_db, f"St_snap_endpoints_{today}")
+endpts_fc = os.path.join(staging_db, f"zzz_endpts_to_snap_{today}")
+snapped = os.path.join(staging_db, f"zzz_TOC_{today}_near_snapped")
 
-# Set snapping radius in meters
+sr_wgs84 = arcpy.SpatialReference(4326)
+sr_utm = arcpy.SpatialReference(26912)
+
+#################################
+# Set snapping radius in meters #
+#################################
 snap_radius = 4
 
-print("Copying features to working layer ...")
-arcpy.CopyFeatures_management(real_streets, temp_streets)
 
-# Add h3 index level 9 for start and end points
-arcpy.management.AddField(temp_streets, "start_h3_9", "TEXT", "", "", 30)
-arcpy.management.AddField(temp_streets, "end_h3_9", "TEXT", "", "", 30)
+def confirm_wgs84(current):
+    temp = temp_streets
+    # Check sr, project to WGS84 (if needed) or copy to temp_streets
+    current_sr = arcpy.Describe(current).spatialReference
 
-h3_time = time.time()
-count = 0
-#             0          1            2
-fields = ['SHAPE@', 'start_h3_9', 'end_h3_9']
-with arcpy.da.UpdateCursor(temp_streets, fields) as ucursor:
-    print("Calculating h3 for start and end points ...")
-    for row in ucursor:
-        start_lon = row[0].firstPoint.X
-        start_lat = row[0].firstPoint.Y
-        end_lon = row[0].lastPoint.X
-        end_lat = row[0].lastPoint.Y
+    if current_sr.factoryCode == 26912:
+        print("Projecting features to working layer (WGS84) ...")
+        arcpy.management.Project(current, temp, sr_wgs84, "WGS_1984_(ITRF00)_To_NAD_1983")
+    else:
+        print("Copying features to working layer ...")
+        arcpy.CopyFeatures_management(current, temp)
 
-        row[1] = h3.geo_to_h3(start_lat, start_lon, 9)
-        row[2] = h3.geo_to_h3(end_lat, end_lon, 9)
-               
-        count += 1
-        ucursor.updateRow(row)
-print(f'Total count of h3 field updates: {count}')
-print("Time elapsed calculating h3 indexes in update cursor: {:.2f}s".format(time.time() - h3_time))
+    return temp
+
+
+def calc_endpoint_h3s(streets):
+    # streets fc must be in wgs84
+    # Add h3 index level 9 for start and end points
+    arcpy.management.AddField(streets, "start_h3_9", "TEXT", "", "", 30)
+    arcpy.management.AddField(streets, "end_h3_9", "TEXT", "", "", 30)
+
+    h3_time = time.time()
+    count = 0
+    #             0          1            2
+    fields = ['SHAPE@', 'start_h3_9', 'end_h3_9']
+    with arcpy.da.UpdateCursor(streets, fields) as ucursor:
+        print("Calculating h3 for start and end points ...")
+        for row in ucursor:
+            start_lon = row[0].firstPoint.X
+            start_lat = row[0].firstPoint.Y
+            end_lon = row[0].lastPoint.X
+            end_lat = row[0].lastPoint.Y
+
+            row[1] = h3.geo_to_h3(start_lat, start_lon, 9)
+            row[2] = h3.geo_to_h3(end_lat, end_lon, 9)
+                
+            count += 1
+            ucursor.updateRow(row)
+    print(f'Total count of h3 field updates: {count}')
+    print("Time elapsed calculating h3 indexes in update cursor: {:.2f}s".format(time.time() - h3_time))
 
 # working_streets = temp_streets
-sr = arcpy.SpatialReference(26912)
-arcpy.management.Project(temp_streets, working_streets, sr, "WGS_1984_(ITRF00)_To_NAD_1983")
+arcpy.management.Project(temp_streets, working_streets, sr_utm, "WGS_1984_(ITRF00)_To_NAD_1983")
 # arcpy.CopyFeatures_management(temp_streets, working_streets)
 oid_fieldname = arcpy.Describe(working_streets).OIDFieldName
 print(f"OID field name:  {oid_fieldname}")
@@ -81,10 +102,9 @@ if arcpy.Exists(st_endpoints):
     arcpy.Delete_management(st_endpoints)
 arcpy.management.FeatureVerticesToPoints(working_streets, st_endpoints, "BOTH_ENDS")
 
-# Project endpoints back to WGS84, convert  to spatial dataframe, calc lon/lat, convert to table, then join back to feature class (much faster this way)
+# Project endpoints to WGS84, convert to spatial dataframe, calc lon/lat, convert to table, then join back to feature class (much faster this way)
 calc_time = time.time()
 st_endpoints_wgs84 = os.path.join(staging_db, f'endpts_wgs84_{today}')
-sr_wgs84 = arcpy.SpatialReference(4326)
 arcpy.management.Project(st_endpoints, st_endpoints_wgs84, sr_wgs84, "WGS_1984_(ITRF00)_To_NAD_1983")
 
 # Convert to spatial dataframe and calc lat/lon fields
@@ -151,8 +171,7 @@ no_dups_fc = non_zero_fc.drop_duplicates(subset=['NEAR_DIST', 'point_h3'])
 no_dups_fc_path = os.path.join(work_dir, 'snapping_test_nodups_fc.csv')
 no_dups_fc.to_csv(no_dups_fc_path)
 
-# # Convert endpts with joined near_table info to point feature class
-endpts_fc = os.path.join(staging_db, f"zzz_endpts_to_snap_{today}")
+# Convert endpts with joined near_table info to point feature class
 no_dups_fc.spatial.to_featureclass(location=endpts_fc)
 
 # Convert endpts to pandas dataframe for street join
@@ -214,7 +233,7 @@ def update_geom(shape, case, x, y):
     return updated_shape
 
 
-snapped = os.path.join(staging_db, f"zzz_TOC_{today}_near_snapped")
+
 if arcpy.Exists(snapped):
     arcpy.Delete_management(snapped)
 arcpy.CopyFeatures_management(final_name, snapped)
@@ -381,6 +400,11 @@ with arcpy.da.UpdateCursor(snapped, fewer_fields, oid_query) as ucursor:
             snap_count += 1
         ucursor.updateRow(row)
 print(f'Total count of snap field comment updates: {snap_count}')
+
+
+# Call Functions
+temp_streets = confirm_wgs84(current_streets)
+calc_endpoint_h3s(temp_streets)
 
 
 print("Script shutting down ...")
