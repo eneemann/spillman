@@ -18,8 +18,9 @@ from tqdm import tqdm
 import math
 from arcgis.features import GeoAccessor, GeoSeriesAccessor
 
-# Initialize the tqdm progress bar tool
+# Initialize the tqdm progress bar tool, suppress chained assignment warning
 tqdm.pandas()
+pd.options.mode.chained_assignment = None  # default='warn'
 
 # Start timer and print start time in UTC
 start_time = time.time()
@@ -39,8 +40,13 @@ current_streets = os.path.join(main_db, "Streets_Combined")
 temp_streets = os.path.join(staging_db, f"St_snap_working_{today}")
 working_streets = os.path.join(staging_db, f"St_snap_working_UTM_{today}")
 st_endpoints = os.path.join(staging_db, f"St_snap_endpoints_{today}")
+join_name = os.path.join(staging_db, f"neartable_join_{today}")
+# final_name = os.path.join(staging_db, f'St_snap_working_{today}_final')
 endpts_fc = os.path.join(staging_db, f"zzz_endpts_to_snap_{today}")
 snapped = os.path.join(staging_db, f"zzz_TOC_{today}_near_snapped")
+n_table = os.path.join(staging_db, f"Snap_near_table_{today}")
+
+intermediate_files = [temp_streets, working_streets, st_endpoints, join_name, endpts_fc, n_table]
 
 sr_wgs84 = arcpy.SpatialReference(4326)
 sr_utm = arcpy.SpatialReference(26912)
@@ -52,31 +58,28 @@ snap_radius = 4
 
 
 def confirm_wgs84(current):
-    temp = temp_streets
     # Check sr, project to WGS84 (if needed) or copy to temp_streets
     current_sr = arcpy.Describe(current).spatialReference
 
     if current_sr.factoryCode == 26912:
         print("Projecting features to working layer (WGS84) ...")
-        arcpy.management.Project(current, temp, sr_wgs84, "WGS_1984_(ITRF00)_To_NAD_1983")
+        arcpy.management.Project(current, temp_streets, sr_wgs84, "WGS_1984_(ITRF00)_To_NAD_1983")
     else:
         print("Copying features to working layer ...")
-        arcpy.CopyFeatures_management(current, temp)
-
-    return temp
+        arcpy.CopyFeatures_management(current, temp_streets)
 
 
-def calc_endpoint_h3s(streets):
+def calc_endpoint_h3s(temp_st):
     # streets fc must be in wgs84
     # Add h3 index level 9 for start and end points
-    arcpy.management.AddField(streets, "start_h3_9", "TEXT", "", "", 30)
-    arcpy.management.AddField(streets, "end_h3_9", "TEXT", "", "", 30)
+    arcpy.management.AddField(temp_st, "start_h3_9", "TEXT", "", "", 30)
+    arcpy.management.AddField(temp_st, "end_h3_9", "TEXT", "", "", 30)
 
     h3_time = time.time()
     count = 0
     #             0          1            2
     fields = ['SHAPE@', 'start_h3_9', 'end_h3_9']
-    with arcpy.da.UpdateCursor(streets, fields) as ucursor:
+    with arcpy.da.UpdateCursor(temp_st, fields) as ucursor:
         print("Calculating h3 for start and end points ...")
         for row in ucursor:
             start_lon = row[0].firstPoint.X
@@ -92,121 +95,126 @@ def calc_endpoint_h3s(streets):
     print(f'Total count of h3 field updates: {count}')
     print("Time elapsed calculating h3 indexes in update cursor: {:.2f}s".format(time.time() - h3_time))
 
-# working_streets = temp_streets
-arcpy.management.Project(temp_streets, working_streets, sr_utm, "WGS_1984_(ITRF00)_To_NAD_1983")
-# arcpy.CopyFeatures_management(temp_streets, working_streets)
-oid_fieldname = arcpy.Describe(working_streets).OIDFieldName
-print(f"OID field name:  {oid_fieldname}")
 
-if arcpy.Exists(st_endpoints):
-    arcpy.Delete_management(st_endpoints)
-arcpy.management.FeatureVerticesToPoints(working_streets, st_endpoints, "BOTH_ENDS")
+def project_to_utm(temp_st):
+    arcpy.management.Project(temp_st, working_streets, sr_utm, "WGS_1984_(ITRF00)_To_NAD_1983")
+    oid_name = arcpy.Describe(working_streets).OIDFieldName
+    print(f"OID field name:  {oid_name}")
 
-# Project endpoints to WGS84, convert to spatial dataframe, calc lon/lat, convert to table, then join back to feature class (much faster this way)
-calc_time = time.time()
-st_endpoints_wgs84 = os.path.join(staging_db, f'endpts_wgs84_{today}')
-arcpy.management.Project(st_endpoints, st_endpoints_wgs84, sr_wgs84, "WGS_1984_(ITRF00)_To_NAD_1983")
+    return oid_name
 
-# Convert to spatial dataframe and calc lat/lon fields
-endpts_wgs84_sdf = pd.DataFrame.spatial.from_featureclass(st_endpoints_wgs84)
-endpts_wgs84_sdf['lon'] = endpts_wgs84_sdf.SHAPE.progress_apply(lambda p: p.x)
-endpts_wgs84_sdf['lat'] = endpts_wgs84_sdf.SHAPE.progress_apply(lambda p: p.y)
+def create_endpoints(working_st):
+    if arcpy.Exists(st_endpoints):
+        arcpy.Delete_management(st_endpoints)
+    arcpy.management.FeatureVerticesToPoints(working_st, st_endpoints, "BOTH_ENDS")
 
-# Convert SDF to table and join back to FC with JoinField
-endpts_wgs84_fc = 'in_memory\\endpts_wgs84_fc'
-endpts_wgs84_sdf.spatial.to_featureclass(location=endpts_wgs84_fc)
-keep_cols = ['OBJECTID', 'lon', 'lat']
-endpts_wgs84_df = endpts_wgs84_sdf[keep_cols]
-endpt_path = os.path.join(work_dir, 'temp_endpts.csv')
-endpts_wgs84_df.to_csv(endpt_path)
-endpt_table = os.path.join(staging_db, f'endpts_table_{today}')
-arcpy.conversion.TableToTable(endpt_path, staging_db, f'endpts_table_{today}')
-arcpy.management.JoinField(st_endpoints, "OBJECTID", endpt_table, "OBJECTID", ["lon", "lat"])
-print("Time elapsed calculating lat/lon fields: {:.2f}s".format(time.time() - calc_time))
-no_dups_fc_path = os.path.join(work_dir, 'snapping_test_nodups_fc.csv')
-# no_dups_fc.to_csv(no_dups_fc_path)
 
-# Delete in-memory temp data for lat/lon calculation
-if arcpy.Exists(st_endpoints_wgs84):
-    arcpy.Delete_management(st_endpoints_wgs84)
-if arcpy.Exists(endpts_wgs84_fc):
-    arcpy.Delete_management(endpts_wgs84_fc)
-if arcpy.Exists(endpt_table):
-    arcpy.Delete_management(endpt_table)
+def calc_endpoint_lon_lat(st_endpts):
+    # Project endpoints to WGS84, convert to spatial dataframe, calc lon/lat, convert to table, then join back to feature class (much faster this way)
+    calc_time = time.time()
+    st_endpts_wgs84 = os.path.join(staging_db, f'endpts_wgs84_{today}')
+    arcpy.management.Project(st_endpts, st_endpts_wgs84, sr_wgs84, "WGS_1984_(ITRF00)_To_NAD_1983")
 
-# Create table name (in memory) for neartable
-neartable = 'in_memory\\near_table'
-# Perform near table analysis
-print("Generating near table ...")
-arcpy.analysis.GenerateNearTable(st_endpoints, st_endpoints, neartable, f'{snap_radius} Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 6, 'PLANAR')
-print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(neartable)))
+    # Convert to spatial dataframe and calc lat/lon fields
+    endpts_wgs84_sdf = pd.DataFrame.spatial.from_featureclass(st_endpts_wgs84)
+    endpts_wgs84_sdf['lon'] = endpts_wgs84_sdf.SHAPE.progress_apply(lambda p: p.x)
+    endpts_wgs84_sdf['lat'] = endpts_wgs84_sdf.SHAPE.progress_apply(lambda p: p.y)
 
-# Convert neartable to pandas dataframe for street join
-neartable_arr = arcpy.da.TableToNumPyArray(neartable, '*')
-near_df = pd.DataFrame(data = neartable_arr)
-print(near_df.head(5))
+    # Convert SDF to table and join back to FC with JoinField
+    # endpts_wgs84_fc = 'in_memory\\endpts_wgs84_fc'
+    # endpts_wgs84_sdf.spatial.to_featureclass(location=endpts_wgs84_fc)
+    # Simplify to dataframe, save as CSV, convert to ArcGIS table, then use JoinField
+    keep_cols = ['OBJECTID', 'lon', 'lat']
+    endpts_wgs84_df = endpts_wgs84_sdf[keep_cols]
+    endpt_path = os.path.join(work_dir, 'temp_endpts.csv')
+    endpts_wgs84_df.to_csv(endpt_path)
+    endpt_table = os.path.join(staging_db, f'endpts_table_{today}')
+    arcpy.conversion.TableToTable(endpt_path, staging_db, f'endpts_table_{today}')
+    arcpy.management.JoinField(st_endpts, "OBJECTID", endpt_table, "OBJECTID", ["lon", "lat"])
+    print("Time elapsed calculating lat/lon fields: {:.2f}s".format(time.time() - calc_time))
 
-# Convert endpts to spatial dataframe for endpoint fc
-print("Converting working end points to spatial dataframe ...")
-endpt_sdf = pd.DataFrame.spatial.from_featureclass(st_endpoints)
+    # Delete in-memory temp data for lat/lon calculation
+    if arcpy.Exists(st_endpts_wgs84):
+        arcpy.Delete_management(st_endpts_wgs84)
+    # if arcpy.Exists(endpts_wgs84_fc):
+    #     arcpy.Delete_management(endpts_wgs84_fc)
+    if arcpy.Exists(endpt_table):
+        arcpy.Delete_management(endpt_table)
 
-# Join end points to near table for endpoint fc
-endpt_near_df = near_df.join(endpt_sdf.set_index(oid_fieldname), on='NEAR_FID')
-print(endpt_near_df.head(5))
 
-endpt_near_df.sort_values('NEAR_DIST', inplace=True)
+def generate_neartable_and_join_to_streets(st_endpts):
+    # Create table name (in memory) for neartable
+    neartable = 'in_memory\\near_table'
+    # Perform near table analysis
+    print("Generating near table ...")
+    arcpy.analysis.GenerateNearTable(st_endpts, st_endpts, neartable, f'{snap_radius} Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 6, 'PLANAR')
+    print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(neartable)))
 
-non_zero_fc = endpt_near_df[endpt_near_df.NEAR_DIST != 0]
-non_zero_fc_path = os.path.join(work_dir, 'snapping_test_nonzero.csv')
-non_zero_fc.to_csv(non_zero_fc_path)
+    # Convert neartable to pandas dataframe for street join
+    neartable_arr = arcpy.da.TableToNumPyArray(neartable, '*')
+    near_df = pd.DataFrame(data = neartable_arr)
+    print(near_df.head(5))
 
-#: Calculate h3 on points in a lamdba function
-print("Calculating h3 index as a lambda function ...")
-h3_lambda = time.time()
-non_zero_fc['point_h3'] = non_zero_fc.progress_apply(lambda p: h3.geo_to_h3(p['lat'], p['lon'], 12), axis = 1)
-print("\n    Time elapsed in h3 as a lambda function: {:.2f}s".format(time.time() - h3_lambda))
+    # Convert endpts to spatial dataframe for endpoint fc
+    print("Converting working end points to spatial dataframe ...")
+    endpt_sdf = pd.DataFrame.spatial.from_featureclass(st_endpts)
 
-# Drop duplicates to narrow it down to the important end points 
-no_dups_fc = non_zero_fc.drop_duplicates(subset=['NEAR_DIST', 'point_h3'])
-no_dups_fc_path = os.path.join(work_dir, 'snapping_test_nodups_fc.csv')
-no_dups_fc.to_csv(no_dups_fc_path)
+    # Join end points to near table for endpoint fc
+    endpt_near_df = near_df.join(endpt_sdf.set_index(oid_fieldname), on='NEAR_FID')
+    print(endpt_near_df.head(5))
 
-# Convert endpts with joined near_table info to point feature class
-no_dups_fc.spatial.to_featureclass(location=endpts_fc)
+    endpt_near_df.sort_values('NEAR_DIST', inplace=True)
 
-# Convert endpts to pandas dataframe for street join
-endpt_fields = [oid_fieldname, 'ORIG_FID', 'STREET']
-endpt_arr = arcpy.da.FeatureClassToNumPyArray(st_endpoints, endpt_fields)
-endpt_df = pd.DataFrame(data = endpt_arr)
-print(endpt_df.head(5).to_string())
+    non_zero_fc = endpt_near_df[endpt_near_df.NEAR_DIST != 0]
+    non_zero_fc_path = os.path.join(work_dir, 'snapping_test_nonzero.csv')
+    non_zero_fc.to_csv(non_zero_fc_path)
 
-# Join end points to near table for street join
-join1_df = near_df.join(endpt_df.set_index(oid_fieldname), on='NEAR_FID')
-join1_df.sort_values('NEAR_DIST', inplace=True)
-print(join1_df.head(5).to_string())
-non_zero = join1_df[join1_df.NEAR_DIST != 0]
+    #: Calculate h3 on points in a lamdba function
+    print("Calculating h3 index as a lambda function ...")
+    h3_lambda = time.time()
+    non_zero_fc['point_h3'] = non_zero_fc.progress_apply(lambda p: h3.geo_to_h3(p['lat'], p['lon'], 12), axis = 1)
+    print("\n    Time elapsed in h3 as a lambda function: {:.2f}s".format(time.time() - h3_lambda))
 
-no_dups = non_zero.drop_duplicates('ORIG_FID')
-no_dups_path = os.path.join(work_dir, 'snapping_test_nodups.csv')
-no_dups.to_csv(no_dups_path)
+    # Drop duplicates to narrow it down to the important end points 
+    no_dups_fc = non_zero_fc.drop_duplicates(subset=['NEAR_DIST', 'point_h3'])
+    no_dups_fc_path = os.path.join(work_dir, 'snapping_test_nodups_fc.csv')
+    no_dups_fc.to_csv(no_dups_fc_path)
 
-# Convert CSV output into table and join to working streets FC
-join_name = f"neartable_join_{today}"
-if arcpy.Exists(join_name):
-    arcpy.Delete_management(join_name)
-arcpy.TableToTable_conversion(no_dups_path, staging_db, join_name)
-features_with_join = arcpy.AddJoin_management(working_streets, oid_fieldname, join_name, "ORIG_FID")
-final_name = f'St_snap_working_{today}_final'
-if arcpy.Exists(final_name):
-    arcpy.Delete_management(final_name)
-# Copy joined table to "_final" feature class
-# This is a copy of the streets feature class with new joined fields
-arcpy.CopyFeatures_management(features_with_join, final_name)
-arcpy.Delete_management('in_memory\\near_table')
+    # Convert endpts with joined near_table info to point feature class
+    no_dups_fc.spatial.to_featureclass(location=endpts_fc)
 
-#########################
-# WORK ON AUTO-SNAPPING #
-#########################
+    # Convert endpts to pandas dataframe for street join
+    endpt_fields = [oid_fieldname, 'ORIG_FID', 'STREET']
+    endpt_arr = arcpy.da.FeatureClassToNumPyArray(st_endpts, endpt_fields)
+    endpt_df = pd.DataFrame(data = endpt_arr)
+    print(endpt_df.head(5).to_string())
+
+    # Join end points to near table for street join
+    join1_df = near_df.join(endpt_df.set_index(oid_fieldname), on='NEAR_FID')
+    join1_df.sort_values('NEAR_DIST', inplace=True)
+    print(join1_df.head(5).to_string())
+    non_zero = join1_df[join1_df.NEAR_DIST != 0]
+
+    no_dups = non_zero.drop_duplicates('ORIG_FID')
+    no_dups_path = os.path.join(work_dir, 'snapping_test_nodups.csv')
+    no_dups.to_csv(no_dups_path)
+
+    # Convert CSV output into table and join to working streets FC
+    if arcpy.Exists(join_name):
+        arcpy.Delete_management(join_name)
+    arcpy.TableToTable_conversion(no_dups_path, staging_db, f"neartable_join_{today}")
+    # features_with_join = arcpy.AddJoin_management(working_streets, oid_fieldname, join_name, "ORIG_FID")
+    # Use JoinField instead of AddJoin for a cleaner schema
+    arcpy.management.JoinField(working_streets, oid_fieldname, join_name, "ORIG_FID", ["IN_FID", "NEAR_FID", "NEAR_DIST", "NEAR_RANK"])
+
+    # if arcpy.Exists(final_name):
+    #     arcpy.Delete_management(final_name)
+    # Copy joined table to "_final" feature class
+    # This is a copy of the streets feature class with new joined fields
+    # arcpy.CopyFeatures_management(features_with_join, final_name)
+    # arcpy.CopyFeatures_management(working_streets, final_name)
+    arcpy.Delete_management('in_memory\\near_table')
+
 
 def update_geom(shape, case, x, y):
     pts_orig = []
@@ -233,179 +241,204 @@ def update_geom(shape, case, x, y):
     return updated_shape
 
 
+def prep_snapped_fc(working_st):
+    if arcpy.Exists(snapped):
+        arcpy.Delete_management(snapped)
+    arcpy.CopyFeatures_management(working_st, snapped)
 
-if arcpy.Exists(snapped):
-    arcpy.Delete_management(snapped)
-arcpy.CopyFeatures_management(final_name, snapped)
+    # # Get the spatial reference for later use
+    # sr = arcpy.Describe(snapped).spatialReference
+    # print(sr)
 
-# # Get the spatial reference for later use
-sr = arcpy.Describe(snapped).spatialReference
-# print(sr)
-
-# Add field to use for auto-snapping
-arcpy.management.AddField(snapped, 'snap_start', 'TEXT', '', '', 30)
-arcpy.management.AddField(snapped, 'snap_end', 'TEXT', '', '', 30)
-arcpy.management.AddField(snapped, 'snap_status', 'TEXT', '', '', 30)
-
-# Calculate new geometries and update fields
-# Get list of unique h3s and distances for selection queries
-print("Converting working roads to spatial dataframe ...")
-sdf = pd.DataFrame.spatial.from_featureclass(snapped)
-not_zero = sdf[(sdf.NEAR_DIST > 0) & (sdf.NEAR_DIST is not None)]
+    # Add field to use for auto-snapping
+    arcpy.management.AddField(snapped, 'snap_start', 'TEXT', '', '', 30)
+    arcpy.management.AddField(snapped, 'snap_end', 'TEXT', '', '', 30)
+    arcpy.management.AddField(snapped, 'snap_status', 'TEXT', '', '', 30)
 
 
-# Create dataframe from relevant oids to track start/endpoint snapping staus
-snap_df = not_zero[['OBJECTID']].rename(columns={'OBJECTID': 'oid'}).set_index('oid')
-snap_df['start'] = ''
-snap_df['end'] = ''
-
-# Get list of OIDs for use in selection by location within 4m of each point
-snap_area_oids = []
-with arcpy.da.SearchCursor(endpts_fc, ['OID@']) as scursor:
-    for row in scursor:
-        snap_area_oids.append(row[0])
+def prep_snap_df(snapped_fc):
+    # Calculate new geometries and update fields
+    # Get list of unique h3s and distances for selection queries
+    print("Converting working roads to spatial dataframe ...")
+    sdf = pd.DataFrame.spatial.from_featureclass(snapped_fc)
+    not_zero = sdf[(sdf.NEAR_DIST > 0) & (sdf.NEAR_DIST is not None)]
 
 
-# Create Near Table to get OIDs within 4m of each snap point
-n_table = os.path.join(staging_db, f"Snap_near_table_{today}")
-print("Generating near table on snap points ...")
-arcpy.analysis.GenerateNearTable(endpts_fc, snapped, n_table, f'{snap_radius} Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 6, 'PLANAR')
-print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(n_table)))
+    # Create dataframe from relevant oids to track start/endpoint snapping staus
+    snapped_df = not_zero[['OBJECTID']].rename(columns={'OBJECTID': 'oid'}).set_index('oid')
+    snapped_df['start'] = ''
+    snapped_df['end'] = ''
+
+    return snapped_df
 
 
-item_number = 0
-multi = 0
-deletes = 0
-skipped = False
-# Iterate over list of OIDs and perform selction by location within 4m of each point
-for snap_oid in snap_area_oids:
-    near_oids = []
-    oid_query = f"""IN_FID = {snap_oid}"""
-    near_fields = ['NEAR_FID']
-    with arcpy.da.SearchCursor(n_table, near_fields, oid_query) as scursor:
+def generate_neartable_for_snapping():
+    # Create Near Table to get OIDs within 4m of each snap point
+    print("Generating near table on snap points ...")
+    arcpy.analysis.GenerateNearTable(endpts_fc, snapped, n_table, f'{snap_radius} Meters', 'NO_LOCATION', 'NO_ANGLE', 'ALL', 6, 'PLANAR')
+    print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(n_table)))
+
+    # Get list of OIDs for use in selection queries within 4m of each point
+    snap_areas = []
+    with arcpy.da.SearchCursor(endpts_fc, ['OID@']) as scursor:
         for row in scursor:
-            near_oids.append(row[0])
+            snap_areas.append(row[0])
 
-    snap_query = f"""OBJECTID IN ({','.join([str(o) for o in near_oids])}) AND NEAR_DIST IS NOT NULL"""
-    # print(snap_query)
+    return snap_areas
 
-    sql_clause = [None, "ORDER BY NEAR_DIST ASC, OBJECTID ASC"]
-    #             0          1               2             3           4             5           6          7         8
-    fields = ['SHAPE@', 'Shape_Length', 'start_h3_9', 'end_h3_9', 'NEAR_DIST', 'snap_start', 'snap_end', 'OID@', 'snap_status']
-    with arcpy.da.UpdateCursor(snapped, fields, snap_query, '', '', sql_clause) as ucursor:
-        cnt = 0
-        for row in ucursor:
-            skipped = False
-            shape_obj = row[0]
-            if shape_obj.partCount > 1: 
-                print("Warning: multiple parts! extra parts are automatically trimmed!")
-                print(f"Line has {shape_obj.partCount} parts")
-                multi += 1
-            # Only operate on lines whose length is more than the snap_radius
-            if row[1] < snap_radius:
-                skipped = True
-                deletes += 1
-                print(f'OID: {row[7]} was deleted,      Length: {row[1]}')
-            else:
-                # Get start/end coordinates of each feature
-                start_x = shape_obj.firstPoint.X
-                start_y = shape_obj.firstPoint.Y
-                end_x = shape_obj.lastPoint.X
-                end_y = shape_obj.lastPoint.Y
-                
-                if cnt == 0:
-                    # Hold first features start/end coordinates in a variable
-                    first_start_x = start_x
-                    first_start_y = start_y
-                    first_end_x = end_x
-                    first_end_y = end_y
-                    first_oid = row[7]
-                    cnt += 1
+
+def perform_snapping():
+    item_number = 0
+    multi = 0
+    deletes = 0
+    skipped = False
+    # Iterate over list of OIDs and perform selction by location within 4m of each point
+    for snap_oid in snap_area_oids:
+        near_oids = []
+        oid_query = f"""IN_FID = {snap_oid}"""
+        near_fields = ['NEAR_FID']
+        with arcpy.da.SearchCursor(n_table, near_fields, oid_query) as scursor:
+            for row in scursor:
+                near_oids.append(row[0])
+
+        snap_query = f"""OBJECTID IN ({','.join([str(o) for o in near_oids])}) AND NEAR_DIST IS NOT NULL"""
+        # print(snap_query)
+
+        sql_clause = [None, "ORDER BY NEAR_DIST ASC, OBJECTID ASC"]
+        #             0          1               2             3           4             5           6          7         8
+        fields = ['SHAPE@', 'Shape_Length', 'start_h3_9', 'end_h3_9', 'NEAR_DIST', 'snap_start', 'snap_end', 'OID@', 'snap_status']
+        with arcpy.da.UpdateCursor(snapped, fields, snap_query, '', '', sql_clause) as ucursor:
+            cnt = 0
+            for row in ucursor:
+                skipped = False
+                shape_obj = row[0]
+                if shape_obj.partCount > 1: 
+                    print("Warning: multiple parts! extra parts are automatically trimmed!")
+                    print(f"Line has {shape_obj.partCount} parts")
+                    multi += 1
+                # Only operate on lines whose length is more than the snap_radius
+                if row[1] < snap_radius:
+                    skipped = True
+                    deletes += 1
+                    print(f'OID: {row[7]} was deleted,      Length: {row[1]}')
                 else:
+                    # Get start/end coordinates of each feature
                     start_x = shape_obj.firstPoint.X
                     start_y = shape_obj.firstPoint.Y
                     end_x = shape_obj.lastPoint.X
                     end_y = shape_obj.lastPoint.Y
-                    this_oid = row[7]
-
-                    # Calculate distances from each endpoint to endpoint of first feature
-                    thisend_firstend = math.sqrt((end_x - first_end_x)**2 + (end_y - first_end_y)**2)
-                    thisstart_firstend = math.sqrt((start_x - first_end_x)**2 + (start_y - first_end_y)**2)
-                    thisend_firststart = math.sqrt((end_x - first_start_x)**2 + (end_y - first_start_y)**2)
-                    thisstart_firststart = math.sqrt((start_x - first_start_x)**2 + (start_y - first_start_y)**2)
                     
-                    distances = [thisend_firstend, thisstart_firstend, thisend_firststart, thisstart_firststart]
-                    # print(distances)
-                    benchmark_dist = min(d for d in distances if d > 0)
-                    # print(f'benchmark_dist: {benchmark_dist}    NEAR_DIST: {row[4]}')
-
-                    if thisend_firstend < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'end']:
-                        scenario = 1
-                        # print(f'    Case 1: thisend_firstend')
-                        new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
-                        row[0] = new_geom
-                        snap_df.at[this_oid, 'end'] = 'snapped - done'
-                        snap_df.at[first_oid, 'end'] = 'static - done'
+                    if cnt == 0:
+                        # Hold first features start/end coordinates in a variable
+                        first_start_x = start_x
+                        first_start_y = start_y
+                        first_end_x = end_x
+                        first_end_y = end_y
+                        first_oid = row[7]
                         cnt += 1
-                    elif thisstart_firstend < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'start']:
-                        scenario = 2
-                        # print(f'    Case 2: thisstart_firstend')
-                        new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
-                        row[0] = new_geom
-                        snap_df.at[this_oid, 'start'] = 'snapped - done'
-                        snap_df.at[first_oid, 'end'] = 'static - done'
-                        cnt += 1
-                    elif thisend_firststart < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'end']:
-                        scenario = 3
-                        # print(f'    Case 3: thisend_firststart')
-                        new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
-                        row[0] = new_geom
-                        snap_df.at[this_oid, 'end'] = 'snapped - done'
-                        snap_df.at[first_oid, 'start'] = 'static - done'
-                        cnt += 1
-                    elif thisstart_firststart < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'start']:
-                        scenario = 4
-                        # print(f'    Case 4: thisstart_firststart')
-                        new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
-                        row[0] = new_geom
-                        snap_df.at[this_oid, 'start'] = 'snapped - done'
-                        snap_df.at[first_oid, 'start'] = 'static - done'
-                        cnt += 1
-            if skipped:
-                ucursor.deleteRow()
-            else:
-                ucursor.updateRow(row)
-            # print(snap_df.to_string())
+                    else:
+                        start_x = shape_obj.firstPoint.X
+                        start_y = shape_obj.firstPoint.Y
+                        end_x = shape_obj.lastPoint.X
+                        end_y = shape_obj.lastPoint.Y
+                        this_oid = row[7]
 
-    item_number += 1
+                        # Calculate distances from each endpoint to endpoint of first feature
+                        thisend_firstend = math.sqrt((end_x - first_end_x)**2 + (end_y - first_end_y)**2)
+                        thisstart_firstend = math.sqrt((start_x - first_end_x)**2 + (start_y - first_end_y)**2)
+                        thisend_firststart = math.sqrt((end_x - first_start_x)**2 + (end_y - first_start_y)**2)
+                        thisstart_firststart = math.sqrt((start_x - first_start_x)**2 + (start_y - first_start_y)**2)
+                        
+                        distances = [thisend_firstend, thisstart_firstend, thisend_firststart, thisstart_firststart]
+                        # print(distances)
+                        benchmark_dist = min(d for d in distances if d > 0)
+                        # print(f'benchmark_dist: {benchmark_dist}    NEAR_DIST: {row[4]}')
 
-print(f'Total count of snapping areas: {item_number}')
-print(f'Total count of multipart features: {multi}')
-print(f'Total count of deleted features: {deletes}')
+                        if thisend_firstend < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'end']:
+                            scenario = 1
+                            # print(f'    Case 1: thisend_firstend')
+                            new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
+                            row[0] = new_geom
+                            snap_df.at[this_oid, 'end'] = 'snapped - done'
+                            snap_df.at[first_oid, 'end'] = 'static - done'
+                            cnt += 1
+                        elif thisstart_firstend < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'start']:
+                            scenario = 2
+                            # print(f'    Case 2: thisstart_firstend')
+                            new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
+                            row[0] = new_geom
+                            snap_df.at[this_oid, 'start'] = 'snapped - done'
+                            snap_df.at[first_oid, 'end'] = 'static - done'
+                            cnt += 1
+                        elif thisend_firststart < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'end']:
+                            scenario = 3
+                            # print(f'    Case 3: thisend_firststart')
+                            new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
+                            row[0] = new_geom
+                            snap_df.at[this_oid, 'end'] = 'snapped - done'
+                            snap_df.at[first_oid, 'start'] = 'static - done'
+                            cnt += 1
+                        elif thisstart_firststart < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'start']:
+                            scenario = 4
+                            # print(f'    Case 4: thisstart_firststart')
+                            new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
+                            row[0] = new_geom
+                            snap_df.at[this_oid, 'start'] = 'snapped - done'
+                            snap_df.at[first_oid, 'start'] = 'static - done'
+                            cnt += 1
+                if skipped:
+                    ucursor.deleteRow()
+                else:
+                    ucursor.updateRow(row)
+                # print(snap_df.to_string())
 
-# Go back through data and update the comment fields (snap_start, snap_end) based on snap_df
-snap_count = 0
-oid_list = snap_df.index.to_list()
-#                 0          1            2            3
-fewer_fields = ['OID@', 'snap_start', 'snap_end', 'snap_status']
-oid_query = f'OBJECTID IN ({",".join([str(oid) for oid in oid_list])})'
-with arcpy.da.UpdateCursor(snapped, fewer_fields, oid_query) as ucursor:
-    print("Calculating snap comments for start and end points ...")
-    for row in ucursor:
-        if row[0] in oid_list:
-            row[1] = snap_df.at[row[0], 'start']
-            row[2] = snap_df.at[row[0], 'end']
-            if 'done' in row[1] and 'done' in row[2]:
-                row[3] = 'finished'
-            snap_count += 1
-        ucursor.updateRow(row)
-print(f'Total count of snap field comment updates: {snap_count}')
+        item_number += 1
+
+    print(f'Total count of snapping areas: {item_number}')
+    print(f'Total count of multipart features: {multi}')
+    print(f'Total count of deleted features: {deletes}')
+
+
+def update_comments():
+    # Go back through data and update the comment fields (snap_start, snap_end) based on snap_df
+    snap_count = 0
+    oid_list = snap_df.index.to_list()
+    #                 0          1            2            3
+    fewer_fields = ['OID@', 'snap_start', 'snap_end', 'snap_status']
+    oid_query = f'OBJECTID IN ({",".join([str(oid) for oid in oid_list])})'
+    with arcpy.da.UpdateCursor(snapped, fewer_fields, oid_query) as ucursor:
+        print("Calculating snap comments for start and end points ...")
+        for row in ucursor:
+            if row[0] in oid_list:
+                row[1] = snap_df.at[row[0], 'start']
+                row[2] = snap_df.at[row[0], 'end']
+                if 'done' in row[1] and 'done' in row[2]:
+                    row[3] = 'finished'
+                snap_count += 1
+            ucursor.updateRow(row)
+    print(f'Total count of snap field comment updates: {snap_count}')
+
+
+def delete_intermediate_files(file_list):
+    for item in file_list:
+        if arcpy.Exists(item):
+            arcpy.Delete_management(item)
+
 
 
 # Call Functions
-temp_streets = confirm_wgs84(current_streets)
+confirm_wgs84(current_streets)
 calc_endpoint_h3s(temp_streets)
-
+oid_fieldname = project_to_utm(temp_streets)
+create_endpoints(working_streets)
+calc_endpoint_lon_lat(st_endpoints)
+generate_neartable_and_join_to_streets(st_endpoints)
+prep_snapped_fc(working_streets)
+snap_df = prep_snap_df(snapped)
+snap_area_oids = generate_neartable_for_snapping()
+perform_snapping()
+update_comments()
+# delete_intermediate_files(intermediate_files)
 
 print("Script shutting down ...")
 # Stop timer and print end time
