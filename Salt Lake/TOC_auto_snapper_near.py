@@ -41,7 +41,6 @@ temp_streets = os.path.join(staging_db, f"St_snap_working_{today}")
 working_streets = os.path.join(staging_db, f"St_snap_working_UTM_{today}")
 st_endpoints = os.path.join(staging_db, f"St_snap_endpoints_{today}")
 join_name = os.path.join(staging_db, f"neartable_join_{today}")
-# final_name = os.path.join(staging_db, f'St_snap_working_{today}_final')
 endpts_fc = os.path.join(staging_db, f"zzz_endpts_to_snap_{today}")
 snapped = f"{current_streets}_{today}_snapped"
 n_table = os.path.join(staging_db, f"Snap_near_table_{today}")
@@ -118,8 +117,6 @@ def calc_endpoint_lon_lat(st_endpts):
     endpts_wgs84_sdf['lat'] = endpts_wgs84_sdf.SHAPE.progress_apply(lambda p: p.y)
 
     # Convert SDF to table and join back to FC with JoinField
-    # endpts_wgs84_fc = 'in_memory\\endpts_wgs84_fc'
-    # endpts_wgs84_sdf.spatial.to_featureclass(location=endpts_wgs84_fc)
     # Simplify to dataframe, save as CSV, convert to ArcGIS table, then use JoinField
     keep_cols = ['OBJECTID', 'lon', 'lat']
     endpts_wgs84_df = endpts_wgs84_sdf[keep_cols]
@@ -133,8 +130,6 @@ def calc_endpoint_lon_lat(st_endpts):
     # Delete in-memory temp data for lat/lon calculation
     if arcpy.Exists(st_endpts_wgs84):
         arcpy.Delete_management(st_endpts_wgs84)
-    # if arcpy.Exists(endpts_wgs84_fc):
-    #     arcpy.Delete_management(endpts_wgs84_fc)
     if arcpy.Exists(endpt_table):
         arcpy.Delete_management(endpt_table)
 
@@ -200,16 +195,8 @@ def generate_neartable_and_join_to_streets(st_endpts):
     if arcpy.Exists(join_name):
         arcpy.Delete_management(join_name)
     arcpy.TableToTable_conversion(no_dups_path, staging_db, f"neartable_join_{today}")
-    # features_with_join = arcpy.AddJoin_management(working_streets, oid_fieldname, join_name, "ORIG_FID")
     # Use JoinField instead of AddJoin for a cleaner schema
     arcpy.management.JoinField(working_streets, oid_fieldname, join_name, "ORIG_FID", ["IN_FID", "NEAR_FID", "NEAR_DIST", "NEAR_RANK"])
-
-    # if arcpy.Exists(final_name):
-    #     arcpy.Delete_management(final_name)
-    # Copy joined table to "_final" feature class
-    # This is a copy of the streets feature class with new joined fields
-    # arcpy.CopyFeatures_management(features_with_join, final_name)
-    # arcpy.CopyFeatures_management(working_streets, final_name)
     arcpy.Delete_management('in_memory\\near_table')
 
 
@@ -243,10 +230,6 @@ def prep_snapped_fc(working_st):
         arcpy.Delete_management(snapped)
     arcpy.CopyFeatures_management(working_st, snapped)
 
-    # # Get the spatial reference for later use
-    # sr = arcpy.Describe(snapped).spatialReference
-    # print(sr)
-
     # Add field to use for auto-snapping
     arcpy.management.AddField(snapped, 'snap_start', 'TEXT', '', '', 30)
     arcpy.management.AddField(snapped, 'snap_end', 'TEXT', '', '', 30)
@@ -259,7 +242,6 @@ def prep_snap_df(snapped_fc):
     print("Converting working roads to spatial dataframe ...")
     sdf = pd.DataFrame.spatial.from_featureclass(snapped_fc)
     not_zero = sdf[(sdf.NEAR_DIST > 0) & (sdf.NEAR_DIST is not None)]
-
 
     # Create dataframe from relevant oids to track start/endpoint snapping staus
     snapped_df = not_zero[['OBJECTID']].rename(columns={'OBJECTID': 'oid'}).set_index('oid')
@@ -299,8 +281,6 @@ def perform_snapping():
                 near_oids.append(row[0])
 
         snap_query = f"""OBJECTID IN ({','.join([str(o) for o in near_oids])}) AND NEAR_DIST IS NOT NULL"""
-        # print(snap_query)
-
         sql_clause = [None, "ORDER BY NEAR_DIST ASC, OBJECTID ASC"]
         #             0          1               2             3           4             5           6          7         8
         fields = ['SHAPE@', 'Shape_Length', 'start_h3_9', 'end_h3_9', 'NEAR_DIST', 'snap_start', 'snap_end', 'OID@', 'snap_status']
@@ -347,9 +327,7 @@ def perform_snapping():
                         thisstart_firststart = math.sqrt((start_x - first_start_x)**2 + (start_y - first_start_y)**2)
                         
                         distances = [thisend_firstend, thisstart_firstend, thisend_firststart, thisstart_firststart]
-                        # print(distances)
                         benchmark_dist = min(d for d in distances if d > 0)
-                        # print(f'benchmark_dist: {benchmark_dist}    NEAR_DIST: {row[4]}')
 
                         if thisend_firstend < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'end']:
                             scenario = 1
@@ -387,7 +365,6 @@ def perform_snapping():
                     ucursor.deleteRow()
                 else:
                     ucursor.updateRow(row)
-                # print(snap_df.to_string())
 
         item_number += 1
 
@@ -436,7 +413,7 @@ snap_df = prep_snap_df(snapped)
 snap_area_oids = generate_neartable_for_snapping()
 perform_snapping()
 update_comments()
-# delete_intermediate_files(intermediate_files)
+delete_intermediate_files(intermediate_files)
 
 print("Script shutting down ...")
 # Stop timer and print end time
