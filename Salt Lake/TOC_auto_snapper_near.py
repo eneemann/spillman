@@ -43,7 +43,7 @@ st_endpoints = os.path.join(staging_db, f"St_snap_endpoints_{today}")
 join_name = os.path.join(staging_db, f"neartable_join_{today}")
 # final_name = os.path.join(staging_db, f'St_snap_working_{today}_final')
 endpts_fc = os.path.join(staging_db, f"zzz_endpts_to_snap_{today}")
-snapped = os.path.join(staging_db, f"zzz_TOC_{today}_near_snapped")
+snapped = f"{current_streets}_{today}_snapped"
 n_table = os.path.join(staging_db, f"Snap_near_table_{today}")
 
 intermediate_files = [temp_streets, working_streets, st_endpoints, join_name, endpts_fc, n_table]
@@ -98,10 +98,7 @@ def calc_endpoint_h3s(temp_st):
 
 def project_to_utm(temp_st):
     arcpy.management.Project(temp_st, working_streets, sr_utm, "WGS_1984_(ITRF00)_To_NAD_1983")
-    oid_name = arcpy.Describe(working_streets).OIDFieldName
-    print(f"OID field name:  {oid_name}")
 
-    return oid_name
 
 def create_endpoints(working_st):
     if arcpy.Exists(st_endpoints):
@@ -236,7 +233,7 @@ def update_geom(shape, case, x, y):
     elif case in (2, 4):
         array.replace(0, new_pt)
 
-    updated_shape = arcpy.Polyline(array, sr)
+    updated_shape = arcpy.Polyline(array, sr_utm)
 
     return updated_shape
 
@@ -429,7 +426,8 @@ def delete_intermediate_files(file_list):
 # Call Functions
 confirm_wgs84(current_streets)
 calc_endpoint_h3s(temp_streets)
-oid_fieldname = project_to_utm(temp_streets)
+project_to_utm(temp_streets)
+oid_fieldname = arcpy.Describe(working_streets).OIDFieldName
 create_endpoints(working_streets)
 calc_endpoint_lon_lat(st_endpoints)
 generate_neartable_and_join_to_streets(st_endpoints)
