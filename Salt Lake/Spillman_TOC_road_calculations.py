@@ -195,11 +195,11 @@ def calc_location(streets):
     # Calculate the "LOCATION" field with ACSALIAS
     update_count = 0
     where_clause = "ACSNAME IS NOT NULL AND ACSSUF IS NOT NULL AND (LOCATION IS NULL OR ACSALIAS IS NULL)"
-    fields = ['ACSNAME', 'ACSSUF', 'ACSALIAS', 'LOCATION', 'PREDIR']
+    fields = ['ACSNAME', 'ACSSUF', 'ACSALIAS', 'LOCATION']
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            loc = row[4] + ' ' + row[0] + ' ' + row[1]
+            loc = row[0] + ' ' + row[1]
             loc = loc.strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
             row[2] = loc
             row[3] = loc
