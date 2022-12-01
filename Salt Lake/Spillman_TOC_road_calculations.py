@@ -16,9 +16,11 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-work_db = r"C:\E911\TOC\TOC_Staging.gdb"
+# work_db = r"C:\E911\TOC\TOC_Staging.gdb"
+work_db = r"C:\E911\TOC\TOC_Geovalidation_WGS84.gdb"
 env.workspace = work_db
-fc_layer = "TOC_Streets_update_20210125"    # Update to working streets fc
+# fc_layer = "TOC_Streets_update_20210125"    # Update to working streets fc
+fc_layer = "Streets_Combined"    # Update to working streets fc
 streets_fc = os.path.join(work_db, fc_layer)
 
 ###############
@@ -29,9 +31,9 @@ streets_fc = os.path.join(work_db, fc_layer)
 def blanks_to_nulls(streets):
     update_count = 0
     # Use update cursor to convert blanks to null (None) for each field
-    flist = ['FULLNAME', 'PREDIR', 'STREETNAME', 'STREETTYPE', 'SUFDIR', 'ALIAS1', 'ALIAS1TYPE', 'ALIAS2', 'ALIAS2TYPE',
-              'ACSALIAS', 'ACSNAME', 'ACSSUF', 'SALIAS1', 'SALIAS2', 'SALIAS3', 'SALIAS4', 'HWYNAME', 'DOT_RTNAME',
-              'DOT_RTPART', 'ZIPLEFT', 'ZIPRIGHT', 'LCITYCD', 'RCITYCD']
+    flist = ['STREET', 'PREDIR', 'STREETNAME', 'STREETTYPE', 'SUFDIR', 'ALIAS1', 'ALIAS1TYPE', 'ALIAS2', 'ALIAS2TYPE',
+              'ALIAS3', 'ALIAS3TYPE', 'ACSALIAS', 'ACSNAME', 'ACSSUF', 'HWYNAME', 'LOCATION', 'ZIPLEFT', 'ZIPRIGHT',
+              'CITYCD_L', 'CITYCD_R']
     fields = arcpy.ListFields(streets)
 
     field_list = []
@@ -174,229 +176,10 @@ def calc_streetname_from_street(streets):
     print("Total count of STREETNAME calculations is: {}".format(update_count))
 
 
-def calc_salias1(streets):
-    update_count = 0
-    # Calculate "SALIAS1" field where applicable
-    # where_clause = "ALIAS1 IS NOT NULL"
-    # where_clause = "ALIAS1 IS NOT NULL AND SALIAS1 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY'"
-    where_clause = """ALIAS1 IS NOT NULL AND SALIAS1 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY' OR
-    (ALIAS1 IS NOT NULL AND SALIAS1 IS NULL AND STREETTYPE IS NULL)"""
-    fields = ['PREDIR', 'ALIAS1', 'ALIAS1TYPE', 'SALIAS1']
-    with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            if row[0] is None: row[0] = ''
-            if row[2] is None: row[2] = ''
-            parts = [row[0], row[1], row[2]]
-            row[3] = " ".join(parts)
-            row[3] = row[3].lstrip().rstrip()
-            row[3] = row[3].replace("  ", " ").replace("  ", " ").replace("  ", " ")
-            row[3] = row[3][:30]
-            print("New value for {0} is: {1}".format(fields[3], row[3]))
-            update_count += 1
-            cursor.updateRow(row)
-    print("Total count of updates to {0}: {1}".format(fields[3], update_count))
-
-
-def calc_salias2(streets):
-    update_count = 0
-    # Calculate "SALIAS2" field where applicable
-    # where_clause = "ALIAS2 IS NOT NULL"
-    # where_clause = "ALIAS2 IS NOT NULL AND SALIAS2 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY'"
-    where_clause = """ALIAS2 IS NOT NULL AND SALIAS2 IS NULL AND STREETTYPE <> 'RAMP' AND STREETTYPE <> 'FWY' OR
-    (ALIAS2 IS NOT NULL AND SALIAS2 IS NULL AND STREETTYPE IS NULL)"""
-    fields = ['PREDIR', 'ALIAS2', 'ALIAS2TYPE', 'SALIAS2']
-    with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            if row[0] is None: row[0] = ''
-            if row[2] is None: row[2] = ''
-            parts = [row[0], row[1], row[2]]
-            row[3] = " ".join(parts)
-            row[3] = row[3].lstrip().rstrip()
-            row[3] = row[3].replace("  ", " ").replace("  ", " ").replace("  ", " ")
-            row[3] = row[3][:30]
-            print("New value for {0} is: {1}".format(fields[3], row[3]))
-            update_count += 1
-            cursor.updateRow(row)
-    print("Total count of updates to {0}: {1}".format(fields[3], update_count))
-
-
-def calc_salias4(streets):
-    update_count = 0
-    # Calculate "SALIAS4" field where applicable
-    where_clause = "ACSNAME IS NOT NULL and SALIAS4 IS NULL"
-    fields = ['PREDIR', 'ACSNAME', 'ACSSUF', 'SALIAS4']
-    with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            if row[0] is None: row[0] = ''
-            if row[2] is None: row[2] = ''
-            parts = [row[0], row[1], row[2]]
-            row[3] = " ".join(parts)
-            row[3] = row[3].lstrip().rstrip()
-            row[3] = row[3].replace("  ", " ").replace("  ", " ").replace("  ", " ")
-            row[3] = row[3][:30]
-            print("New value for {0} is: {1}".format(fields[3], row[3]))
-            update_count += 1
-            cursor.updateRow(row)
-    print("Total count of updates to {0}: {1}".format(fields[3], update_count))
-
-
-def highway_to_sr_us(streets):
-    update_count1 = 0
-    # Calculate updates on "SALIAS1" and change 'HIGHWAY' to 'SR'
-    where_clause1 = "HWYNAME LIKE 'SR%' AND SALIAS1 LIKE '%HIGHWAY%'"
-    fields1 = ['SALIAS1']
-    with arcpy.da.UpdateCursor(streets, fields1, where_clause1) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[0].replace("HIGHWAY", "SR")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields1[0], row[0]))
-            update_count1 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS1 'HIGHWAY' to 'SR' updates: {}".format(update_count1))
-
-    update_count2 = 0
-    # Calculate updates on "SALIAS1" and change 'HIGHWAY' to 'US'
-    where_clause2 = "HWYNAME LIKE 'US%' AND SALIAS1 LIKE '%HIGHWAY%'"
-    fields2 = ['SALIAS1']
-    with arcpy.da.UpdateCursor(streets, fields2, where_clause2) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[0].replace("HIGHWAY", "US")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields2[0], row[0]))
-            update_count2 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS1 'HIGHWAY' to 'US' updates: {}".format(update_count2))
-
-    update_count3 = 0
-    # Calculate updates on "SALIAS2" and change 'HIGHWAY' to 'SR'
-    where_clause3 = "HWYNAME LIKE 'SR%' AND SALIAS2 LIKE '%HIGHWAY%'"
-    fields3 = ['SALIAS2']
-    with arcpy.da.UpdateCursor(streets, fields3, where_clause3) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[0].replace("HIGHWAY", "SR")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields3[0], row[0]))
-            update_count3 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS2 'HIGHWAY' to 'SR' updates: {}".format(update_count3))
-
-    update_count4 = 0
-    # Calculate updates on "SALIAS2" and change 'HIGHWAY' to 'US'
-    where_clause4 = "HWYNAME LIKE 'US%' AND SALIAS2 LIKE '%HIGHWAY%'"
-    fields4 = ['SALIAS2']
-    with arcpy.da.UpdateCursor(streets, fields4, where_clause4) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[0].replace("HIGHWAY", "US")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields4[0], row[0]))
-            update_count4 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS2 'HIGHWAY' to 'US' updates: {}".format(update_count4))
-
-
-def calc_salias3(streets):
-    update_count1 = 0
-    # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "STREET" field
-    where_clause1 = "HWYNAME LIKE 'US%' AND STREET LIKE '%US%'"
-    fields1 = ['SALIAS3', 'STREET']
-    with arcpy.da.UpdateCursor(streets, fields1, where_clause1) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[1]
-            row[0] = row[0].replace("US", "HWY")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields1[0], row[0]))
-            update_count1 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS3 updates based on {0} is: {1}".format(fields1[1], update_count1))
-
-    update_count2 = 0
-    # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "STREET" field
-    where_clause2 = "HWYNAME LIKE 'SR%' AND STREET LIKE '%SR%'"
-    fields2 = ['SALIAS3', 'STREET']
-    with arcpy.da.UpdateCursor(streets, fields2, where_clause2) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[1]
-            row[0] = row[0].replace("SR", "HWY")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields2[0], row[0]))
-            update_count2 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS3 updates based on {0} is: {1}".format(fields2[1], update_count2))
-
-    update_count3 = 0
-    # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "SALIAS1" field
-    where_clause3 = "HWYNAME LIKE 'US%' AND SALIAS1 LIKE '%US%'"
-    fields3 = ['SALIAS3', 'SALIAS1']
-    with arcpy.da.UpdateCursor(streets, fields3, where_clause3) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[1]
-            row[0] = row[0].replace("US", "HWY")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields3[0], row[0]))
-            update_count3 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS3 updates based on {0} is: {1}".format(fields3[1], update_count3))
-
-    update_count4 = 0
-    # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "SALIAS1" field
-    where_clause4 = "HWYNAME LIKE 'SR%' AND SALIAS1 LIKE '%SR%'"
-    fields4 = ['SALIAS3', 'SALIAS1']
-    with arcpy.da.UpdateCursor(streets, fields4, where_clause4) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[1]
-            row[0] = row[0].replace("SR", "HWY")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields4[0], row[0]))
-            update_count4 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS3 updates based on {0} is: {1}".format(fields4[1], update_count4))
-
-    update_count5 = 0
-    # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "SALIAS2" field
-    where_clause5 = "HWYNAME LIKE 'US%' AND SALIAS2 LIKE '%US%'"
-    fields5 = ['SALIAS3', 'SALIAS2']
-    with arcpy.da.UpdateCursor(streets, fields5, where_clause5) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[1]
-            row[0] = row[0].replace("US", "HWY")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields5[0], row[0]))
-            update_count5 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS3 updates based on {0} is: {1}".format(fields5[1], update_count5))
-
-    update_count6 = 0
-    # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "SALIAS2" field
-    where_clause6 = "HWYNAME LIKE 'SR%' AND SALIAS2 LIKE '%SR%'"
-    fields6 = ['SALIAS3', 'SALIAS2']
-    with arcpy.da.UpdateCursor(streets, fields6, where_clause6) as cursor:
-        print("Looping through rows in FC ...")
-        for row in cursor:
-            row[0] = row[1]
-            row[0] = row[0].replace("SR", "HWY")
-            row[0] = row[0][:30]
-            print("New value for {0} is: {1}".format(fields6[0], row[0]))
-            update_count6 += 1
-            cursor.updateRow(row)
-    print("Total count of SALIAS3 updates based on {0} is: {1}".format(fields6[1], update_count6))
-
-
 def street_blank_to_null(streets):
     update_count = 0
     # Calculate updates on "SALIAS3" to call all highways 'HWY' based on "SALIAS2" field
-    where_clause = "STREET LIKE ''"
+    where_clause = "STREET IN ('', ' ')"
     fields = ['STREET']
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
@@ -409,18 +192,21 @@ def street_blank_to_null(streets):
 
 
 def calc_location(streets):
-    # Calculate the "LOCATION" field with SALIAS4
+    # Calculate the "LOCATION" field with ACSALIAS
     update_count = 0
-    where_clause = "SALIAS4 IS NOT NULL AND LOCATION IS NULL"
-    fields = ['LOCATION', 'SALIAS4']
+    where_clause = "ACSNAME IS NOT NULL AND ACSSUF IS NOT NULL AND (LOCATION IS NULL OR ACSALIAS IS NULL)"
+    fields = ['ACSNAME', 'ACSSUF', 'ACSALIAS', 'LOCATION', 'PREDIR']
     with arcpy.da.UpdateCursor(streets, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
-            row[0] = row[1]
-            print("New value for {0} is: {1}".format(fields[0], row[0]))
+            loc = row[4] + ' ' + row[0] + ' ' + row[1]
+            loc = loc.strip().replace("  ", " ").replace("  ", " ").replace("  ", " ")
+            row[2] = loc
+            row[3] = loc
+            print(f"New value for {fields[2]} and {fields[3]} is: {loc.strip()}")
             update_count += 1
             cursor.updateRow(row)
-    print("Total count of LOCATION field updates in {0} is: {1}".format(streets, update_count))
+    print(f"Total count of LOCATION field updates in {streets} is: {update_count}")
 
 
 def strip_fields(streets):
@@ -453,14 +239,10 @@ def strip_fields(streets):
 # # Calc STREET from other fields
 blanks_to_nulls(streets_fc)
 calc_street(streets_fc)
-calc_salias1(streets_fc)
-calc_salias2(streets_fc)
-calc_salias4(streets_fc)
-highway_to_sr_us(streets_fc)
-calc_salias3(streets_fc)
 street_blank_to_null(streets_fc)
 calc_location(streets_fc)
 strip_fields(streets_fc)
+blanks_to_nulls(streets_fc)
 
 # Calc other fields from STREET
 # calc_street(streets_fc)
@@ -468,9 +250,6 @@ strip_fields(streets_fc)
 # calc_suffixdir_from_street(streets_fc)
 # calc_streettype_from_street(streets_fc)
 # calc_streetname_from_street(streets_fc)
-# calc_salias1(streets_fc)
-# calc_salias2(streets_fc)
-# calc_salias4(streets_fc)
 # highway_to_sr_us(streets_fc)
 # calc_salias3(streets_fc)
 # street_blank_to_null(streets_fc)
