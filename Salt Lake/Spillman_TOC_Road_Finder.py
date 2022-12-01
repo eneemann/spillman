@@ -20,7 +20,7 @@ print("The script start time is {}".format(readable_start))
 
 today = time.strftime("%Y%m%d")
 staging_db = r"C:\E911\TOC\TOC_Staging.gdb"
-TOC_db = r"C:\E911\TOC\TOC_Data_UTM.gdb"
+TOC_db = r"C:\E911\TOC\TOC_Spillman_WGS_84.gdb"
 SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
 current_streets = os.path.join(staging_db, "TOC_Streets_updates_20210121")
 citycd = os.path.join(TOC_db, "TOC_CITYCD")
@@ -40,20 +40,20 @@ arcpy.SelectLayerByLocation_management("sgid_roads_lyr", "INTERSECT", citycd)
 
 arcpy.CopyFeatures_management("sgid_roads_lyr", export_roads)
 
-# Create a 10m buffer around current streets data to use for selection
-roads_buff = os.path.join(staging_db, "temp_roads_buffer")
-if arcpy.Exists(roads_buff):
-    arcpy.Delete_management(roads_buff)
-print("Buffering {} ...".format(current_streets))
-arcpy.Buffer_analysis(current_streets, roads_buff, "10 Meters", "FULL", "ROUND", "ALL")
+# # Create a 10m buffer around current streets data to use for selection
+# roads_buff = os.path.join(staging_db, "temp_roads_buffer")
+# if arcpy.Exists(roads_buff):
+#     arcpy.Delete_management(roads_buff)
+# print("Buffering {} ...".format(current_streets))
+# arcpy.Buffer_analysis(current_streets, roads_buff, "10 Meters", "FULL", "ROUND", "ALL")
 
-# Select and export roads with centroids outside of the current streets buffer
-arcpy.MakeFeatureLayer_management(export_roads, "sgid_export_lyr")
-print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_export_lyr")))
-arcpy.SelectLayerByLocation_management("sgid_export_lyr", "HAVE_THEIR_CENTER_IN", roads_buff,
-                                                     "", "", "INVERT")
-outname = os.path.join(staging_db, "SGID_roads_to_review_" + today)
-arcpy.CopyFeatures_management("sgid_export_lyr", outname)
+# # Select and export roads with centroids outside of the current streets buffer
+# arcpy.MakeFeatureLayer_management(export_roads, "sgid_export_lyr")
+# print("SGID roads layer feature count: {}".format(arcpy.GetCount_management("sgid_export_lyr")))
+# arcpy.SelectLayerByLocation_management("sgid_export_lyr", "HAVE_THEIR_CENTER_IN", roads_buff,
+#                                                      "", "", "INVERT")
+# outname = os.path.join(staging_db, "SGID_roads_to_review_" + today)
+# arcpy.CopyFeatures_management("sgid_export_lyr", outname)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
