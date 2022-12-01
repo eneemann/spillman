@@ -32,7 +32,9 @@ print("The script start time is {}".format(readable_start))
 # Set up user variables #
 #########################
 snap_radius = 4  # in meters
-current_streets = r"C:\E911\TOC\TOC_Geovalidation_WGS84.gdb\Streets_Combined"
+current_db = r"C:\E911\TOC\TOC_Geovalidation_WGS84.gdb"
+current_name = "Streets_Combined"
+current_streets = os.path.join(current_db, current_name)
 output_db = r"C:\E911\TOC\TOC_Staging.gdb"
 work_dir = r'C:\E911\TOC\working_data'
 
@@ -47,7 +49,7 @@ working_streets = os.path.join(output_db, f"St_snap_working_UTM_{today}")
 st_endpoints = os.path.join(output_db, f"St_snap_endpoints_{today}")
 join_name = os.path.join(output_db, f"neartable_join_{today}")
 endpts_fc = os.path.join(output_db, f"zzz_endpts_to_snap_{today}")
-snapped = f"{current_streets}_{today}_snapped"
+snapped = os.path.join(output_db, f"{current_name}_{today}_snapped")
 n_table = os.path.join(output_db, f"Snap_near_table_{today}")
 
 intermediate_files = [temp_streets, working_streets, st_endpoints, join_name, n_table]
