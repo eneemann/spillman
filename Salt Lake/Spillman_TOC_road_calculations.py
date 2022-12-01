@@ -233,6 +233,21 @@ def strip_fields(streets):
             cursor.updateRow(row)
     print("Total count of stripped fields is: {}".format(update_count))
 
+
+def calc_joinid(streets):
+    # Calculate remaining fields
+    update_count = 0
+    # Calculate "JOINID" field
+    fields = ['JOINID', 'OID@']
+    with arcpy.da.UpdateCursor(streets, fields) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            row[0] = row[1]
+            update_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of updates to {fields[0]} field: {update_count}")
+
+
 ##########################
 #  Call Functions Below  #
 ##########################
@@ -241,6 +256,7 @@ blanks_to_nulls(streets_fc)
 calc_street(streets_fc)
 street_blank_to_null(streets_fc)
 calc_location(streets_fc)
+calc_joinid(streets_fc)
 strip_fields(streets_fc)
 blanks_to_nulls(streets_fc)
 
