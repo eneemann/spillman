@@ -628,21 +628,21 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #  Call Functions Below  #
 ##########################
 
-#create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-#blanks_to_nulls(streets_fc_utm)
-#calc_street(streets_fc_utm)
-#calc_salias1(streets_fc_utm)
-#calc_salias2(streets_fc_utm)
-#calc_salias4(streets_fc_utm)
-#highway_to_sr_us(streets_fc_utm)
-#calc_salias3(streets_fc_utm)
-#street_blank_to_null(streets_fc_utm)
-#calc_location(streets_fc_utm)
-#create_streets_CAD(streets_fc_utm)
-#create_address_pts_CAD(address_pts)
-#copy_tbzones(tbzones)
-#project_to_wgs84(FCs_to_project)
-#spillman_polygon_prep(streets_cad_wgs84)
+# create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+# blanks_to_nulls(streets_fc_utm)
+# calc_street(streets_fc_utm)
+# calc_salias1(streets_fc_utm)
+# calc_salias2(streets_fc_utm)
+# calc_salias4(streets_fc_utm)
+# highway_to_sr_us(streets_fc_utm)
+# calc_salias3(streets_fc_utm)
+# street_blank_to_null(streets_fc_utm)
+# calc_location(streets_fc_utm)
+# create_streets_CAD(streets_fc_utm)
+# create_address_pts_CAD(address_pts)
+# copy_tbzones(tbzones)
+# project_to_wgs84(FCs_to_project)
+# spillman_polygon_prep(streets_cad_wgs84)
 
 
 #################################################################
@@ -651,12 +651,12 @@ vela_to_export = ["ems_zones", "fire_zones", "law_zones"]
 #################################################################
 
 # Assign LS_Zones to streets_CAD (wgs84) segments
-#populate_LS_ZONE(streets_cad_wgs84, ls_zones)
+# populate_LS_ZONE(streets_cad_wgs84, ls_zones)
 
 # Spillman Shapefiles Export
 export_shapefiles_select_fields("address_points", out_folder_spillman, addpt_fields)
 export_shapefiles_select_fields("citycodes", out_folder_spillman, citycd_fields)
-export_shapefiles_select_fields("common_places", out_folder_spillman, commplc_fields)
+# export_shapefiles_select_fields("common_places", out_folder_spillman, commplc_fields)
 #export_shapefiles_select_fields_rename("common_places_Exits", out_folder_spillman, exit_fields, exits_out)
 #export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_spillman, milepost_fields, mileposts_out)
 #export_shapefiles_select_fields("ems_zones", out_folder_spillman, ezone_fields)

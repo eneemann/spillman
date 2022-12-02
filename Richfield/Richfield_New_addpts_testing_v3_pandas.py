@@ -28,7 +28,7 @@ env.overwriteOutput = True
 
 rich_streets = os.path.join(rich_db, "streets")
 #rich_addpts = "AddressPoints_TEST_current"
-rich_addpts = "address_points_update_20220523"    # Point to current addpts in staging_db
+rich_addpts = "address_points_update_20221122"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, rich_addpts)
 
 today = time.strftime("%Y%m%d")

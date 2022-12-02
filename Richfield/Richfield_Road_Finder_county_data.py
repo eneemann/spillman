@@ -19,11 +19,12 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
-#county_gdb = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\Sevier\SevierCo_20220419.gdb" # Sevier County data
-county_gdb = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\Wayne\WayneCo_20220414.gdb" # Wayne County data
-#current_streets = os.path.join(staging_db, "streets_update_20220523")
-#county_data = os.path.join(county_gdb, "Roads") # Sevier County data
-county_data = os.path.join(county_gdb, "WayneCoRds_20220414") # Wayne County data
+# county_gdb = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\Sevier\SevierCo_20221019.gdb" # Sevier County data
+# county_gdb = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\Wayne\WayneCo_20220414.gdb" # Wayne County data
+county_gdb = r"C:\E911\RichfieldComCtr\2 Data From County\Wanda_20221123\WayneCo_20221123.gdb" # Wayne County data
+current_streets = os.path.join(staging_db, "streets_update_20221122")
+# county_data = os.path.join(county_gdb, "SC911Roads_101722") # Sevier County data
+county_data = os.path.join(county_gdb, "WayneCoRds_20221123") # Wayne County data
 env.workspace = staging_db
 env.overwriteOutput = True
 

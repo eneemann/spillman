@@ -18,7 +18,7 @@ print("The script start time is {}".format(readable_start))
 
 staging_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
 env.workspace = staging_db
-fc_layer = "streets_update_20220523"    # Update to working streets fc
+fc_layer = "streets_update_20221122"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
 # Use to create a selection to run functions on
@@ -26,7 +26,7 @@ if arcpy.Exists("streets_lyr"):
     print("Deleting {} ...".format("streets_lyr"))
     arcpy.management.Delete("streets_lyr")
 #where_clause = "(STREET IS NOT NULL AND STREETNAME IS NULL) OR (STREET IS NOT NULL AND STREETNAME = '' ) OR (STREET IS NOT NULL AND STREETNAME = ' ')"
-where_clause = "OBJECTID >= 89625"
+where_clause = "OBJECTID >= 89745"
 
 # Need to make layer from feature class
 arcpy.management.MakeFeatureLayer(streets_fc_utm, "streets_lyr", where_clause)
