@@ -19,7 +19,7 @@ print("The script start time is {}".format(readable_start))
 # staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
 live_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
 env.workspace = live_db
-output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20221128'
+output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20230109'
 
 #input_features = ['CommonNames',
 #                  'AddressPoints',
