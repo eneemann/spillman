@@ -19,16 +19,16 @@ print("The script start time is {}".format(readable_start))
 # staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 live_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
 env.workspace = live_db
-output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20220822"
+output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20221229"
 
-input_features = ['StGeorge_Dispatch_Common_Place_Points',
-                  'StGeorge_Dispatch_AddressPoints',
-                  'StGeorge_Dispatch_Streets_All',
-                  'StGeorge_Dispatch_Fire_Zones',
-                  'StGeorge_Dispatch_Law_Zones',
-                  'StGeorge_Dispatch_CITYCD',
-                  'StGeorge_Dispatch_POI',
-                  'StGeorge_Dispatch_EMS_Zones']
+# input_features = ['StGeorge_Dispatch_Common_Place_Points',
+#                   'StGeorge_Dispatch_AddressPoints',
+#                   'StGeorge_Dispatch_Streets_All',
+#                   'StGeorge_Dispatch_Fire_Zones',
+#                   'StGeorge_Dispatch_Law_Zones',
+#                   'StGeorge_Dispatch_CITYCD',
+#                   'StGeorge_Dispatch_POI',
+#                   'StGeorge_Dispatch_EMS_Zones']
 
 #input_features = ['StGeorge_Dispatch_Common_Place_Points',
 #                  'StGeorge_Dispatch_AddressPoints',
@@ -44,7 +44,7 @@ input_features = ['StGeorge_Dispatch_Common_Place_Points',
 #                  'StGeorge_Dispatch_Streets_All',
 #                  'StGeorge_Dispatch_CITYCD']
 
-#input_features = ['StGeorge_Dispatch_POI']
+input_features = ['StGeorge_Dispatch_Fire_Zones']
 
 arcpy.conversion.FeatureClassToShapefile(input_features, output_folder)
 
