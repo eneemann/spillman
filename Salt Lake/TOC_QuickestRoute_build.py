@@ -25,17 +25,17 @@ else:
 ## Prep data for network
 
 # Set up variables
-TOC_staging = r"C:\E911\TOC"
+TOC_dir = r"C:\E911\TOC"
 TOC_db = r"C:\E911\TOC\TOC_Geovalidation_WGS84.gdb"
 TOC_streets = os.path.join(TOC_db, "Streets_Combined_network")
-network_db = os.path.join(TOC_staging,'QuickestRoute_TEST_' + today +  '.gdb')
+network_db = os.path.join(TOC_dir,'QuickestRoute_TEST_' + today +  '.gdb')
 network_dataset = os.path.join(network_db, 'QuickestRoute')
 env.workspace = network_db
 
 # Create new geodatabase for the network and dataset within it
 if arcpy.Exists(network_db):
     arcpy.Delete_management(network_db)
-arcpy.CreateFileGDB_management(TOC_staging, 'QuickestRoute_TEST_' + today +  '.gdb')
+arcpy.CreateFileGDB_management(TOC_dir, 'QuickestRoute_TEST_' + today +  '.gdb')
 arcpy.CreateFeatureDataset_management(network_db, 'QuickestRoute', TOC_streets)
 
 # Create XML Template from current dataset
