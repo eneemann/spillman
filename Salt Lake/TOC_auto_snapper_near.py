@@ -50,9 +50,10 @@ st_endpoints = os.path.join(output_db, f"St_snap_endpoints_{today}")
 join_name = os.path.join(output_db, f"neartable_join_{today}")
 endpts_fc = os.path.join(output_db, f"zzz_endpts_to_snap_{today}")
 snapped = os.path.join(output_db, f"{current_name}_{today}_snapped")
+snapped_wgs84 = os.path.join(output_db, f"{current_name}_{today}_snapped_WGS84")
 n_table = os.path.join(output_db, f"Snap_near_table_{today}")
 
-intermediate_files = [temp_streets, working_streets, st_endpoints, join_name, n_table]
+intermediate_files = [temp_streets, working_streets, st_endpoints, join_name, n_table, snapped]
 
 sr_wgs84 = arcpy.SpatialReference(4326)
 sr_utm = arcpy.SpatialReference(26912)
@@ -394,13 +395,17 @@ def update_comments():
     print(f'Total count of snap field comment updates: {snap_count}')
 
 
+def project_snapped():
+    print("Projecting snapped features to WGS84 ...")
+    arcpy.management.Project(snapped, snapped_wgs84, sr_wgs84, "WGS_1984_(ITRF00)_To_NAD_1983")
+
+
 def delete_intermediate_files(file_list):
     for item in file_list:
         if arcpy.Exists(item):
             print(f'Deleting {item} ...')
             arcpy.Delete_management(item)
-
-
+             
 
 # Call Functions
 confirm_wgs84(current_streets)
@@ -415,6 +420,7 @@ snap_df = prep_snap_df(snapped)
 snap_area_oids = generate_neartable_for_snapping()
 perform_snapping()
 update_comments()
+project_snapped()
 delete_intermediate_files(intermediate_files)
 
 print("Script shutting down ...")
