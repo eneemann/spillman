@@ -239,6 +239,7 @@ print("Number of rows in Near Table: {}".format(arcpy.GetCount_management(n_tabl
 
 item_number = 0
 multi = 0
+deletes = 0
 skipped = False
 # Iterate over list of OIDs and perform selction by location within 4m of each point
 for snap_oid in snap_area_oids:
@@ -249,9 +250,7 @@ for snap_oid in snap_area_oids:
         for row in scursor:
             near_oids.append(row[0])
 
-    snap_query = f"""OBJECTID IN ({','.join([str(o) for o in near_oids])}) AND (NEAR_DIST IS NOT NULL OR NEAR_DIST NOT IN ('', ' ')"""
-    print(snap_query)
-
+    snap_query = f"""OBJECTID IN ({','.join([str(o) for o in near_oids])}) AND NEAR_DIST IS NOT NULL"""
     sql_clause = [None, "ORDER BY NEAR_DIST ASC, OBJECTID ASC"]
     #             0          1               2             3           4             5           6          7         8
     fields = ['SHAPE@', 'Shape_Length', 'start_h3_9', 'end_h3_9', 'NEAR_DIST', 'snap_start', 'snap_end', 'OID@', 'snap_status']
@@ -267,6 +266,7 @@ for snap_oid in snap_area_oids:
             # Only operate on lines whose length is more than the snap_radius
             if row[1] < snap_radius:
                 skipped = True
+                deletes += 1
                 print(f'OID: {row[7]} was deleted,      Length: {row[1]}')
             else:
                 # Get start/end coordinates of each feature
@@ -297,13 +297,11 @@ for snap_oid in snap_area_oids:
                     thisstart_firststart = math.sqrt((start_x - first_start_x)**2 + (start_y - first_start_y)**2)
                     
                     distances = [thisend_firstend, thisstart_firstend, thisend_firststart, thisstart_firststart]
-                    # print(distances)
                     benchmark_dist = min(d for d in distances if d > 0)
-                    print(f'benchmark_dist: {benchmark_dist}    NEAR_DIST: {row[4]}')
 
                     if thisend_firstend < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'end']:
                         scenario = 1
-                        print(f'    Case 1: thisend_firstend')
+                        # print(f'    Case 1: thisend_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
                         row[0] = new_geom
                         snap_df.at[this_oid, 'end'] = 'snapped - done'
@@ -311,7 +309,7 @@ for snap_oid in snap_area_oids:
                         cnt += 1
                     elif thisstart_firstend < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'start']:
                         scenario = 2
-                        print(f'    Case 2: thisstart_firstend')
+                        # print(f'    Case 2: thisstart_firstend')
                         new_geom = update_geom(shape_obj, scenario, first_end_x, first_end_y)
                         row[0] = new_geom
                         snap_df.at[this_oid, 'start'] = 'snapped - done'
@@ -319,7 +317,7 @@ for snap_oid in snap_area_oids:
                         cnt += 1
                     elif thisend_firststart < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'end']:
                         scenario = 3
-                        print(f'    Case 3: thisend_firststart')
+                        # print(f'    Case 3: thisend_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
                         row[0] = new_geom
                         snap_df.at[this_oid, 'end'] = 'snapped - done'
@@ -327,7 +325,7 @@ for snap_oid in snap_area_oids:
                         cnt += 1
                     elif thisstart_firststart < 4 and benchmark_dist < 4 and 'done' not in snap_df.at[this_oid, 'start']:
                         scenario = 4
-                        print(f'    Case 4: thisstart_firststart')
+                        # print(f'    Case 4: thisstart_firststart')
                         new_geom = update_geom(shape_obj, scenario, first_start_x, first_start_y)
                         row[0] = new_geom
                         snap_df.at[this_oid, 'start'] = 'snapped - done'
@@ -337,12 +335,12 @@ for snap_oid in snap_area_oids:
                 ucursor.deleteRow()
             else:
                 ucursor.updateRow(row)
-            # print(snap_df.to_string())
 
     item_number += 1
 
-print(f'Total count of snapping updates: {item_number}')
+print(f'Total count of snapping areas: {item_number}')
 print(f'Total count of multipart features: {multi}')
+print(f'Total count of deleted features: {deletes}')
 
 # Go back through data and update the comment fields (snap_start, snap_end) based on snap_df
 snap_count = 0
