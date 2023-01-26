@@ -43,10 +43,10 @@ name_change_dict = {
     'I-215 SB': 'SB 215',
     'I-215 WB': 'WB 215',
     'I-215 EB': 'EB 215',
-    'I-215W NB': 'NB I-215W',
-    'I-215W SB': 'SB I-215W',
-    'I-215N EB': 'EB I-215N',
-    'I-215N WB': 'WB I-215N',
+    'I-215W NB': 'NB 215W',
+    'I-215W SB': 'SB 215W',
+    'I-215N EB': 'EB 215N',
+    'I-215N WB': 'WB 215N',
     'HWY 89 NB': 'NB 89',
     'HWY 89 SB': 'SB 89',
     'US 89 NB': 'NB 89',
@@ -59,7 +59,11 @@ name_change_dict = {
     'LEGACY SB X': 'SB LEGACY X',
     'LEGACY NB RAMP': 'NB LEGACY RAMP',
     'LEGACY SB RAMP': 'SB LEGACY RAMP',
+    'BANGERTER SB': 'SB BANGERTER',
+    'BANGERTER NB': 'NB BANGERTER',
+    'HIGHWAY' : 'HWY',
 }
+
 
 def export_from_sgid():
     # Export roads from SGID into new FC based on intersection with county boundary
@@ -271,27 +275,51 @@ def blanks_to_nulls(streets):
 
 
 def apply_nomenclature(streets):
-    # First remove 'FWY' from STREET field, convert 'HIGHWAY' to 'HWY'
+    # First remove PREDIRs from interstate segments
+    predir_count = 0
+    fields = ['STREET', 'PREDIR']
+    with arcpy.da.UpdateCursor(streets, fields, "(STREETNAME LIKE '%I-1%' OR STREETNAME LIKE '%I-8%' OR STREETNAME LIKE '%I-2%') AND PREDIR IS NOT NULL") as cursor:
+        print("Looping through rows make remove PREDIRs from interstates ...")
+        for row in cursor:
+            row[0] = row[0].split(row[1], 1)[1].strip()
+            row[1] = None
+            predir_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of Interstate PREDIR removals is: {predir_count}")
+
+    # Second remove 'FWY' from STREET and STREETTYPE and NULL out PREDIR field (interstates), then convert 'HIGHWAY' to 'HWY'
     fwy_count = 0
     hwy_count = 0
-    fields = ['STREET']
+    #             0        1           2             3             4            5        6
+    fields = ['STREET', 'PREDIR', 'STREETTYPE', 'ALIAS1TYPE', 'ALIAS2TYPE', 'ALIAS1', 'ALIAS2']
     with arcpy.da.UpdateCursor(streets, fields, "STREET is not NULL") as cursor:
         print("Looping through rows make FWY/HWY updates ...")
         for row in cursor:
             if 'FWY' in row[0]:
                 row[0] = row[0].replace('FWY', '').replace('  ', ' ').replace('  ', ' ').strip()
                 fwy_count += 1
+                row[1] = None
+                row[2] = None
+                row[3] = None
+                row[4] = None
             if 'HIGHWAY' in row[0]:
                 row[0] = row[0].replace('HIGHWAY', 'HWY').replace('  ', ' ').replace('  ', ' ').strip()
+                hwy_count += 1
+            if 'HIGHWAY' in row[5]:
+                row[5] = row[5].replace('HIGHWAY', 'HWY').replace('  ', ' ').replace('  ', ' ').strip()
+                hwy_count += 1
+            if 'HIGHWAY' in row[6]:
+                row[6] = row[6].replace('HIGHWAY', 'HWY').replace('  ', ' ').replace('  ', ' ').strip()
                 hwy_count += 1
             cursor.updateRow(row)
     print(f"Total count of 'FWY' removals is: {fwy_count}")
     print(f"Total count of 'HIGHWAY' to 'HWY' changes: {hwy_count}")
     
     # Then replace strings based on name_change_dict
-    name_query = """STREET LIKE '%FWY%' OR STREET LIKE '%LEGACY%PKWY%' OR STREET LIKE '% NB%' OR STREET LIKE '% SB%' OR STREET LIKE '%I-8%' OR STREET LIKE '%I-%15%' OR STREET LIKE '%89%'"""
+    name_query = """STREET LIKE '%FWY%' OR STREET LIKE '%LEGACY%PKWY%' OR STREET LIKE '% NB%' OR STREET LIKE '% SB%' OR STREET LIKE '%I%8%' OR STREET LIKE '%I%15%' OR STREET LIKE '%89%'"""
+    # name_query = """STREETNAME LIKE '80 %' OR STREETNAME LIKE '15 %' OR STREETNAME LIKE '84 %' OR STREETNAME LIKE '215%'"""
     name_count = 0
-    fields = ['STREET']
+    fields = ['STREET', 'STREETNAME', 'ALIAS1', 'ALIAS2']
     with arcpy.da.UpdateCursor(streets, fields, name_query) as cursor:
         print("Looping through rows to make nomenclature changes ...")
         for row in cursor:
@@ -299,9 +327,34 @@ def apply_nomenclature(streets):
                 if key in row[0]:
                     row[0] = row[0].replace(key, name_change_dict[key]).replace('  ', ' ').replace('  ', ' ').strip()
                     name_count += 1
+                if row[1] is not None and key in row[1]:
+                    row[1] = row[1].replace(key, name_change_dict[key]).replace('  ', ' ').replace('  ', ' ').strip()
+                if row[2] is not None and key in row[2]:
+                    row[2] = row[2].replace(key, name_change_dict[key]).replace('  ', ' ').replace('  ', ' ').strip()
+                if row[3] is not None and key in row[3]:
+                    row[3] = row[3].replace(key, name_change_dict[key]).replace('  ', ' ').replace('  ', ' ').strip()
             cursor.updateRow(row)
     print(f"Total count of nomenclature changes: {name_count}")
+    
+    # Clean up dashes in HWYNAME
+    dash_query = """HWYNAME LIKE '%US-%' OR HWYNAME LIKE '%SR-%'"""
+    dash_count = 0
+    fields = ['HWYNAME']
+    with arcpy.da.UpdateCursor(streets, fields, dash_query) as cursor:
+        print("Looping through rows to make nomenclature changes ...")
+        for row in cursor:
+            if 'US-' in row[0]:
+                row[0] = row[0].replace('US-', 'US ').replace('  ', ' ').replace('  ', ' ').strip()
+                dash_count += 1
+            if 'SR-' in row[0]:
+                row[0] = row[0].replace('SR-', 'SR ').replace('  ', ' ').replace('  ', ' ').strip()
+                dash_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of HWYNAME dash changes: {dash_count}")
 
+
+# Update/uncomment next line to apply nomenclature to existing feature class
+# working_roads = os.path.join(r"C:\E911\Layton\LaytonGeoValidation.gdb", "LaytonStreets")
 
 
 # export_from_sgid()
@@ -311,7 +364,6 @@ def apply_nomenclature(streets):
 # calc_fields(working_roads)
 # strip_fields(working_roads)
 # blanks_to_nulls(working_roads)
-working_roads = os.path.join(staging_db, "Davis_streets_build_20221021")
 apply_nomenclature(working_roads)
 
 print("Script shutting down ...")
