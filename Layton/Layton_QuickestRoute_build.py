@@ -40,9 +40,8 @@ split_streets = os.path.join(staging_db, f'split_streets_{today}')
 ##########################################
 
 snap_radius = 4  # in meters
-# current_db = geo_db
 current_name = 'LaytonStreets'
-current_streets = split_streets
+current_streets = streets_plus_links
 output_db = staging_db
 work_dir = r'C:\E911\Layton\working_data'
 
@@ -52,6 +51,7 @@ env.overwriteOutput = True
 env.qualifiedFieldNames = False
 
 temp_streets = os.path.join(output_db, f"St_snap_working_{today}")
+temp_for_splits = os.path.join(output_db, f"zzz_temp_for_splits_{today}")
 working_streets = os.path.join(output_db, f"St_snap_working_UTM_{today}")
 st_endpoints = os.path.join(output_db, f"St_snap_endpoints_{today}")
 join_name = os.path.join(output_db, f"neartable_join_{today}")
@@ -60,7 +60,7 @@ snapped = os.path.join(output_db, f"{current_name}_{today}_snapped")
 snapped_wgs84 = os.path.join(output_db, f"{current_name}_{today}_snapped_WGS84")
 n_table = os.path.join(output_db, f"Snap_near_table_{today}")
 
-intermediate_files = [temp_streets, working_streets, st_endpoints, join_name, n_table, snapped]
+intermediate_files = [temp_streets, temp_for_splits, working_streets, st_endpoints, join_name, n_table, snapped]
 
 sr_wgs84 = arcpy.SpatialReference(4326)
 sr_utm = arcpy.SpatialReference(26912)
@@ -89,10 +89,21 @@ def append_links():
 
 
 def split_street_features():
+    # Select and export links and segments within 4 meters
+    print("Selecting links and intersecting streets ...")
+    selection = arcpy.management.SelectLayerByLocation(streets_plus_links, "INTERSECT", links, f"{snap_radius} Meters", "NEW_SELECTION")
+    arcpy.management.CopyFeatures(selection, temp_for_splits)
+    
+    # Delete those selected segments from the working roads
+    arcpy.management.DeleteFeatures(selection)
+    
     ### Run Feature to Line to split at intersections
     print("Splitting streets with Feature to Line ...")
-    arcpy.management.FeatureToLine(streets_plus_links, split_streets, None, 'ATTRIBUTES')
-
+    arcpy.management.FeatureToLine(temp_for_splits, split_streets, None, 'ATTRIBUTES')
+    
+    # Append splits segments back into the working roads
+    print("Appending in split streets ...")
+    arcpy.management.Append(split_streets, streets_plus_links, "NO_TEST")
 
 def confirm_wgs84(current):
     # Check sr, project to WGS84 (if needed) or copy to temp_streets
@@ -432,7 +443,7 @@ def update_comments():
 
 
 def project_snapped():
-    print("Projecting napped features to WGS84 ...")
+    print("Projecting snapped features to WGS84 ...")
     arcpy.management.Project(snapped, snapped_wgs84, sr_wgs84, "WGS_1984_(ITRF00)_To_NAD_1983")
 
 
@@ -526,7 +537,9 @@ def calc_network_fields(network_st):
     # where_clause1 = "HWYNAME IS NOT NULL AND HWYNAME NOT IN ('I-15', 'I-80', 'I-84') AND STREETTYPE <> 'RAMP'"
     # 3/11/2019 Update: added 'STREETTYPE IS NULL' to where clause to catch highway segments correctly
     # 1/2/2020 Update: added some segments with 'QR FIX' in HWYNAME field to improve routing with 1.5 multiplier
-    where_clause1 = "HWYNAME IS NOT NULL AND HWYNAME NOT LIKE 'I-%' AND (STREETTYPE <> 'RAMP' OR STREETTYPE IS NULL)"
+    # where_clause1 = "HWYNAME IS NOT NULL AND HWYNAME NOT LIKE 'I-%' AND (STREETTYPE <> 'RAMP' OR STREETTYPE IS NULL)"
+    where_clause1 = """(HWYNAME IS NOT NULL AND HWYNAME NOT LIKE 'I-%') OR STREETTYPE = 'RAMP' OR \
+    (HWYNAME IS NOT NULL AND HWYNAME NOT LIKE 'I-%' AND STREETTYPE IS NULL)"""
     with arcpy.da.UpdateCursor(network_st, fields1, where_clause1) as cursor:
         print("Looping through rows to multiply TrvlTime on state and federal highways ...")
         for row in cursor:
@@ -541,7 +554,8 @@ def calc_network_fields(network_st):
     update_count3 = 0
     #              0
     fields3 = ['Multiplier']
-    where_clause3 = "(HWYNAME IS NOT NULL AND HWYNAME LIKE 'I-%') OR STREETTYPE = 'RAMP'"
+    # where_clause3 = "(HWYNAME IS NOT NULL AND HWYNAME LIKE 'I-%') OR STREETTYPE = 'RAMP'"
+    where_clause3 = """HWYNAME IS NOT NULL AND HWYNAME LIKE 'I-%'"""
     with arcpy.da.UpdateCursor(network_st, fields3, where_clause3) as cursor:
         print("Looping through rows to assign Multiplier on ramps and interstates ...")
         for row in cursor:
