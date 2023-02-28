@@ -72,8 +72,8 @@ def export_from_sgid():
     if arcpy.Exists("sgid_roads_lyr"):
         arcpy.management.Delete("sgid_roads_lyr")
     arcpy.management.MakeFeatureLayer(sgid_roads, "sgid_roads_lyr", where_SGID)
-    print("Selecting SGID roads to export by intersection with city codes ...")
-    arcpy.management.SelectLayerByLocation("sgid_roads_lyr", "HAVE_THEIR_CENTER_IN", county, "5 Miles")
+    print("Selecting SGID roads to export by intersection with 7-mile county buffer ...")
+    arcpy.management.SelectLayerByLocation("sgid_roads_lyr", "HAVE_THEIR_CENTER_IN", county, "7 Miles")
     arcpy.management.CopyFeatures("sgid_roads_lyr", export_roads)
 
 
