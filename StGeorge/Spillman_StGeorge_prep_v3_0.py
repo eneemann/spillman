@@ -24,6 +24,7 @@ env.workspace = utm_db
 fc_layer = "StGeorge_Dispatch_Streets"
 streets_fc_utm = os.path.join(utm_db, fc_layer)
 streets_cad_wgs84 = os.path.join(wgs84_db, "StGeorge_Dispatch_Streets_CAD")
+streets_all = os.path.join(wgs84_db, "StGeorge_Dispatch_Streets_All")
 
 ###############
 #  Functions  #
@@ -639,8 +640,8 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 # copy_tbzones(tbzones)
 # create_streets_all(streets_fc_utm)
 # project_to_wgs84(FCs_to_project)
-# spillman_polygon_prep(streets_cad_wgs84)
-# recalc_location(streets_cad_wgs84)
+# spillman_polygon_prep(streets_all)
+# recalc_location(streets_all)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
@@ -652,7 +653,7 @@ export_shapefiles_select_fields("StGeorge_Dispatch_AddressPoints", out_folder_sp
 export_shapefiles_select_fields("StGeorge_Dispatch_Common_Place_Points", out_folder_spillman, commplc_fields)
 export_shapefiles_select_fields("StGeorge_Dispatch_Streets_All", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_EMS_Zones", out_folder_spillman, ezone_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Fire_Zones", out_folder_spillman, fzone_fields)
+# export_shapefiles_select_fields("StGeorge_Dispatch_Fire_Zones", out_folder_spillman, fzone_fields)
 export_shapefiles_select_fields("StGeorge_Dispatch_Law_Zones", out_folder_spillman, lzone_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_CITYCD", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_Municipalities", out_folder_spillman, muni_fields)
