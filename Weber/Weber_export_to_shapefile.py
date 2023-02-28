@@ -19,7 +19,9 @@ print("The script start time is {}".format(readable_start))
 # staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
 live_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
 env.workspace = live_db
-output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20230109'
+today = time.strftime("%Y%m%d")
+# output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20230109'
+output_folder = rf'C:\E911\WeberArea\Staging103\00 Weber_Updates_{today}'
 
 #input_features = ['CommonNames',
 #                  'AddressPoints',
@@ -39,13 +41,17 @@ output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20230109'
 #                  'LawAreas',
 #                  'LawZones']
 
-# input_features = ['FireZones',
+# input_features = ['CommonNames',
 #                   'AddressPoints',
 #                   'Streets_Map']
 
 # input_features = ['CommonNames',
 #                   'CityCodes',
 #                   'LawZones',
+#                   'LawAreas']
+
+# input_features = ['CommonNames',
+#                   'AddressPoints',
 #                   'LawAreas']
 
 input_features = ['CommonNames']
