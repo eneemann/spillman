@@ -28,7 +28,7 @@ env.workspace = stgeorge_db
 env.overwriteOutput = True
 
 stgeorge_streets = os.path.join(stgeorge_db, "StGeorge_Dispatch_Streets")
-stgeorge_addpts = "StG_AddPts_update_20221116"    # Point to current addpts in staging_db
+stgeorge_addpts = "StG_AddPts_update_20230213"    # Point to current addpts in staging_db
 #stgeorge_addpts = "AddressPoints_update_20190904"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, stgeorge_addpts)
 
@@ -311,7 +311,7 @@ def logic_checks(row):
 #  Call Functions Below  #
 ##########################
 
-get_SGID_addpts(staging_db, new_addpts)
+# get_SGID_addpts(staging_db, new_addpts)
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
