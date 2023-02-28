@@ -302,13 +302,13 @@ def apply_nomenclature(streets):
                 row[2] = None
                 row[3] = None
                 row[4] = None
-            if 'HIGHWAY' in row[0]:
+            if row[0] is not None and 'HIGHWAY' in row[0]:
                 row[0] = row[0].replace('HIGHWAY', 'HWY').replace('  ', ' ').replace('  ', ' ').strip()
                 hwy_count += 1
-            if 'HIGHWAY' in row[5]:
+            if row[5] is not None and 'HIGHWAY' in row[5]:
                 row[5] = row[5].replace('HIGHWAY', 'HWY').replace('  ', ' ').replace('  ', ' ').strip()
                 hwy_count += 1
-            if 'HIGHWAY' in row[6]:
+            if row[6] is not None and 'HIGHWAY' in row[6]:
                 row[6] = row[6].replace('HIGHWAY', 'HWY').replace('  ', ' ').replace('  ', ' ').strip()
                 hwy_count += 1
             cursor.updateRow(row)
