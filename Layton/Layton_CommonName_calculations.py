@@ -15,16 +15,41 @@ import time
 
 # Start timer and print start time in UTC
 start_time = time.time()
-readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script start time is {}".format(readable_start))
 
-stage_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
-commonplaces = os.path.join(stage_db, "CommonNames_update_20201023")
+stage_db = r"C:\E911\Layton\Layton_staging.gdb"
+commonplaces = os.path.join(stage_db, "PointsOfInterest_update_20230207")
 env.workspace = stage_db
 
 
 # # Optional selection to narrow down rows the calculations are performed on
 # arcpy.management.SelectLayerByAttribute(commonplaces, 'NEW_SELECTION', "StreetName IS NULL")
+
+
+def calc_street(pts):
+    update_count = 0
+    # Calculate "Street" field where applicable
+    where_clause = "StreetName IS NOT NULL AND STREET IS NULL"
+    #            0           1           2           3           4
+    fields = ['PreDir', 'StreetName', 'SufDir', 'StreetType', 'street']
+    with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
+#    with arcpy.da.UpdateCursor(pts, fields) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            if row[0] is None: row[0] = ''
+            if row[2] is None: row[2] = ''
+            if row[3] is None: row[3] = ''
+            parts = [row[0], row[1], row[2], row[3]]
+            row[4] = " ".join(parts)
+            row[4] = row[4].strip()
+            row[4] = row[4].replace("  ", " ").replace("  ", " ").replace("  ", " ")
+            print(f"New value for {fields[4]} is: {row[4]}")
+            update_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of updates to {fields[4]} field: {update_count}")
+    
+
 
 unit_list = ['#', 'APT', 'BLDG', 'BSMT', 'CONDO', 'DEPT', 'FL', 'FRNT', 'HANGAR',
              'HNGR', 'LOT', 'MAIN', 'OFC', 'OFFICE', 'REAR', 'RM', 'SIDE', 'SP', 'SPC',
@@ -35,8 +60,8 @@ def calc_all_components_from_street(pts):
     update_count = 0
     five_letter = 0
     # Use update cursor to calculate components from street field
-    #            0           1           2           3         4          5
-    fields = ['FullAddr', 'ADDR_SN', 'ADDR_PD', 'ADDR_ST', 'ADDR_SD', 'ADDR_HN']
+    #               0            1           2           3           4          5
+    fields = ['FullAddres', 'StreetName', 'PreDir', 'StreetType', 'SufDir', 'HouseNum']
     # where_clause = "STREET IS NOT NULL AND STREETNAME IS NULL"
     where_clause = "ADDR_SN IS NULL AND FullAddr IS NOT NULL"
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
@@ -148,12 +173,92 @@ def calc_all_components_from_street(pts):
             cursor.updateRow(row)
     print("Total count of STREETNAME calculations is: {}".format(update_count))
     print("Total count of Five letter street types is: {}".format(five_letter))
-    
-calc_all_components_from_street(commonplaces)
 
+
+def blanks_to_nulls(pts):
+    update_count = 0
+    # Use update cursor to convert blanks to null (None) for each field
+    flist = ['HouseNum', 'FullAddres', 'PreDir', 'PreType', 'StreetName', 'StreetType', 'SufDir', 'UnitType',
+             'Unit', 'CityCode', 'Zip', 'LocationTy', 'CommonName', 'IsIntersec', 'JoinID', 'ALIAS_1',
+             'ALIAS_2', 'ALIAS_3', 'ALIAS4', 'ALIAS5', 'ALIAS6', 'ALIAS7', 'ALIAS8', 'ALIAS9', 'ALIAS10']
+    fields = arcpy.ListFields(pts)
+
+    field_list = []
+    for field in fields:
+        if field.name in flist:
+            field_list.append(field)
+            
+#    field_list = []
+#    for field in fields:
+#        print(field.type)
+#        if field.type == 'String':
+#            field_list.append(field.name)
+#            
+#    print(field_list)
+
+    with arcpy.da.UpdateCursor(pts, flist) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            for i in range(len(flist)):
+                if row[i] in ('', ' ', 'None', None):
+#                    print("Updating field: {0} on ObjectID: {1}".format(field_list[i].name, row[0]))
+                    update_count += 1
+                    row[i] = None
+                elif isinstance(row[i], str):
+                    row[i] = row[i].strip()
+            cursor.updateRow(row)
+    print("Total count of blanks converted to NULLs is: {}".format(update_count))
+
+
+def strip_fields(pts):
+    update_count = 0
+    # Use update cursor to convert blanks to null (None) for each field
+
+    fields = arcpy.ListFields(pts)
+
+    field_list = []
+    for field in fields:
+        print(field.type)
+        if field.type == 'String':
+            field_list.append(field.name)
+            
+    print(field_list)
+
+    with arcpy.da.UpdateCursor(pts, field_list) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            for i in range(len(field_list)):
+                if isinstance(row[i], str):
+                    row[i] = row[i].strip().upper()
+                    update_count += 1
+            cursor.updateRow(row)
+    print("Total count of stripped fields is: {}".format(update_count))
+
+
+def calc_joinid(pts):
+    update_count = 0
+    # Calculate "JoinID" field
+    fields = ['JoinID', 'OID@']
+    with arcpy.da.UpdateCursor(pts, fields) as cursor:
+        print("Looping through rows in FC ...")
+        for row in cursor:
+            row[0] = row[1]
+            update_count += 1
+            cursor.updateRow(row)
+    print(f"Total count of updates to {fields[0]} field: {update_count}")
+
+
+
+
+
+calc_street(commonplaces)
+# calc_all_components_from_street(commonplaces)
+blanks_to_nulls(commonplaces)
+strip_fields(commonplaces)
+calc_joinid(commonplaces)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
-readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
