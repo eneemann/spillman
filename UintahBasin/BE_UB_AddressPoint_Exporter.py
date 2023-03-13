@@ -40,7 +40,7 @@ poly_dict = {
 def export_from_sgid():
     # Export address points from SGID into new FC based on intersection with citycodes boundary
     # First make layer from relevant counties (BoxElder, Weber, Davis, Tooele, Cache and Summit, Daggett, Wasatch, Duchesne, Uintah, Carbon, Emery, Grand)
-    where_SGID = "CountyID IN ('49003', '49057', '49011', '49045', '49005', '49043', '49009', '49051', '49013', '49047', '49007', '49015', '49019')"
+    where_SGID = "CountyID IN ('49003', '49057', '49011', '49045', '49005', '49043', '49009', '49051', '49013', '49047', '49007', '49015', '49019') AND AddNumSuffix IS NULL"
     if arcpy.Exists("sgid_addpts_lyr"):
         arcpy.management.Delete("sgid_addpts_lyr")
     arcpy.management.MakeFeatureLayer(sgid_addpts, "sgid_addpts_lyr", where_SGID)
@@ -69,7 +69,6 @@ def load_into_schema():
     # fm_dict_addpts = {
     #            'FullAdd': 'FullAdd',
     #            'AddNum': 'AddNum',
-    #            'AddNumSuffix': 'AddNumSuffix',
     #            'POSTDIR': 'PrefixDir',
     #            'PrefixDir': 'StreetName',
     #            'StreetType': 'StreetType',
@@ -324,14 +323,14 @@ def check_duplicates(addpts):
 # Update/uncomment next line to apply nomenclature to existing feature class
 working_addpts = os.path.join(staging_db, "BE_UB_addpts_build_20230305")
 
-# export_from_sgid()
-# project_to_wgs84()
-# load_into_schema()
-# remove_special_chars(working_addpts)
-# calc_fields(working_addpts)
-# assign_city_code(working_addpts, poly_dict)
-# strip_fields(working_addpts)
-# blanks_to_nulls(working_addpts)
+export_from_sgid()
+project_to_wgs84()
+load_into_schema()
+remove_special_chars(working_addpts)
+calc_fields(working_addpts)
+assign_city_code(working_addpts, poly_dict)
+strip_fields(working_addpts)
+blanks_to_nulls(working_addpts)
 check_duplicates(working_addpts)
 
 print("Script shutting down ...")
