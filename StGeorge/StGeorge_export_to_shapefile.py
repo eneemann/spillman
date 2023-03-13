@@ -13,13 +13,13 @@ import time
 
 # Start timer and print start time in UTC
 start_time = time.time()
-readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script start time is {}".format(readable_start))
 
 # staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 live_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
 env.workspace = live_db
-output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20230228"
+output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20230302"
 
 # input_features = ['StGeorge_Dispatch_Common_Place_Points',
 #                   'StGeorge_Dispatch_AddressPoints',
@@ -51,6 +51,6 @@ arcpy.conversion.FeatureClassToShapefile(input_features, output_folder)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
-readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
