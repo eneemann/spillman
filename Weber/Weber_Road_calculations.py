@@ -20,7 +20,7 @@ staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
 #staging_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
 env.workspace = staging_db
 #fc_layer = "Streets"    # Update to working streets fc
-fc_layer = "Streets_update_20220819"    # Update to working streets fc
+fc_layer = "Streets_update_20230328"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
 ###############
@@ -299,6 +299,7 @@ calc_street(streets_fc_utm)
 # highway_to_sr_us(streets_fc_utm)
 street_blank_to_null(streets_fc_utm)
 calc_location(streets_fc_utm)
+blanks_to_nulls(streets_fc_utm)
 strip_fields(streets_fc_utm)
 
 # Calc other fields from STREET
