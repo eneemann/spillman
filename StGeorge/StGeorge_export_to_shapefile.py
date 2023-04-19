@@ -16,10 +16,12 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script start time is {}".format(readable_start))
 
+today = time.strftime("%Y%m%d")
+
 # staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 live_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
 env.workspace = live_db
-output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20230302"
+output_folder = rf"C:\E911\StGeorgeDispatch\1 Geovalidation_update_{today}"
 
 # input_features = ['StGeorge_Dispatch_Common_Place_Points',
 #                   'StGeorge_Dispatch_AddressPoints',
@@ -30,11 +32,8 @@ output_folder = r"C:\E911\StGeorgeDispatch\1 Geovalidation_update_20230302"
 #                   'StGeorge_Dispatch_POI',
 #                   'StGeorge_Dispatch_EMS_Zones']
 
-input_features = ['StGeorge_Dispatch_Common_Place_Points',
-                  'StGeorge_Dispatch_AddressPoints',
-                  'StGeorge_Dispatch_Streets_All',
-                  'StGeorge_Dispatch_Law_Zones',
-                  'StGeorge_Dispatch_POI']
+input_features = ['StGeorge_Dispatch_Streets_All',
+                  'StGeorge_Dispatch_Law_Zones']
 
 #input_features = ['StGeorge_Dispatch_AddressPoints',
 #                  'StGeorge_Dispatch_Common_Place_Points',
