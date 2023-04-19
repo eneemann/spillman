@@ -12,6 +12,9 @@ import os
 import time
 import random
 
+import os
+print(os.environ['CONDA_DEFAULT_ENV'])
+
 # Start timer and print start time in UTC
 start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -31,8 +34,11 @@ arcpy.env.qualifiedFieldNames = False
 
 today = time.strftime("%Y%m%d")
 
-common_names = os.path.join(geo_db, 'CommonNames')
-common_names_update = os.path.join(staging_db, 'CommonName_update_' + today + '_jitter')
+# common_names = os.path.join(geo_db, 'CommonNames')
+# common_names_update = os.path.join(staging_db, 'CommonName_update_' + today + '_jitter')
+
+common_names = os.path.join(geo_db, 'RoadFeatures')
+common_names_update = os.path.join(staging_db, 'RoadFeatures_update_' + today + '_jitter')
 
 print(f"Copying CommonNames to: {common_names_update} ...")
 arcpy.management.Copy(common_names, common_names_update)
