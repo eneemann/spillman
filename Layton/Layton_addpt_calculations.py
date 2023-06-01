@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Oct 16 08:27:29 2019
+Created on Wed Nov 16 08:27:29 2023
 
 @author: eneemann
 
-EMN: Initial scrip to calculate address point fields for Layton
+EMN: Initial script to calculate address point fields for Davis
 """
 
 import arcpy
@@ -14,14 +14,15 @@ import time
 
 # Start timer and print start time in UTC
 start_time = time.time()
-readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script start time is {}".format(readable_start))
 
-# stage_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
-stage_db = r"C:\E911\Layton\LaytonGeoValidation_updates_20220826.gdb"
-# addpts = os.path.join(stage_db, "address_points_update_20201117")
-addpts = os.path.join(stage_db, "LaytonAddressPoints")
+stage_db = r"C:\E911\Layton\Davis_staging.gdb"
+# addpts = os.path.join(stage_db, "DavisAddressPoints")
+addpts = os.path.join(stage_db, "Addpts_update_20230302")
 env.workspace = stage_db
+
+
 
 # Use to create a selection to run functions on
 # if arcpy.Exists("addpts_lyr"):
@@ -142,6 +143,6 @@ strip_fields(addpts)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
-readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
