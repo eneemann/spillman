@@ -21,14 +21,14 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-layton_db = r"C:\E911\Layton\LaytonGeoValidation_updates_20220826.gdb"
-staging_db = r"C:\E911\Layton\Layton_staging.gdb"
-env.workspace = layton_db
+davis_db = r"C:\E911\Layton\DavisGeoValidation_updates_20220826.gdb"
+staging_db = r"C:\E911\Layton\Davis_staging.gdb"
+env.workspace = davis_db
 env.overwriteOutput = True
 
-layton_streets = os.path.join(layton_db, "LaytonStreets")
-layton_addpts = "LaytonAddressPoints_20221110"    # Point to current addpts in staging_db
-current_addpts = os.path.join(staging_db, layton_addpts)
+davis_streets = os.path.join(davis_db, "DavisStreets")
+davis_addpts = "DavisAddressPoints_20221110"    # Point to current addpts in staging_db
+current_addpts = os.path.join(staging_db, davis_addpts)
 
 today = time.strftime("%Y%m%d")
 new_addpts = "AddressPoints_SGID_export_" + today
@@ -215,21 +215,21 @@ def check_nearby_roads(working, streets, gdb):
 #    filtered_df = goodstreets_df.append(badstreets_df).sort_values(['goodstreet', 'goodnum'], ascending=False).drop_duplicates('IN_FID')
     filtered_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'],
                                        ascending=[True,False, False, True, True])
-    filtered_df.to_csv(r'C:\E911\Layton\Addpts_working_folder\layton_neartable_all.csv')
+    filtered_df.to_csv(r'C:\E911\Layton\Addpts_working_folder\davis_neartable_all.csv')
     # Re-sort data frame on address point ID for final data set
     final_df = filtered_df.drop_duplicates('IN_FID')
-    path = r'C:\E911\Layton\Addpts_working_folder\layton_neartable_final.csv'
+    path = r'C:\E911\Layton\Addpts_working_folder\davis_neartable_final.csv'
     final_df.to_csv(path)
     
 #    # Testing best method to sort data to resturn best candidate for non-matches
 #    test_df = goodstreets_df.append(badstreets_df).sort_values(['IN_FID','goodstreet', 'goodnum', 'edit_dist', 'NEAR_DIST'], ascending=[True,False, False, True, True])
-#    test_df.to_csv(r'C:\E911\Layton\Addpts_working_folder\layton_neartable_test_edit.csv')
+#    test_df.to_csv(r'C:\E911\Layton\Addpts_working_folder\davis_neartable_test_edit.csv')
     
     # Create new dataframe that will be used to join to address point feature class with arcpy
     join_df = final_df[['IN_FID', 'Notes', 'edit_dist']]
     # Rename 'Notes' column to 'Notes_near' -- prevents conflict with 'Notes' field already in FC table
     join_df.columns = ['IN_FID', 'Notes_near', 'edit_dist']
-    join_path = r'C:\E911\Layton\Addpts_working_folder\layton_neartable_join.csv'
+    join_path = r'C:\E911\Layton\Addpts_working_folder\davis_neartable_join.csv'
     join_df.to_csv(join_path)
         
     # Convert CSV output into table and join to working address points FC
@@ -338,7 +338,7 @@ working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today
 
 # arcpy.Delete_management("working_nodups")
 # arcpy.Delete_management('in_memory\\near_table')
-check_nearby_roads(working_addpts, layton_streets, staging_db)
+check_nearby_roads(working_addpts, davis_streets, staging_db)
 
 
 print("Script shutting down ...")
@@ -350,7 +350,7 @@ print("Time elapsed: {:.2f}s".format(time.time() - start_time))
 
 # Plot histogram of Edit Distances
 print("Creating edit distance histogram ...")
-df = pd.read_csv(r'C:\E911\Layton\Addpts_working_folder\layton_neartable_final.csv')
+df = pd.read_csv(r'C:\E911\Layton\Addpts_working_folder\davis_neartable_final.csv')
 plt.figure(figsize=(6,4))
 plt.hist(df['edit_dist'], bins = np.arange(0, df['edit_dist'].max(), 1)-0.5, color='red', edgecolor='black')
 plt.xticks(np.arange(0, df['edit_dist'].max(), 2))
