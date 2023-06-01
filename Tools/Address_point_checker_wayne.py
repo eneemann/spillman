@@ -50,9 +50,9 @@ logger = logging.getLogger()
 logger.info(f"The script start time is {readable_start}")
 
 # Street and address point layers with full paths:
-addpts = r'C:\E911\RichfieldComCtr\2 Data From County\20211110\WayneCoPts_20211109.shp'  # Point to current addpts layer
+addpts = r'C:\E911\RichfieldComCtr\2 Data From County\Wanda_20230517\WayneCoPts_20230517.gdb\WayneCoPts_20230517'  # Point to current addpts layer
 #addpts = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\address_points_update_20211118'  # Point to current addpts layer
-streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20211118'  # Point to current roads layer
+streets = r'C:\E911\RichfieldComCtr\richfield_staging.gdb\streets_update_20230515'  # Point to current roads layer
 # addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.LOCATION.AddressPoints'  # Point to current addpts layer
 # streets = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde\SGID.TRANSPORTATION.Roads'  # Point to current roads layer
 #addpts = r'C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\agrc@opensgid@opensgid.agrc.utah.gov.sde\opensgid.location.address_points'  # Point to current addpts layer
