@@ -22,6 +22,25 @@ stage_db = r"C:\E911\Layton\Davis_staging.gdb"
 commonplaces = os.path.join(stage_db, "PointsOfInterest_update_20230420")
 env.workspace = stage_db
 
+casing_replacements = {
+    'Nb ': 'NB ',
+    'Sb ': 'SB ',
+    'Eb ': 'EB ',
+    'Wb ': 'WB ',
+    'Sr ': 'SR ',
+    'Us ': 'US ',
+    'Th ': 'th ',
+    'Highway': 'Hwy'
+    }
+
+endswith_replacements = {
+    'Nb': 'NB',
+    'Sb': 'SB',
+    'Eb': 'EB',
+    'Wb': 'WB',
+    'Th': 'th',
+    }
+
 
 # # Optional selection to narrow down rows the calculations are performed on
 # arcpy.management.SelectLayerByAttribute(commonplaces, 'NEW_SELECTION', "StreetName IS NULL")
@@ -31,6 +50,7 @@ def calc_street(pts):
     update_count = 0
     # Calculate "Street" field where applicable
     where_clause = "StreetName IS NOT NULL AND STREET IS NULL"
+    # where_clause = "StreetName IS NOT NULL"
     #            0           1           2           3           4
     fields = ['PreDir', 'StreetName', 'SufDir', 'StreetType', 'street']
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
@@ -178,7 +198,7 @@ def calc_all_components_from_street(pts):
 def blanks_to_nulls(pts):
     update_count = 0
     # Use update cursor to convert blanks to null (None) for each field
-    flist = ['HouseNum', 'FullAddres', 'PreDir', 'PreType', 'StreetName', 'StreetType', 'SufDir', 'UnitType',
+    flist = ['HouseNum', 'FullAddres', 'PreDir', 'StreetName', 'StreetType', 'SufDir', 'UnitType',
              'Unit', 'CityCode', 'Zip', 'LocationTy', 'CommonName', 'IsIntersec', 'JoinID', 'ALIAS_1',
              'ALIAS_2', 'ALIAS_3', 'ALIAS4', 'ALIAS5', 'ALIAS6', 'ALIAS7', 'ALIAS8', 'ALIAS9', 'ALIAS10']
     fields = arcpy.ListFields(pts)
@@ -233,6 +253,21 @@ def strip_fields(pts):
                     update_count += 1
             cursor.updateRow(row)
     print("Total count of stripped fields is: {}".format(update_count))
+    
+    
+def remove_internal_spaces(pts):
+    update_count = 0
+    # Remove extra spaces within strings
+    fields = ['FullAddres', 'StreetName', 'street', 'LocationTy', 'CommonName', 'ALIAS_1', 'ALIAS_2', 'ALIAS_3',  'ALIAS4', 'ALIAS5', 'ALIAS6', 'ALIAS7' ]
+    with arcpy.da.UpdateCursor(pts, fields) as cursor:
+        print("Removing internal spaces on strings ...")
+        for row in cursor:
+            for i in np.arange(len(fields)):
+                if row[i] is not None:
+                    row[i] = ' '.join(row[i].split()).strip()
+                    update_count += 1
+                    cursor.updateRow(row)
+    print(f"Total count of updates: {update_count}")
 
 
 def calc_joinid(pts):
@@ -248,14 +283,42 @@ def calc_joinid(pts):
     print(f"Total count of updates to {fields[0]} field: {update_count}")
 
 
+def apply_casing(pts):
+    # Apply title casing to street name components
+    # Exceptions: NB, SB, EB, WB
+    case_count = 0
+    
+    mixed = ['FullAddres', 'PreDir', 'StreetName', 'StreetType', 'street', 'UnitType', 'Unit', 'LocationTy']
+    upper = ['CommonName', 'ALIAS_1', 'ALIAS_2', 'ALIAS_3',  'ALIAS4', 'ALIAS5', 'ALIAS6', 'ALIAS7', 'CityCode']
+    fields = mixed + upper
+    with arcpy.da.UpdateCursor(pts, fields) as cursor:
+        print("Looping through rows to apply casing rules ...")
+        for row in cursor:
+            for i in np.arange(len(fields)):
+                if row[i] is not None and fields[i] in mixed:
+                    row[i] = row[i].title()
+                    for key in casing_replacements:
+                        if key in row[i]:
+                            row[i] = row[i].replace(key, casing_replacements[key])
+                            case_count += 1
+                    for key in endswith_replacements:
+                        if row[i].endswith(key):
+                            row[i] = row[i].replace(key, endswith_replacements[key])
+                            case_count += 1
+                elif row[i] is not None and fields[i] in upper:
+                    row[i] = row[i].upper()
+            cursor.updateRow(row)
+    print(f"Total of upper case preservations: {case_count}")
 
 
 
-calc_street(commonplaces)
+# calc_street(commonplaces)
 # calc_all_components_from_street(commonplaces)
 blanks_to_nulls(commonplaces)
 strip_fields(commonplaces)
+remove_internal_spaces(commonplaces)
 calc_joinid(commonplaces)
+apply_casing(commonplaces)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
