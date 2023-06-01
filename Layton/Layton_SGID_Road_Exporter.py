@@ -14,13 +14,13 @@ from arcpy import env
 
 # Start timer and print start time in UTC
 start_time = time.time()
-readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script start time is {}".format(readable_start))
 
 today = time.strftime("%Y%m%d")
 
 # Set up paths and variables
-staging_db = r"C:\E911\Layton\Layton_staging.gdb"
+staging_db = r"C:\E911\Layton\Davis_staging.gdb"
 schema_db = r"C:\E911\Layton\Davis_new_road_schema.gdb"
 SGID = r"C:\Users\eneemann\AppData\Roaming\ESRI\ArcGISPro\Favorites\internal@SGID@internal.agrc.utah.gov.sde"
 county = os.path.join(staging_db, "aaa_Davis_County_UTM")
@@ -420,3 +420,4 @@ print("Script shutting down ...")
 readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
+
