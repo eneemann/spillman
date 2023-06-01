@@ -3,7 +3,7 @@
 Created on Fri Jun 4 11:37:56 2021
 @author: eneemann
 
-4 Jun 2021 - script to calculate street fields for Layton_combined (built from Weber)
+4 Jun 2021 - script to calculate street fields for Davis_combined (built from Weber)
 """
 
 import arcpy
@@ -16,9 +16,9 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-staging_db = r"C:\E911\Layton\LaytonGeoValidation_updates.gdb"
+staging_db = r"C:\E911\Layton\DavisGeoValidation_updates.gdb"
 env.workspace = staging_db
-fc_layer = "LaytonStreets_combined_from_SGID_20210604"    # Update to working streets fc
+fc_layer = "DavisStreets_combined_from_SGID_20210604"    # Update to working streets fc
 streets_fc = os.path.join(staging_db, fc_layer)
 
 
