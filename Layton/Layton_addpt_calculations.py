@@ -11,6 +11,7 @@ import arcpy
 from arcpy import env
 import os
 import time
+import numpy as np
 
 # Start timer and print start time in UTC
 start_time = time.time()
