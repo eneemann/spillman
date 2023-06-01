@@ -18,7 +18,7 @@ readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
 stage_db = r"C:\E911\RichfieldComCtr\richfield_staging.gdb"
-addpts = os.path.join(stage_db, "address_points_update_20221122")
+addpts = os.path.join(stage_db, "address_points_update_20230515")
 env.workspace = stage_db
 
 # Use to create a selection to run functions on
