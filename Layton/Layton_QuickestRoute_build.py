@@ -76,11 +76,6 @@ network_db = os.path.join(Layton_dir,'QuickestRoute_TEST_' + today +  '.gdb')
 network_dataset = os.path.join(network_db, 'QuickestRoute')
 env.workspace = network_db
 
-# arcpy.management.FeatureToLine(streets_plus_links, split_streets)
-# arcpy.management.FeatureToLine([layton_streets, links], split_streets)
-
-# arcpy.management.FeatureToLine("LaytonStreets_w_Links_20230109", r"C:\E911\Layton\Layton_staging.gdb\split_streets_20230109", None, "ATTRIBUTES")
-
 def append_links():
     ### Append Links into LaytonStreets
     arcpy.management.CopyFeatures(layton_streets, streets_plus_links)
