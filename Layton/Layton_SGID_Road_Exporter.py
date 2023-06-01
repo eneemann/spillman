@@ -61,8 +61,28 @@ name_change_dict = {
     'LEGACY SB RAMP': 'SB LEGACY RAMP',
     'BANGERTER SB': 'SB BANGERTER',
     'BANGERTER NB': 'NB BANGERTER',
+    'LEGACY NB': 'NB LEGACY',
+    'LEGACY SB': 'SB LEGACY',
     'HIGHWAY' : 'HWY',
-}
+    }
+
+casing_replacements = {
+    'Nb ': 'NB ',
+    'Sb ': 'SB ',
+    'Eb ': 'EB ',
+    'Wb ': 'WB ',
+    'Sr ': 'SR ',
+    'Us ': 'US ',
+    'Th ': 'th ',
+    }
+
+endswith_replacements = {
+    'Nb': 'NB',
+    'Sb': 'SB',
+    'Eb': 'EB',
+    'Wb': 'WB',
+    'Th': 'th',
+    }
 
 
 def export_from_sgid():
@@ -290,8 +310,8 @@ def apply_nomenclature(streets):
     # Second remove 'FWY' from STREET and STREETTYPE and NULL out PREDIR field (interstates), then convert 'HIGHWAY' to 'HWY'
     fwy_count = 0
     hwy_count = 0
-    #             0        1           2             3             4            5        6
-    fields = ['STREET', 'PREDIR', 'STREETTYPE', 'ALIAS1TYPE', 'ALIAS2TYPE', 'ALIAS1', 'ALIAS2']
+    #             0        1           2             3             4            5        6           7
+    fields = ['STREET', 'PREDIR', 'STREETTYPE', 'ALIAS1TYPE', 'ALIAS2TYPE', 'ALIAS1', 'ALIAS2', 'STREETNAME']
     with arcpy.da.UpdateCursor(streets, fields, "STREET is not NULL") as cursor:
         print("Looping through rows make FWY/HWY updates ...")
         for row in cursor:
@@ -311,6 +331,9 @@ def apply_nomenclature(streets):
             if row[6] is not None and 'HIGHWAY' in row[6]:
                 row[6] = row[6].replace('HIGHWAY', 'HWY').replace('  ', ' ').replace('  ', ' ').strip()
                 hwy_count += 1
+            if row[7] is not None and 'HIGHWAY' in row[7]:
+                row[7] = row[7].replace('HIGHWAY', 'HWY').replace('  ', ' ').replace('  ', ' ').strip()
+                hwy_count += 1
             cursor.updateRow(row)
     print(f"Total count of 'FWY' removals is: {fwy_count}")
     print(f"Total count of 'HIGHWAY' to 'HWY' changes: {hwy_count}")
@@ -319,6 +342,7 @@ def apply_nomenclature(streets):
     name_query = """STREET LIKE '%FWY%' OR STREET LIKE '%LEGACY%PKWY%' OR STREET LIKE '% NB%' OR STREET LIKE '% SB%' OR STREET LIKE '%I%8%' OR STREET LIKE '%I%15%' OR STREET LIKE '%89%'"""
     # name_query = """STREETNAME LIKE '80 %' OR STREETNAME LIKE '15 %' OR STREETNAME LIKE '84 %' OR STREETNAME LIKE '215%'"""
     name_count = 0
+    #             0          1           2          3
     fields = ['STREET', 'STREETNAME', 'ALIAS1', 'ALIAS2']
     with arcpy.da.UpdateCursor(streets, fields, name_query) as cursor:
         print("Looping through rows to make nomenclature changes ...")
@@ -353,21 +377,46 @@ def apply_nomenclature(streets):
     print(f"Total count of HWYNAME dash changes: {dash_count}")
 
 
+def apply_casing(streets):
+    # Apply title casing to street name components
+    # Exceptions: NB, SB, EB, WB
+    case_count = 0
+    fields = ['STREETNAME', 'STREETTYPE', 'STREET', 'ALIAS1', 'ALIAS1TYPE', 'ALIAS2', 'ALIAS2TYPE', 'ALIAS3', 'ALIAS3TYPE',]
+    with arcpy.da.UpdateCursor(streets, fields) as cursor:
+        print("Looping through rows to apply casing rules ...")
+        for row in cursor:
+            for i in np.arange(len(fields)):
+                if row[i] is not None:
+                    row[i] = row[i].title()
+                    for key in casing_replacements:
+                        if key in row[i]:
+                            row[i] = row[i].replace(key, casing_replacements[key])
+                            case_count += 1
+                    for key in endswith_replacements:
+                        if row[i].endswith(key):
+                            row[i] = row[i].replace(key, endswith_replacements[key])
+                            case_count += 1
+            cursor.updateRow(row)
+    print(f"Total of upper case preservations: {case_count}")
+
+
+
 # Update/uncomment next line to apply nomenclature to existing feature class
-# working_roads = os.path.join(r"C:\E911\Layton\LaytonGeoValidation.gdb", "LaytonStreets")
+# working_roads = os.path.join(r"C:\E911\Layton\DavisGeoValidation.gdb", "DavisStreets")
+# working_roads = os.path.join(staging_db, 'Streets_update_20230302')
 
-
-# export_from_sgid()
-# project_to_wgs84()
-# prep_fields(wgs84_export_roads)
-# load_into_schema()
-# calc_fields(working_roads)
-# strip_fields(working_roads)
-# blanks_to_nulls(working_roads)
+export_from_sgid()
+project_to_wgs84()
+prep_fields(wgs84_export_roads)
+load_into_schema()
+calc_fields(working_roads)
+strip_fields(working_roads)
+blanks_to_nulls(working_roads)
 apply_nomenclature(working_roads)
+apply_casing(working_roads)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC
-readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
