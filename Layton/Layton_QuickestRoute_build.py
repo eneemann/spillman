@@ -3,6 +3,12 @@
 Created on Mon Jan 9 08:349:21 2023
 @author: eneemann
 Script to build Layton/Davis County QuickestRoute network
+- adds 'link' streets to regular splits
+- splits streets where features cross over each other
+- snaps endpoints and deletes small segments (<4m)
+- creates network dataset from template
+- builds road network
+
 """
 
 import arcpy
