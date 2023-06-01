@@ -26,11 +26,11 @@ print("The script start time is {}".format(readable_start))
 today = time.strftime("%Y%m%d")
 
 #: Set up directories and variables
-geo_db = r'C:\E911\Layton\LaytonGeoValidation.gdb'
-staging_db = r'C:\E911\Layton\Layton_staging.gdb'
-layton_streets = os.path.join(geo_db, 'LaytonStreets')
-streets_plus_links = os.path.join(staging_db, f'LaytonStreets_w_Links_{today}')
-links = os.path.join(geo_db, 'LaytonStreets_schema_QR_Links')
+geo_db = r'C:\E911\Layton\DavisGeoValidation.gdb'
+staging_db = r'C:\E911\Layton\Davis_staging.gdb'
+davis_streets = os.path.join(geo_db, 'DavisStreets')
+streets_plus_links = os.path.join(staging_db, f'DavisStreets_w_Links_{today}')
+links = os.path.join(geo_db, 'DavisStreets_schema_QR_Links')
 split_streets = os.path.join(staging_db, f'split_streets_{today}')
 
 ##########################################
@@ -38,7 +38,7 @@ split_streets = os.path.join(staging_db, f'split_streets_{today}')
 ##########################################
 
 snap_radius = 4  # in meters
-current_name = 'LaytonStreets'
+current_name = 'DavisStreets'
 current_streets = streets_plus_links
 output_db = staging_db
 work_dir = r'C:\E911\Layton\working_data'
@@ -67,17 +67,17 @@ sr_utm = arcpy.SpatialReference(26912)
 ###########################################
 # Set up user variables for QuickestRoute #
 ###########################################
-Layton_dir = r"C:\E911\Layton"
-Layton_db = geo_db
-Layton_streets = snapped_wgs84
-network_db = os.path.join(Layton_dir,'QuickestRoute_TEST_' + today +  '.gdb')
+Davis_dir = r"C:\E911\Layton"
+Davis_db = geo_db
+Davis_streets = snapped_wgs84
+network_db = os.path.join(Davis_dir,'QuickestRoute_TEST_' + today +  '.gdb')
 network_dataset = os.path.join(network_db, 'QuickestRoute')
 env.workspace = network_db
 
 def append_links():
-    ### Append Links into LaytonStreets
-    arcpy.management.CopyFeatures(layton_streets, streets_plus_links)
-    print(f"Adding {arcpy.management.GetCount(links)[0]} QR Links to LaytonStreets ...")
+    ### Append Links into DavisStreets
+    arcpy.management.CopyFeatures(davis_streets, streets_plus_links)
+    print(f"Adding {arcpy.management.GetCount(links)[0]} QR Links to DavisStreets ...")
     arcpy.management.Append(links, streets_plus_links, "NO_TEST")
 
 
@@ -450,8 +450,8 @@ def delete_intermediate_files(file_list):
 def create_network_db_and_template():
     if arcpy.Exists(network_db):
         arcpy.Delete_management(network_db)
-    arcpy.CreateFileGDB_management(Layton_dir, 'QuickestRoute_TEST_' + today +  '.gdb')
-    arcpy.CreateFeatureDataset_management(network_db, 'QuickestRoute', Layton_streets)
+    arcpy.CreateFileGDB_management(Davis_dir, 'QuickestRoute_TEST_' + today +  '.gdb')
+    arcpy.CreateFeatureDataset_management(network_db, 'QuickestRoute', Davis_streets)
     
     print('Creating network template ...')
     output_xml_file = r"C:\E911\TOC\Network Dataset Template\NDTemplate.xml"
@@ -462,7 +462,7 @@ def create_network_db_and_template():
 def import_streets():
     print('Importing street data ...')
     net_streets = os.path.join(network_dataset, 'Streets')
-    arcpy.CopyFeatures_management(Layton_streets, net_streets)
+    arcpy.CopyFeatures_management(Davis_streets, net_streets)
     
     return net_streets
 
