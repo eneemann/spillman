@@ -6,6 +6,12 @@ Created on Wed Jan 27 10:44:29 2023
 
 EMN: Initial script to replace addpts in Davis with the counties data
 - archives existing address points in Davis_staging.gdb
+- projects Davis county submitted points to WGS84
+- removes current pts from Spillman data and adds new ones
+    - NOTE: points in Layton city are untouched
+- cleans up fields, calculates fields, fixes street types
+- checks for duplicates and flags them in the 'Annotation' field
+
 """
 
 import arcpy
