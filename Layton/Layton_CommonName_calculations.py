@@ -18,8 +18,8 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script start time is {}".format(readable_start))
 
-stage_db = r"C:\E911\Layton\Layton_staging.gdb"
-commonplaces = os.path.join(stage_db, "PointsOfInterest_update_20230207")
+stage_db = r"C:\E911\Layton\Davis_staging.gdb"
+commonplaces = os.path.join(stage_db, "PointsOfInterest_update_20230420")
 env.workspace = stage_db
 
 
