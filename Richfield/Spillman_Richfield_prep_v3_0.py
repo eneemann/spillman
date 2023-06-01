@@ -666,16 +666,6 @@ export_shapefiles_select_fields("municipalities", out_folder_spillman, muni_fiel
 export_shapefiles_select_fields("MZ_Zones", out_folder_spillman, mzone_fields)
 export_shapefiles_select_fields("streets", out_folder_spillman, street_fields)
 
-## Vela Shapefiles Export
-#export_shapefiles_select_fields_rename("address_points_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-#export_shapefiles_select_fields_rename("citycodes", out_folder_vela, vela_citycd_fields, vela_citycd_out)
-#export_shapefiles_select_fields_rename("common_places", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-#export_shapefiles_select_fields_rename("common_places_Mileposts", out_folder_vela, vela_milepost_fields, vela_milepost_out)
-#export_shapefiles_select_fields_rename("law_zones", out_folder_vela, vela_law_fields, vela_law_out)
-#export_shapefiles_select_fields_rename("municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
-#export_shapefiles_select_fields_rename("MZ_Zones", out_folder_vela, vela_mz_fields, vela_mz_out)
-#export_shapefiles_select_fields_rename("streets", out_folder_vela, vela_street_fields, vela_street_out)
-
 
 #export_shapefiles_all_fields(vela_to_export, out_folder_vela)
 #env.workspace = out_folder_vela
