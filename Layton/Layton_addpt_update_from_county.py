@@ -32,10 +32,6 @@ city_codes = os.path.join(geo_db, "LaytonDispatchServiceArea")
 davis_county = os.path.join(stage_db, "aaa_Davis_County_WGS84")
 
 # Create dictionary for polygon assignements
-# poly_dict_davis = {
-#         'CityCode': {'poly_path': city_codes, 'poly_field': "CITYCODE"},
-#         }
-
 poly_dict = {
         'CityCode': {'poly_path': city_codes, 'poly_field': "CITYCODE"},
         }
@@ -259,15 +255,7 @@ def fix_street_types(pts):
                                 if row[7] is not None and v in row[7]:
                                     row[7] = key.join(row[7].rsplit(v, 1))
                                     total_count += 1
-            # for i in range(len(fields)):
-            #     if row[i] is None:
-            #         continue
-            #     else:
-            #         for key, values in INVALID_STREET_TYPES.items():
-            #             for v in values:
-            #                 if v in row[i]:
-            #                     row[i] = row[i].replace(v, key)
-            #                     update_count += 1
+
             cursor.updateRow(row)
     print(f"Total count of fixed street types is: {type_count}")
     print(f"Total count of street type text replacements: {total_count}")
@@ -286,7 +274,7 @@ def calc_joinid(pts):
             
             
 def assign_city_code(pts, polygonDict):
-    #: Assing polygon attributes to poins using near tables to get the nearsest polygon info
+    #: Assign polygon attributes to poins using near tables to get the nearsest polygon info
     arcpy.env.workspace = os.path.dirname(pts)
     arcpy.env.overwriteOutput = True
     
@@ -444,35 +432,6 @@ def check_duplicates(pts):
     #       .format(arcpy.GetCount_management(final_selection)))
 
 
-##########################
-#  Call Functions Below  #
-##########################
-# archive_current_pts()
-# project_to_wgs84()
-# remove_current_davis_addpts()
-# load_new_addpts()
-# clean_full_address(geo_addpts)
-# fix_street_types(geo_addpts)
-# calc_joinid(geo_addpts)
-# assign_city_code(geo_addpts, poly_dict)
-# blanks_to_nulls(geo_addpts)
-# strip_fields(geo_addpts)
-check_duplicates(geo_addpts)
-
-# Use below to call on a selection
-# #calc_unit_from_fulladd("addpts_lyr")
-# blanks_to_nulls("addpts_lyr")
-# strip_fields("addpts_lyr")
-
-print("Script shutting down ...")
-# Stop timer and print end time in UTC
-readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-print("The script end time is {}".format(readable_end))
-print("Time elapsed: {:.2f}s".format(time.time() - start_time))
-
-
-
-
 def check_davis_duplicates(pts):
     count = 0
     dup_count = 0
@@ -506,5 +465,35 @@ def check_davis_duplicates(pts):
     print(f"Duplicate address point count: {dup_count}")
 
 
-davis_addr = r'C:\E911\Layton\Layton_staging.gdb\DavisAddress_20230124'
-check_davis_duplicates(davis_addr)
+##########################
+#  Call Functions Below  #
+##########################
+archive_current_pts()
+project_to_wgs84()
+remove_current_davis_addpts()
+load_new_addpts()
+clean_full_address(geo_addpts)
+fix_street_types(geo_addpts)
+calc_joinid(geo_addpts)
+assign_city_code(geo_addpts, poly_dict)
+blanks_to_nulls(geo_addpts)
+strip_fields(geo_addpts)
+check_duplicates(geo_addpts)
+
+# Use below to call on a selection
+# #calc_unit_from_fulladd("addpts_lyr")
+# blanks_to_nulls("addpts_lyr")
+# strip_fields("addpts_lyr")
+
+
+# Check duplicates on Davis address points
+# davis_addr = r'C:\E911\Layton\Davis_staging.gdb\DavisAddress_20230124'
+# check_davis_duplicates(davis_addr)
+
+
+
+print("Script shutting down ...")
+# Stop timer and print end time in UTC
+readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+print("The script end time is {}".format(readable_end))
+print("Time elapsed: {:.2f}s".format(time.time() - start_time))
