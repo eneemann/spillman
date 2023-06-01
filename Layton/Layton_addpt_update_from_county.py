@@ -5,6 +5,7 @@ Created on Wed Jan 27 10:44:29 2023
 @author: eneemann
 
 EMN: Initial script to replace addpts in Davis with the counties data
+- archives existing address points in Davis_staging.gdb
 """
 
 import arcpy
@@ -19,16 +20,16 @@ print("The script start time is {}".format(readable_start))
 today = time.strftime("%Y%m%d")
 
 #: Set up variables
-geo_db = r"C:\E911\Layton\LaytonGeoValidation.gdb"
-county_db = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\Davis\DavisCounty_20230124.gdb"
-stage_db = r"C:\E911\Layton\Layton_staging.gdb"
+geo_db = r"C:\E911\Layton\DavisGeoValidation.gdb"
+county_db = r"\\itwfpcap2\AGRC\agrc\data\county_obtained\Davis\DavisCounty_20230520.gdb"
+stage_db = r"C:\E911\Layton\Davis_staging.gdb"
 
-geo_addpts = os.path.join(geo_db, "LaytonAddressPoints")
+geo_addpts = os.path.join(geo_db, "DavisAddressPoints")
 county_addpts = os.path.join(county_db, "DavisAddress")
 working_addpts = os.path.join(stage_db, f"Addpt_Davis_update_WGS84_{today}")
-archived_addpts = os.path.join(stage_db, f"LaytonAddressPoints_{today}")
+archived_addpts = os.path.join(stage_db, f"DavisAddressPoints_{today}")
 
-city_codes = os.path.join(geo_db, "LaytonDispatchServiceArea")
+city_codes = os.path.join(geo_db, "DavisDispatchServiceArea")
 davis_county = os.path.join(stage_db, "aaa_Davis_County_WGS84")
 
 # Create dictionary for polygon assignements
