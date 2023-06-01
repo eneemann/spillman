@@ -9,6 +9,7 @@ Script to export SGID roads for Davis county
 
 import os
 import time
+import numpy as np
 import arcpy
 from arcpy import env
 
