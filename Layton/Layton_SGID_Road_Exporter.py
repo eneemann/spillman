@@ -2,7 +2,14 @@
 """
 Created on Thu Oct 20 16:27:21 2022
 @author: eneemann
-Script to export SGID roads for Davis county
+Script to export SGID roads and ETL into Davis county schema
+- exports roads from SGID w/i 7 mile buffer of Davis county
+- projects data to WGS84
+- preps data and loads into Davis Spillman schema
+- calculates fields
+- cleans fields and converts blanks to NULLs
+- applies Davis Spillman nomenclature using a dictionary
+- applies Davis Spillman casing rules (with help of a dictionary)
 
 20 Oct 2022: Created initial version of code (EMN).
 """
