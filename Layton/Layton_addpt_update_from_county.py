@@ -8,7 +8,7 @@ EMN: Initial script to replace addpts in Davis with the counties data
 - archives existing address points in Davis_staging.gdb
 - projects Davis county submitted points to WGS84
 - removes current pts from Spillman data and adds new ones
-    - NOTE: points in Layton city are untouched
+    - NOTE: existing points in Layton city are untouched
 - cleans up fields, calculates fields, fixes street types
 - checks for duplicates and flags them in the 'Annotation' field
 
@@ -72,7 +72,7 @@ def remove_current_davis_addpts():
     selection = arcpy.management.SelectLayerByLocation(geo_addpts, "INTERSECT", davis_county)
     print(f"Selected  {arcpy.management.GetCount(selection)[0]} addpts in DavisCo")
     
-    # Remove points in Layton, Hill AFB, or outside Davis County from the selection
+    # Remove points in Layton, Hill AFB, or outside Davis County from the selection (Keep them in data)
     print("Removing Layton addpts from selection ...")
     where = """CityCode IN ('LAY', 'HIL', 'ODC')"""
     non_layton_selection = arcpy.management.SelectLayerByAttribute(selection, "REMOVE_FROM_SELECTION", where)
@@ -172,7 +172,7 @@ def load_new_addpts():
     print(f"Davis unique addresses points: {unique_count}")
     print(f"Davis duplicate addresses points: {dup_count}")
     
-    # Select points that aren't within 3m of existing points
+    # Select points that aren't within 10m of existing points
     arcpy.management.MakeFeatureLayer(working_addpts, "addpt_lyr")
     arcpy.management.SelectLayerByLocation("addpt_lyr", "INTERSECT", geo_addpts, "10 Meters", "NEW_SELECTION", "INVERT")
     print(f"Initial Davis addpts selection to add:   {arcpy.management.GetCount('addpt_lyr')[0]}")
