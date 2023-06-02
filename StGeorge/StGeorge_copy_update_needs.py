@@ -20,6 +20,8 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
+today = time.strftime("%Y%m%d")
+
 staging_db = r"C:\E911\StGeorgeDispatch\StGeorge_Staging.gdb"
 wgs84_db = r"C:\E911\StGeorgeDispatch\StGeorgeDispatch_WGS84.gdb"
 
@@ -43,7 +45,6 @@ FCs_dict = {"StGeorge_Dispatch_CITYCD": "StG_CITYCD",
 
     
 def project_to_UTM(input_features):
-    today = time.strftime("%Y%m%d")
     env.workspace = wgs84_db
     sr = arcpy.SpatialReference(26912)
     print("Copy and projecting the following datasets to UTM for updates ...")
@@ -56,6 +57,10 @@ def project_to_UTM(input_features):
 
 project_to_UTM(FCs_dict)
 
+
+#: Copy the latest UTM Streets data into the staging database
+out_streets = f'StG_Streets_update_{today}' 
+arcpy.conversion.FeatureClassToFeatureClass(r'C:\E911\StGeorgeDispatch\StGeorgeDispatch_UTM_good.gdb\StGeorge_Dispatch_Streets', staging_db, out_streets)
 
 
 print("Script shutting down ...")
