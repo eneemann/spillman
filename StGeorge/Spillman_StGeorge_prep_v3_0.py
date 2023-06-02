@@ -440,6 +440,7 @@ def create_streets_all(streets):
     clip_feature = os.path.join(wgs84_db, "WashingtonCo_Buffer")
     arcpy.Clip_analysis(streets_temp, clip_feature, streets_all)
 
+    # Calculate JoinID    
     fields = ['OID@', 'JoinID']
     with arcpy.da.UpdateCursor(streets_all, fields) as cursor:
         print("Looping through rows in FC ...")
@@ -625,23 +626,23 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 #  Call Functions Below  #
 ##########################
 
-# create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
-# blanks_to_nulls(streets_fc_utm)
-# calc_street(streets_fc_utm)
-# calc_salias1(streets_fc_utm)
-# calc_salias2(streets_fc_utm)
-# calc_salias4(streets_fc_utm)
-# highway_to_sr_us(streets_fc_utm)
-# calc_salias3(streets_fc_utm)
-# street_blank_to_null(streets_fc_utm)
-# calc_location(streets_fc_utm)
-# create_streets_CAD(streets_fc_utm)
-# create_address_pts_CAD(address_pts)
-# copy_tbzones(tbzones)
-# create_streets_all(streets_fc_utm)
-# project_to_wgs84(FCs_to_project)
-# spillman_polygon_prep(streets_all)
-# recalc_location(streets_all)
+create_new_gdbs(utm_db, wgs84_db, UTM_files_to_delete, WGS84_files_to_delete)
+blanks_to_nulls(streets_fc_utm)
+calc_street(streets_fc_utm)
+calc_salias1(streets_fc_utm)
+calc_salias2(streets_fc_utm)
+calc_salias4(streets_fc_utm)
+highway_to_sr_us(streets_fc_utm)
+calc_salias3(streets_fc_utm)
+street_blank_to_null(streets_fc_utm)
+calc_location(streets_fc_utm)
+create_streets_CAD(streets_fc_utm)
+create_address_pts_CAD(address_pts)
+copy_tbzones(tbzones)
+create_streets_all(streets_fc_utm)
+project_to_wgs84(FCs_to_project)
+spillman_polygon_prep(streets_all)
+recalc_location(streets_all)
 
 #################################################################
 # Run code to here, then pause to use Spillman tools in ArcMap. #
@@ -649,21 +650,16 @@ vela_to_export = ["StGeorge_Dispatch_EMS_Zones", "StGeorge_Dispatch_Fire_Zones",
 #################################################################
 
 # Spillman Shapefiles Export
-export_shapefiles_select_fields("StGeorge_Dispatch_AddressPoints", out_folder_spillman, addpt_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Common_Place_Points", out_folder_spillman, commplc_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Streets_All", out_folder_spillman, street_fields)
+# export_shapefiles_select_fields("StGeorge_Dispatch_AddressPoints", out_folder_spillman, addpt_fields)
+# export_shapefiles_select_fields("StGeorge_Dispatch_Common_Place_Points", out_folder_spillman, commplc_fields)
+# export_shapefiles_select_fields("StGeorge_Dispatch_Streets_All", out_folder_spillman, street_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_EMS_Zones", out_folder_spillman, ezone_fields)
 # export_shapefiles_select_fields("StGeorge_Dispatch_Fire_Zones", out_folder_spillman, fzone_fields)
-export_shapefiles_select_fields("StGeorge_Dispatch_Law_Zones", out_folder_spillman, lzone_fields)
+# export_shapefiles_select_fields("StGeorge_Dispatch_Law_Zones", out_folder_spillman, lzone_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_CITYCD", out_folder_spillman, citycd_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_Municipalities", out_folder_spillman, muni_fields)
 #export_shapefiles_select_fields("StGeorge_Dispatch_Mileposts", out_folder_spillman, mp_fields)
 
-# Vela Shapefiles Export
-#export_shapefiles_select_fields_rename("StGeorge_Dispatch_AddressPoints_CAD", out_folder_vela, vela_addpt_fields, vela_addpt_out)
-#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Common_Place_Points", out_folder_vela, vela_commplc_fields, vela_commplc_out)
-#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Streets_All", out_folder_vela, vela_street_fields, vela_street_out)
-#export_shapefiles_select_fields_rename("StGeorge_Dispatch_Law_Zones", out_folder_vela, vela_law_fields, vela_law_out)
 
 #export_shapefiles_select_fields_rename("StGeorge_Dispatch_Municipalities", out_folder_vela, vela_muni_fields, vela_muni_out)
 
