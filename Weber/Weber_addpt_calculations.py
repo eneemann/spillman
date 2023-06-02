@@ -21,7 +21,7 @@ print("The script start time is {}".format(readable_start))
 # stage_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
 # addpts = os.path.join(stage_db, "AddressPoints")
 stage_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
-addpts = os.path.join(stage_db, "AddressPoints_update_20220819")
+addpts = os.path.join(stage_db, "AddressPoints_SGB_20230523")
 
 env.workspace = stage_db
 
@@ -392,9 +392,9 @@ def calc_join_id(pts):
 def calc_base(pts):
     update_count = 0
     # Calculate "Street" field where applicable
-    # where_clause = "Base IS NULL"
+    where_clause = "Base IS NULL"
     # where_clause = "OBJECTID >= 116122"
-    # fields = ['Base', 'UnitType', 'FullAdd']
+    fields = ['Base', 'UnitType', 'FullAdd']
     with arcpy.da.UpdateCursor(pts, fields, where_clause) as cursor:
         print("Looping through rows in FC ...")
         for row in cursor:
