@@ -16,11 +16,11 @@ start_time = time.time()
 readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 print("The script start time is {}".format(readable_start))
 
-staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
-#staging_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
+# staging_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
+staging_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
 env.workspace = staging_db
-#fc_layer = "Streets"    # Update to working streets fc
-fc_layer = "Streets_update_20230328"    # Update to working streets fc
+fc_layer = "Streets"    # Update to working streets fc
+# fc_layer = "Streets_update_20230328"    # Update to working streets fc
 streets_fc_utm = os.path.join(staging_db, fc_layer)
 
 ###############
