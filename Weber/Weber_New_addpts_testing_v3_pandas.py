@@ -26,7 +26,7 @@ env.workspace = weber_db
 env.overwriteOutput = True
 
 weber_streets = os.path.join(weber_db, "Streets_Map")
-weber_addpts = "AddressPoints_SGB_20220819"    # Point to current addpts in staging_db
+weber_addpts = "AddressPoints_SGB_20230523"    # Point to current addpts in staging_db
 current_addpts = os.path.join(staging_db, weber_addpts)
 
 today = time.strftime("%Y%m%d")
@@ -128,7 +128,7 @@ def mark_near_addpts(current, working):
             
 def check_nearby_roads(working, streets, gdb):
     """
-    Function performs near table analysis to find 5 closest roads w/i 100m of each address point.
+    Function performs near table analysis to find 10 closest roads w/i 800m of each address point.
     It then uses pandas dataframes to join address point and street attributes to near table.
     Calls 'logic_checks' function to compare address point and street attributes.
     This searches for address point street names that match near street segment names.
