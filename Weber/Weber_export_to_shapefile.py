@@ -23,14 +23,12 @@ today = time.strftime("%Y%m%d")
 # output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20230109'
 output_folder = rf'C:\E911\WeberArea\Staging103\00 Weber_Updates_{today}'
 
-#input_features = ['CommonNames',
-#                  'AddressPoints',
-#                  'Streets_Map',
-#                  'FireZones',
-#                  'LawZones',
-#                  'LawAreas',
-#                  'CityCodes',
-#                  'POI']
+input_features = ['CommonNames',
+                  'AddressPoints',
+                  'Streets_Map',
+                  'LawZones',
+                  'LawAreas',
+                  'CityCodes']
 
 # input_features = ['LawZones',
 #                  'LawAreas',]
@@ -42,7 +40,7 @@ output_folder = rf'C:\E911\WeberArea\Staging103\00 Weber_Updates_{today}'
 #                  'LawZones']
 
 # input_features = ['CommonNames',
-#                   'AddressPoints',
+#                   'POI',
 #                   'Streets_Map']
 
 # input_features = ['CommonNames',
@@ -54,7 +52,8 @@ output_folder = rf'C:\E911\WeberArea\Staging103\00 Weber_Updates_{today}'
 #                   'AddressPoints',
 #                   'LawAreas']
 
-input_features = ['CommonNames']
+# input_features = ['CommonNames',
+#                   'AddressPoints']
 
 arcpy.conversion.FeatureClassToShapefile(input_features, output_folder)
 
