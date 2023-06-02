@@ -32,17 +32,19 @@ output_folder = rf"C:\E911\StGeorgeDispatch\1 Geovalidation_update_{today}"
 #                   'StGeorge_Dispatch_POI',
 #                   'StGeorge_Dispatch_EMS_Zones']
 
-input_features = ['StGeorge_Dispatch_Streets_All',
-                  'StGeorge_Dispatch_Law_Zones']
+# input_features = ['StGeorge_Dispatch_Streets_All',
+#                   'StGeorge_Dispatch_Law_Zones']
 
 #input_features = ['StGeorge_Dispatch_AddressPoints',
 #                  'StGeorge_Dispatch_Common_Place_Points',
 #                  'StGeorge_Dispatch_Streets_All']
 
-#input_features = ['StGeorge_Dispatch_AddressPoints',
-#                  'StGeorge_Dispatch_Common_Place_Points',
-#                  'StGeorge_Dispatch_Streets_All',
-#                  'StGeorge_Dispatch_CITYCD']
+input_features = ['StGeorge_Dispatch_AddressPoints',
+                  'StGeorge_Dispatch_POI',
+                  'StGeorge_Dispatch_Common_Place_Points',
+                  'StGeorge_Dispatch_Streets_All',
+                  'StGeorge_Dispatch_Fire_Zones',
+                  'StGeorge_Dispatch_Law_Zones']
 
 # input_features = ['StGeorge_Dispatch_Fire_Zones', 'StGeorge_Dispatch_EMS_Zones', 'StGeorge_Dispatch_Streets_All']
 
