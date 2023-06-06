@@ -23,15 +23,14 @@ today = time.strftime("%Y%m%d")
 # output_folder = r'C:\E911\WeberArea\Staging103\00 Weber_Updates_20230109'
 output_folder = rf'C:\E911\WeberArea\Staging103\00 Weber_Updates_{today}'
 
-input_features = ['CommonNames',
-                  'AddressPoints',
-                  'Streets_Map',
-                  'LawZones',
-                  'LawAreas',
-                  'CityCodes']
+# input_features = ['CommonNames',
+#                   'AddressPoints',
+#                   'Streets_Map',
+#                   'LawZones',
+#                   'LawAreas',
+#                   'CityCodes']
 
-# input_features = ['LawZones',
-#                  'LawAreas',]
+input_features = ['CommonNames']
 
 #input_features = ['CommonNames',
 #                  'AddressPoints',
