@@ -17,7 +17,7 @@ print("The script start time is {}".format(readable_start))
 
 today = time.strftime("%Y%m%d")
 
-project = 'weber'
+project = 'davis'
 
 # Create dictionary to hold project info with utm, wgs84 geodatbases and G Drive destination folder
 spillman_dict = {"beaver": {"utm": r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb",
@@ -41,15 +41,20 @@ spillman_dict = {"beaver": {"utm": r"C:\E911\Beaver Co\Beaver_Spillman_UTM.gdb",
             "uintahbasin": {"utm": r"C:\E911\UintahBasin\UintahBasin_UTM.gdb",
                             "wgs84": r"C:\E911\UintahBasin\UintahBasin_WGS84.gdb",
                             "destination": "UintahBasin"},
+            #: Weber has no UTM, will use that key for QuickestRoute
             "weber": {"utm": r"C:\E911\WeberArea\Staging103\QuickestRoute.gdb",
                       "wgs84": r"C:\E911\WeberArea\Staging103\WeberSGB.gdb",
-                      "destination": "WeberArea"}
+                      "destination": "WeberArea"},
+            #: Davis has no UTM, will use that key for QuickestRoute
+            "davis": {"utm": r"C:\E911\Layton\QuickestRoute.gdb",
+                      "wgs84": r"C:\E911\Layton\DavisGeoValidation.gdb",
+                      "destination": "DavisLayton"}
             }
                       
                       
 
 # Build destination directory information from dictionary
-backup_dir = r'G:\Shared drives\AGRC Projects\911\SpillmanBackup'
+backup_dir = r'M:\Shared drives\AGRC Projects\911\SpillmanBackup'
 sub_dir = spillman_dict[f'{project}']['destination']
 target_dir = os.path.join(backup_dir, sub_dir)
 
