@@ -33,9 +33,9 @@
    - Script that calculates specific fields in the Spillman address points layer and converts blanks to NULLs (ex: STREET, Label, JoinID, etc.)
 - `Spillman_classic_{psap_name}_prep.py`
    - Script to prep data for Spillman Classic. Creates new working copies of geodatabases, calculates `STREET` and alias fields on streets layer, cleans up data.  Creates AddressPoints_CAD layer by removing unit addresses (if necessary). Copies TBZONES table to WGS84 geodatabse, projects data layers to WGS84, appends streets in buffer to `Streets_All` (if necessary).  Sets attributes to NULL that will populated from polygon data using the Spillman Toolbar.
-   1. Run the script first to prep the data
-   2. Use the Spillman ArcMap tools to populate fields from polygon layers
-   3. Comment out the main function calls, uncomment the rows to export the shapefiles that you updated, then run the script again to export the shapefiles
+      1. Run the script first to prep the data
+      2. Use the Spillman ArcMap tools to populate fields from polygon layers
+      3. Comment out the main function calls, uncomment the rows to export the shapefiles that you updated, then run the script again to export the shapefiles
 - `{psap_name}_jitter_CommonNames.py`
    - A simple script to add some random variability (jitter) to the shape field for point layers.  It moves points about 1-1.5m so that they aren't stacked on top of each other.  In Spillman Geovalidation, this can be important if several common places with different names are stack on top of each other.  By slightly adjusting the location, each common place can properly be located in the Spillman console.
 - 
