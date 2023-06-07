@@ -41,7 +41,7 @@ possible_addpts = os.path.join(staging_db, new_addpts)
 # SGID_addpts_wgs84 = os.path.join(staging_db, "SGID_addpts_wgs84")
 
 # Copy current address points into a working FC
-working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
+working_addpts = os.path.join(staging_db, "zzz_AddPts_new_working_" + today)
 arcpy.CopyFeatures_management(possible_addpts, working_addpts)
 
 # Add field to working FC for notes

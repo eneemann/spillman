@@ -34,7 +34,7 @@ new_addpts = "Britt_Millard_Addresses_Sep2022"
 possible_addpts = os.path.join(staging_db, new_addpts)
 
 # Copy current address points into a working FC
-working_addpts = os.path.join(staging_db, "zzz_AddPts_new_TEST_working_" + today)
+working_addpts = os.path.join(staging_db, "zzz_AddPts_new_working_" + today)
 if arcpy.Exists(working_addpts):
     print("Deleting {} ...".format(working_addpts))
     arcpy.Delete_management(working_addpts)
