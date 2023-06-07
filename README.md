@@ -19,16 +19,23 @@
       - To see if the street names match between the road and address point
       - To see if the house number fits within the roads address range
    - Categories each address point into one of the following groups in the `Notes` field:
-      - 'good address point' - new and matches to a street segment
-      - 'name duplicate' - the full address already exists
-      - 'likely unit or spatial duplicate' - w/i 5m of exisiting addpt
-      - 'near street found, but address range mismatch' - the street name matches a road segment, but the address range doesn't
-      - 'no near st: possible typo predir or sufdir error' - nearly-matching street with an edit distance of 1 or 2 was found
-      - 'no near st: likely predir or sufdir error' - nearly-matching street with an edit distance of 1 or 2 was found and the house number correctly falls within the nearby segments address range
-      - 'near street not found' - a matching street wasn't found w/i 800m
-      - 'not name duplicate' - catchall if the full address doesn't already exist, but the point didn't fall into another category
-
+      - **'good address point'** - new and matches to a street segment
+      - **'name duplicate'** - the full address already exists
+      - **'likely unit or spatial duplicate'** - w/i 5m of exisiting addpt
+      - **'near street found, but address range mismatch'** - the street name matches a road segment, but the address range doesn't
+      - **'no near st: possible typo predir or sufdir error'** - nearly-matching street with an edit distance of 1 or 2 was found
+      - **'no near st: likely predir or sufdir error'** - nearly-matching street with an edit distance of 1 or 2 was found and the house number correctly falls within the nearby segments address range
+      - **'near street not found'** - a matching street wasn't found w/i 800m
+      - **'not name duplicate'** - catchall if the full address doesn't already exist, but the point didn't fall into another category
+   - Outputs a feature class named `zzz_AddPts_new_working_{yyyymmdd}_final` in the staging geodatabase that contains the results
+   - Review the output, clean up the points that can be fixed, flag the address points you want to add (use the Notes_near field), and then append them into your Spillman address points layer
 - `{psap_name}_addpts_calculations.py`
    - Script that calculates specific fields in the Spillman address points layer and converts blanks to NULLs (ex: STREET, Label, JoinID, etc.)
 - `Spillman_classic_{psap_name}_prep.py`
    - Script to prep data for Spillman Classic. Creates new working copies of geodatabases, calculates `STREET` and alias fields on streets layer, cleans up data.  Creates AddressPoints_CAD layer by removing unit addresses (if necessary). Copies TBZONES table to WGS84 geodatabse, projects data layers to WGS84, appends streets in buffer to `Streets_All` (if necessary).  Sets attributes to NULL that will populated from polygon data using the Spillman Toolbar.
+   1. Run the script first to prep the data
+   2. Use the Spillman ArcMap tools to populate fields from polygon layers
+   3. Comment out the main function calls, uncomment the rows to export the shapefiles that you updated, then run the script again to export the shapefiles
+- `{psap_name}_jitter_CommonNames.py`
+   - A simple script to add some random variability (jitter) to the shape field for point layers.  It moves points about 1-1.5m so that they aren't stacked on top of each other.  In Spillman Geovalidation, this can be important if several common places with different names are stack on top of each other.  By slightly adjusting the location, each common place can properly be located in the Spillman console.
+- 
