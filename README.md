@@ -3,6 +3,15 @@
  - Each PSAP has its own folder with scripts to process and prep data for that location
  - **There are variables in each script will need to be updated to point to local data sources, connection files, etc.**
 
+ ## Python Environment
+ - Create new environment (might take an hour or so to build):
+    - `conda create --clone arcgispro-py3 --name main_303`
+    - `activate main_303`
+    - `FOR /F "delims=~" %f in (C:\{path-to}requirements_main_303.txt) DO conda install --yes -c conda-forge --no-pin --dry-run "%f"`
+    - `pip install zipfile36`
+    - `pip install wget`
+    - `pip install xxhash`
+ 
  ## Overview of common scripts
  - `{psap_name}_copy_update_needs.py`
    - Script that projects a list of data layers from the WGS84 geodatabase into UTM 12N in the staging geodatabase for working on an update.  This ensures the layers for the update are created from the latest in-use data. Output feature classes are controlled by the list or dictionary in the script and have `_update_{yyyymmdd}` appended on the end of their name.
@@ -38,4 +47,15 @@
       3. Comment out the main function calls, uncomment the rows to export the shapefiles that you updated, then run the script again to export the shapefiles
 - `{psap_name}_jitter_CommonNames.py`
    - A simple script to add some random variability (jitter) to the shape field for point layers.  It moves points about 1-1.5m so that they aren't stacked on top of each other.  In Spillman Geovalidation, this can be important if several common places with different names are stack on top of each other.  By slightly adjusting the location, each common place can properly be located in the Spillman console.
-- 
+- `{psap_name}_auto_snapper_near.py`
+   - Script that automatically snaps together the endpoints of road segments that are unsnapped, but within a specified distance of each other (4m).  Also deletes short segments that are shorter than the specified distance (4m).  This improves the road data for use in a network dataset and routing applications.
+   - Uses spatially-enabble data frames (SEDF) with h3 index and near tables to determine what endpoints should be snapped together.  One endpoint is chosen to remain static and the other nearby endpoints (4m) are moved to snapped to the static one.  No other vertices are adjusted, only the endpoints.
+   - A few fields are added to the data and populated to track endpoint information and snapping status.
+- `{psap_name}_QuickestRoute_build.py`
+   - Weber and Davis-Layton use QuickestRoute, Salt Lake TOC may in the future (code is ready)
+   - Builds a routing network dataset from the streets layer for use in Spillman's QuickestRoute extension.  Calculates travel time fields and applies a multiplier to incentivize interstates (travel time x1), then state highways (travel time x1.5), then surface streets (travel time x2)
+   - `ONEWAY` field must be populated with the following travel convention:
+     - 0 = both directions allowed (converted by script to 'B')
+     - 1 = travel with line direction (converted by script to 'FT')
+     - 2 = travel against line direction (converted by script to 'TF')
+   - Note: the `Layton` version of this script also takes care of the auto-snapping
