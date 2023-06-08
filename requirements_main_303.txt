@@ -1,11 +1,7 @@
-fiona
-geopandas
 python-levenshtein
 beautifulsoup4
 lxml
 psycopg2
 tqdm
-seaborn
-descartes
 h3-py
 mercantile
