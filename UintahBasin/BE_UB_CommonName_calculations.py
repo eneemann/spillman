@@ -214,8 +214,8 @@ def check_duplicates(pts):
 
     
 # calc_all_components_from_street(commonplaces)
-# calc_join_id(commonplaces)
-check_duplicates(commonplaces)
+calc_join_id(commonplaces)
+# check_duplicates(commonplaces)
 
 print("Script shutting down ...")
 # Stop timer and print end time in UTC

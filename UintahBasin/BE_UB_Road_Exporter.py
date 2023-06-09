@@ -356,9 +356,9 @@ def apply_nomenclature(streets):
 # working_roads = os.path.join(r"C:\E911\Layton\LaytonGeoValidation.gdb", "LaytonStreets")
 
 
-# export_from_sgid()
-# project_to_wgs84()
-# prep_fields(wgs84_export_roads)
+export_from_sgid()
+project_to_wgs84()
+prep_fields(wgs84_export_roads)
 load_into_schema()
 calc_fields(working_roads)
 strip_fields(working_roads)
