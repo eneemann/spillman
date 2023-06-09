@@ -12,4 +12,3 @@
       - Weber-Morgan Fire Service Areas
       - Weber-Morgan Paramedic Service Areas
       - Weber-Morgan Ambulance Service Areas
-- 
