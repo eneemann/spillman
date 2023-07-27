@@ -15,15 +15,14 @@ import random
 
 # Start timer and print start time in UTC
 start_time = time.time()
-readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+readable_start = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script start time is {}".format(readable_start))
 
 ######################
 #  Set up variables  #
 ######################
 
-# Set up databases (SGID must be changed based on user's path)
-# weber_db = r"C:\E911\WeberArea\Staging103\WeberSGB.gdb"
+# Set up databases
 weber_db = r"C:\E911\WeberArea\Staging103\Weber_Staging.gdb"
 
 arcpy.env.workspace = weber_db
@@ -47,17 +46,12 @@ field_list = ['SHAPE@', 'SHAPE@X', 'SHAPE@Y']
 with arcpy.da.UpdateCursor(cn_update, field_list) as update_cursor:
     print("Looping through rows in FC ...")
     for row in update_cursor:
-#        print(f'Shape: {row[0]}')
-#        print(f'X Coord: {row[1]}')
-#        print(f'Y Coord: {row[2]}')
         row[1] = jitter(row[1])
         row[2] = jitter(row[2])
         update_cursor.updateRow(row)
-#print("Total count of blanks converted to NULLs is: {}".format(update_count))
-
 
 print("Script shutting down ...")
-# Stop timer and print end time in UTC
-readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+# Stop timer and print end time
+readable_end = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 print("The script end time is {}".format(readable_end))
 print("Time elapsed: {:.2f}s".format(time.time() - start_time))
